@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { id, email, phone, company_name, website_url, category, rating, review } = await request.json()
+    const { userId } = await auth()
 
-    console.log('📝 Update Review Request:', { id, email, phone })
-
-    if (!id || !email || !phone || !company_name || !category || !rating || !review) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'ID, email, phone, company name, category, rating, and review are required' },
-        { status: 400 }
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
       )
     }
 
-    // Use server-side client to bypass RLS for update operation
-    if (!supabaseServer) {
+    const { id, company_name, website_url, category, rating, review } = await request.json()
+
+    console.log('📝 Update Review Request:', { id, userId })
+
+    if (!id || !company_name || !category || !rating || !review) {
       return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500 }
+        { error: 'ID, company name, category, rating, and review are required' },
+        { status: 400 }
       )
     }
 
@@ -35,10 +37,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify that the review belongs to this email/phone
+    // Verify that the review belongs to this user
     const { data: existingReview, error: fetchError } = await client
       .from('company_reviews')
-      .select('email, phone')
+      .select('user_id')
       .eq('id', id)
       .single()
 
@@ -58,28 +60,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Normalize for comparison
-    const normalizedEmail = email.toLowerCase().trim()
-    const normalizedPhone = phone.replace(/\s/g, '').trim()
-    const existingEmail = existingReview.email.toLowerCase().trim()
-    const existingPhone = existingReview.phone.replace(/\s/g, '').trim()
-
-    if (normalizedEmail !== existingEmail || normalizedPhone !== existingPhone) {
+    // Verify ownership
+    if (existingReview.user_id !== userId) {
       return NextResponse.json(
         { error: 'You can only modify your own reviews' },
         { status: 403 }
-      )
-    }
-
-    // Use server-side client to bypass RLS for update operation
-    // If not available, fall back to regular client (RLS policies should allow it)
-    const client = supabaseServer || supabase
-
-    if (!client) {
-      console.error('❌ No Supabase client available')
-      return NextResponse.json(
-        { error: 'Server configuration error - Supabase not configured' },
-        { status: 500 }
       )
     }
 

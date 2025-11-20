@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { id, email, phone } = await request.json()
+    const { userId } = await auth()
 
-    console.log('🗑️ Delete Review Request:', { id, email, phone })
-
-    if (!id || !email || !phone) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'ID, email, and phone are required' },
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      )
+    }
+
+    const { id } = await request.json()
+
+    console.log('🗑️ Delete Review Request:', { id, userId })
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID is required' },
         { status: 400 }
       )
     }
@@ -29,10 +39,10 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Using Supabase client:', supabaseServer ? 'server-side' : 'client-side')
 
-    // Verify that the review belongs to this email/phone
+    // Verify that the review belongs to this user
     const { data: existingReview, error: fetchError } = await client
       .from('company_reviews')
-      .select('email, phone')
+      .select('user_id')
       .eq('id', id)
       .single()
 
@@ -53,16 +63,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Normalize for comparison
-    const normalizedEmail = email.toLowerCase().trim()
-    const normalizedPhone = phone.replace(/\s/g, '').trim()
-    const existingEmail = existingReview.email.toLowerCase().trim()
-    const existingPhone = existingReview.phone.replace(/\s/g, '').trim()
-
-    console.log('🔍 Email comparison:', { normalizedEmail, existingEmail, match: normalizedEmail === existingEmail })
-    console.log('🔍 Phone comparison:', { normalizedPhone, existingPhone, match: normalizedPhone === existingPhone })
-
-    if (normalizedEmail !== existingEmail || normalizedPhone !== existingPhone) {
+    // Verify ownership
+    if (existingReview.user_id !== userId) {
       return NextResponse.json(
         { error: 'You can only delete your own reviews' },
         { status: 403 }

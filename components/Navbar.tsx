@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -24,7 +25,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Right side - Navigation items */}
+          {/* Right side - Navigation items and Auth */}
           <div className="flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
@@ -39,6 +40,25 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            
+            {/* Clerk Authentication */}
+            <div className="flex items-center space-x-4">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-all duration-200">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="text-sm font-medium bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
@@ -49,6 +50,7 @@ const popularCategories = [
 ]
 
 export default function Home() {
+  const { user, isLoaded } = useUser()
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [filteredReviews, setFilteredReviews] = useState<CompanyReview[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -76,6 +78,7 @@ export default function Home() {
 
   const fetchReviews = useCallback(async () => {
     try {
+      // Fetch all reviews (not just user's own) - anyone can see all reviews
       const { data, error } = await supabase
         .from('company_reviews')
         .select('*')
@@ -85,6 +88,7 @@ export default function Home() {
       setReviews(data || [])
     } catch (error) {
       console.error('Error fetching reviews:', error)
+      setReviews([])
     }
   }, [])
 
@@ -176,8 +180,13 @@ export default function Home() {
     e.preventDefault()
     
     // Validate required fields
-    if (!formData.email || !formData.phone || !formData.company_name || !formData.category || !formData.review || formData.rating === 0) {
+    if (!formData.phone || !formData.company_name || !formData.category || !formData.review || formData.rating === 0) {
       alert('Please fill in all required fields.')
+      return
+    }
+
+    if (!user) {
+      alert('Please sign in to submit a review.')
       return
     }
 
@@ -192,6 +201,11 @@ export default function Home() {
   }
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please sign in to submit a review.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -199,6 +213,8 @@ export default function Home() {
       const normalizedFormData = {
         ...formData,
         website_url: formData.website_url ? normalizeUrl(formData.website_url) : '',
+        user_id: user.id,
+        email: user.primaryEmailAddress?.emailAddress || formData.email,
       }
       
       const { error } = await supabase.from('company_reviews').insert([normalizedFormData])
@@ -230,7 +246,7 @@ export default function Home() {
     setShowEditForm(true)
     setSelectedReview(null)
     setFormData({
-      email: review.email,
+      email: review.email || '',
       phone: review.phone,
       company_name: review.company_name,
       website_url: review.website_url || '',
@@ -246,20 +262,18 @@ export default function Home() {
   }
 
   const handleEditSubmit = async () => {
-    if (!editingReview) return
+    if (!editingReview || !user) {
+      alert('Please sign in to edit reviews.')
+      return
+    }
 
     setLoading(true)
     try {
-      const normalizedEmail = formData.email.toLowerCase().trim()
-      const normalizedPhone = formData.phone.replace(/\s/g, '').trim()
-
       const response = await fetch('/api/reviews/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingReview.id,
-          email: normalizedEmail,
-          phone: normalizedPhone,
           company_name: formData.company_name,
           website_url: formData.website_url || null,
           category: formData.category,
@@ -296,20 +310,18 @@ export default function Home() {
   }
 
   const handleDeleteConfirm = async () => {
-    if (!deletingReview) return
+    if (!deletingReview || !user) {
+      alert('Please sign in to delete reviews.')
+      return
+    }
 
     setLoading(true)
     try {
-      const normalizedEmail = deletingReview.email.toLowerCase().trim()
-      const normalizedPhone = deletingReview.phone.replace(/\s/g, '').trim()
-
       const response = await fetch('/api/reviews/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: deletingReview.id,
-          email: normalizedEmail,
-          phone: normalizedPhone,
         }),
       })
 
@@ -430,6 +442,31 @@ export default function Home() {
         <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 overflow-hidden" title={review.review}>
           {review.review}
         </p>
+        {/* Edit/Delete buttons - only show for user's own reviews */}
+        {isLoaded && user && review.user_id === user.id && (
+          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleEditClick(review)
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+            >
+              <Edit size={16} />
+              <span>Edit</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDeleteClick(review)
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <Trash2 size={16} />
+              <span>Delete</span>
+            </button>
+          </div>
+        )}
       </div>
   }
 
@@ -442,7 +479,7 @@ export default function Home() {
             Find Trusted Company Reviews
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Discover authentic reviews from real customers. Make informed decisions with trusted insights.
+            Discover authentic reviews from real customers. Make informed decisions with trusted insights. {isLoaded && !user && 'Sign in to add your own reviews.'}
           </p>
           
           {/* Wide Search Bar */}
@@ -505,13 +542,17 @@ export default function Home() {
             )}
           </div>
 
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
-          >
-            <Plus size={18} />
-            <span>Add Your Review</span>
-          </button>
+          {isLoaded && user ? (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+            >
+              <Plus size={18} />
+              <span>Add Your Review</span>
+            </button>
+          ) : (
+            <p className="text-gray-600 text-sm">Please sign in to add reviews</p>
+          )}
         </div>
       </div>
 
@@ -526,12 +567,12 @@ export default function Home() {
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedReview.company_name}</h2>
                   <div className="flex items-center gap-3 flex-wrap">
                     <p className="text-sm text-gray-500 font-medium">{selectedReview.category}</p>
-                    {selectedReview.created_at && (
-                      <>
+                    {selectedReview.created_at ? (
+                      <React.Fragment>
                         <span className="text-gray-300">•</span>
                         <p className="text-sm text-gray-500">{formatDate(selectedReview.created_at)}</p>
-                      </>
-                    )}
+                      </React.Fragment>
+                    ) : null}
                   </div>
                 </div>
                 <button
@@ -579,22 +620,33 @@ export default function Home() {
               </div>
 
               <div className="pt-6 border-t border-gray-200 flex justify-between items-center">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleEditClick(selectedReview)}
-                    className="bg-blue-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
-                  >
-                    <Edit size={18} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(selectedReview)}
-                    className="bg-red-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
-                  >
-                    <Trash2 size={18} />
-                    <span>Delete</span>
-                  </button>
-                </div>
+                {/* Only show Edit/Delete buttons if this is the user's own review */}
+                {isLoaded && user && selectedReview.user_id === user.id ? (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        handleEditClick(selectedReview)
+                        setSelectedReview(null)
+                      }}
+                      className="bg-blue-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+                    >
+                      <Edit size={18} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleDeleteClick(selectedReview)
+                        setSelectedReview(null)
+                      }}
+                      className="bg-red-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
+                    >
+                      <Trash2 size={18} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div></div>
+                )}
                 <button
                   onClick={() => setSelectedReview(null)}
                   className="bg-gray-200 text-gray-700 py-2.5 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
@@ -613,18 +665,13 @@ export default function Home() {
               <h2 className="text-3xl font-bold mb-6 text-gray-900">Add New Company Review</h2>
               
               <form onSubmit={handleFormSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Email ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
-                </div>
+                {user && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-700">
+                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Phone <span className="text-red-500">*</span>
@@ -635,6 +682,7 @@ export default function Home() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                    placeholder="Enter your phone number"
                   />
                 </div>
                 <div>
@@ -731,19 +779,13 @@ export default function Home() {
               <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Company Review</h2>
               
               <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Email ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                      disabled
-                    />
-                  </div>
+                  {user && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                      <p className="text-sm text-gray-700">
+                        <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Phone Number <span className="text-red-500">*</span>
@@ -754,7 +796,7 @@ export default function Home() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                      disabled
+                      placeholder="Enter your phone number"
                     />
                   </div>
                   <div>
@@ -915,12 +957,16 @@ export default function Home() {
                 Help others make better decisions by sharing your honest review
               </p>
             </div>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
-            >
-              Write a Review
-            </button>
+            {isLoaded && user ? (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
+              >
+                Write a Review
+              </button>
+            ) : (
+              <p className="text-gray-600 text-sm">Please sign in to add reviews</p>
+            )}
           </div>
         </div>
 
@@ -980,6 +1026,30 @@ export default function Home() {
             </div>
           )
         })}
+
+        {/* Empty State - No Reviews */}
+        {filteredReviews.length === 0 && !loading && (
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Reviews Found</h3>
+              <p className="text-gray-600 mb-6">
+                {searchQuery || selectedCategory || selectedRating > 0
+                  ? 'No reviews match your search criteria. Try adjusting your filters.'
+                  : 'No reviews have been submitted yet. Be the first to share your experience!'}
+              </p>
+              {isLoaded && user && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <Plus size={20} />
+                  <span>Write Your First Review</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* All Reviews Carousel (when no category filter) */}
         {!selectedCategory && filteredReviews.length > 0 && (

@@ -11,6 +11,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
 // Types
 export interface CompanyReview {
   id?: string
+  user_id?: string
   email: string
   phone: string
   company_name: string
