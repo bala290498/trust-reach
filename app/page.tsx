@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
 import StarRating from '@/components/StarRating'
-import { Search, Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react'
+import { Search, Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, ChevronLeft, ChevronRight, Edit, Trash2, Menu } from 'lucide-react'
+import YourReviewsSlider from '@/components/YourReviewsSlider'
 
 const categories = [
   'Restaurants & Bars',
@@ -75,6 +77,7 @@ export default function Home() {
   const [editingReview, setEditingReview] = useState<CompanyReview | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingReview, setDeletingReview] = useState<CompanyReview | null>(null)
+  const [showSlider, setShowSlider] = useState(false)
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -442,29 +445,16 @@ export default function Home() {
         <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 overflow-hidden" title={review.review}>
           {review.review}
         </p>
-        {/* Edit/Delete buttons - only show for user's own reviews */}
+        {/* View in Your Reviews link - only show for user's own reviews */}
         {isLoaded && user && review.user_id === user.id && (
-          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleEditClick(review)
-              }}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <Link
+              href="/my-reviews"
+              onClick={(e) => e.stopPropagation()}
+              className="block text-center text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-2 px-3"
             >
-              <Edit size={16} />
-              <span>Edit</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDeleteClick(review)
-              }}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-            >
-              <Trash2 size={16} />
-              <span>Delete</span>
-            </button>
+              Manage in Your Reviews →
+            </Link>
           </div>
         )}
       </div>
@@ -472,6 +462,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Your Reviews Slider */}
+      <YourReviewsSlider 
+        isOpen={showSlider} 
+        onClose={() => setShowSlider(false)}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+      />
+
+      {/* Floating Button to Open Slider */}
+      {isLoaded && user && (
+        <button
+          onClick={() => setShowSlider(true)}
+          className="fixed right-6 bottom-6 z-30 bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 transition-all duration-200 hover:scale-110 flex items-center justify-center"
+          aria-label="Open your reviews menu"
+        >
+          <Menu size={24} />
+        </button>
+      )}
+
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">

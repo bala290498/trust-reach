@@ -56,6 +56,17 @@ export default function Navbar() {
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
+                <button
+                  onClick={() => {
+                    // This will be handled by the parent component
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('openYourReviews'))
+                    }
+                  }}
+                  className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-all duration-200"
+                >
+                  Your Reviews
+                </button>
                 <UserButton afterSignOutUrl="/" />
               </SignedIn>
             </div>
