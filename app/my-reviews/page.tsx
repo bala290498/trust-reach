@@ -147,8 +147,6 @@ export default function MyReviewsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: deletingReview.id,
-          email: deletingReview.email,
-          phone: deletingReview.phone,
         }),
       })
 
