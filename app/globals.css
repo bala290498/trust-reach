@@ -36,6 +36,8 @@
     /* Use clamp for responsive base font size - minimum 16px to prevent zoom */
     font-size: clamp(1rem, 0.875rem + 0.5vw, 1.125rem); /* Minimum 1rem (16px), scales up on larger screens */
     line-height: 1.6;
+    /* Add top padding to account for fixed navbar (5rem = 80px) */
+    padding-top: 5rem;
   }
 
   /* Responsive typography using clamp - no raw vw */

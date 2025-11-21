@@ -7,7 +7,7 @@ import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { ExternalLink, ArrowLeft, Edit, Trash2, Plus } from 'lucide-react'
+import { ExternalLink, ArrowLeft, Edit, Trash2, Plus, Search } from 'lucide-react'
 
 interface CompanyData {
   name: string
@@ -52,6 +52,7 @@ export default function CompanyPage() {
     rating: 0,
     review: '',
   })
+  const [searchQuery, setSearchQuery] = useState('')
 
   const slug = params?.slug as string
 
@@ -115,6 +116,7 @@ export default function CompanyPage() {
   useEffect(() => {
     fetchCompanyData()
   }, [fetchCompanyData])
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -309,7 +311,18 @@ export default function CompanyPage() {
     )
   }
 
-  const sortedReviews = [...company.reviews].sort((a, b) => {
+  // Filter reviews by search query
+  const filteredReviews = company.reviews.filter((review) => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      review.review.toLowerCase().includes(query) ||
+      review.email.toLowerCase().includes(query) ||
+      getEmailDisplayName(review.email).toLowerCase().includes(query)
+    )
+  })
+
+  const sortedReviews = [...filteredReviews].sort((a, b) => {
     if (sortBy === 'date') {
       const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
       const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
@@ -321,132 +334,148 @@ export default function CompanyPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-8 md:py-12 px-6">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium mb-6 transition-colors"
-          >
-            <ArrowLeft size={18} />
-            <span>Back to Reviews</span>
-          </Link>
+      {/* Clean Company Header Bar - Fixed below main nav */}
+      <div className="fixed top-[5rem] left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-6 h-20 sm:h-24">
+            {/* Left - Company name and category (two lines) */}
+            <div className="flex flex-col justify-center flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                {company.name}
+              </h2>
+              <span className="text-sm sm:text-base text-gray-500 truncate">
+                {company.category}
+              </span>
+            </div>
 
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{company.name}</h1>
-              {company.category && (
-                <p className="text-base md:text-lg text-gray-500 font-medium mb-4">{company.category}</p>
-              )}
-              {company.website_url && (
-                <a
-                  href={company.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2 mb-4 transition-colors"
-                >
-                  <ExternalLink size={18} />
-                  <span>Visit Website</span>
-                </a>
-              )}
-              <div className="flex items-center gap-3">
+            {/* Center - Rating value + stars (vertically centered) */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-lg sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                {company.averageRating.toFixed(1)}
+              </span>
+              <div className="flex-shrink-0">
                 <StarRating rating={company.averageRating} onRatingChange={() => {}} readonly />
-                <span className="text-xl font-bold text-gray-900">
-                  {company.averageRating.toFixed(1)}
-                </span>
-                <span className="text-base text-gray-600">
-                  ({company.reviewCount} {company.reviewCount === 1 ? 'review' : 'reviews'})
-                </span>
               </div>
             </div>
-          </div>
 
-          {/* Disclaimer */}
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
-            <p className="text-sm text-blue-800 font-medium">
-              Companies on TrustReach aren&apos;t allowed to offer incentives or pay to hide reviews.
-            </p>
-          </div>
-
-          {/* Add Review Button */}
-          <div className="flex justify-center">
-            <button
-              onClick={handleAddReviewClick}
-              className="bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 flex items-center gap-2"
-            >
-              <Plus size={20} />
-              <span>Add Review</span>
-            </button>
+            {/* Right - Add Review button (vertically aligned with rating) */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={handleAddReviewClick}
+                className="text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 whitespace-nowrap"
+                aria-label="Add review"
+              >
+                Add Review
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Sorting Options */}
-        <div className="mb-6 flex items-center gap-4 flex-wrap">
-          <label className="text-sm font-semibold text-gray-700">Sort by:</label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
-            className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
-          >
-            <option value="date">Date</option>
-            <option value="rating">Rating</option>
-          </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-            className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
-          >
-            <option value="desc">Newest/Highest First</option>
-            <option value="asc">Oldest/Lowest First</option>
-          </select>
+      {/* Divider after sticky header */}
+      <div className="fixed top-[9rem] sm:top-[11rem] left-0 right-0 z-30 border-b border-gray-200"></div>
+
+      {/* Main Content - Add top padding for company header (h-20 = 5rem on mobile, h-24 = 6rem on larger screens) */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-6 sm:pb-8">
+        {/* Spacing after divider */}
+        <div className="pt-6 sm:pt-8">
+          {/* Search bar and sort controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            {/* Search bar */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reviews..."
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                aria-label="Search reviews"
+              />
+            </div>
+
+            {/* Sort dropdowns */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
+                className="px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm bg-white cursor-pointer"
+                aria-label="Sort by"
+              >
+                <option value="date">Date</option>
+                <option value="rating">Rating</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                className="px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm bg-white cursor-pointer"
+                aria-label="Sort order"
+              >
+                <option value="desc">{sortBy === 'date' ? 'Newest' : 'Highest'}</option>
+                <option value="asc">{sortBy === 'date' ? 'Oldest' : 'Lowest'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Second divider */}
+          <div className="border-b border-gray-200 mb-6 sm:mb-8"></div>
         </div>
 
-        {/* Reviews List */}
-        <div className="space-y-4">
+        {/* Reviews List - Flat, borderless feed style */}
+        <div className="space-y-12">
           {sortedReviews.map((review) => (
-            <div key={review.id} className="border-2 border-gray-200 rounded-xl p-4 sm:p-6 hover:border-primary-300 transition-all">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm">
-                      {getEmailName(review.email)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(review.email)}</p>
-                      <p className="text-xs text-gray-500">{review.email}</p>
-                    </div>
+            <div key={review.id} className="pb-12 border-b border-gray-100 last:border-b-0 last:pb-0">
+              <div className="flex gap-4">
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-base">
+                    {getEmailName(review.email)}
                   </div>
                 </div>
-                {review.created_at && (
-                  <p className="text-sm text-gray-500 whitespace-nowrap ml-4">{formatDate(review.created_at)}</p>
-                )}
-              </div>
-              <div className="mb-3">
-                <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
-              </div>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">{review.review}</p>
-              {/* Edit/Delete buttons - only show for user's own reviews */}
-              {isLoaded && user && review.user_id === user.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200 flex gap-3">
-                  <button
-                    onClick={() => handleEditClick(review)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <Edit size={16} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(review)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                    <span>Delete</span>
-                  </button>
+
+                {/* Content area */}
+                <div className="flex-1 min-w-0">
+                  {/* User name and date */}
+                  <div className="mb-3">
+                    <div className="flex items-baseline gap-3 flex-wrap mb-2">
+                      <p className="text-base font-semibold text-gray-900">{getEmailDisplayName(review.email)}</p>
+                      {review.created_at && (
+                        <p className="text-sm text-gray-500 ml-auto">{formatDate(review.created_at)}</p>
+                      )}
+                    </div>
+                    
+                    {/* Rating */}
+                    <div>
+                      <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
+                    </div>
+                  </div>
+
+                  {/* Review text - larger, readable typography */}
+                  <div className="mb-4">
+                    <p className="text-base sm:text-lg text-gray-900 leading-relaxed whitespace-pre-wrap">{review.review}</p>
+                  </div>
+
+                  {/* Edit/Delete buttons - only show for user's own reviews */}
+                  {isLoaded && user && review.user_id === user.id && (
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => handleEditClick(review)}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-2"
+                      >
+                        <Edit size={16} />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(review)}
+                        className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-2"
+                      >
+                        <Trash2 size={16} />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
@@ -650,4 +679,5 @@ export default function CompanyPage() {
     </div>
   )
 }
+
 
