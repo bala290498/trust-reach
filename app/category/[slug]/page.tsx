@@ -77,7 +77,7 @@ export default function CategoryPage() {
             <span>Back to Home</span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-          <p className="text-gray-600">The category you're looking for doesn't exist or has no brands.</p>
+          <p className="text-gray-600">The category you&apos;re looking for doesn&apos;t exist or has no brands.</p>
         </div>
       </div>
     )
