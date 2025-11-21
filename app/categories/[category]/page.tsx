@@ -164,7 +164,7 @@ export default function CategoryPage() {
     const companySlug = generateSlug(company.name)
     
     return (
-      <div className="relative flex-shrink-0 pt-4" style={{ width: '140px', marginRight: '24px' }}>
+      <div className="relative flex-shrink-0 pt-4" style={{ width: '140px', marginRight: '54px' }}>
         {/* Semi-Transparent Numeral Behind Card - Scaled smaller, beneath card, fully visible */}
         <div 
           className="absolute -left-6 sm:-left-8 top-4 bottom-0 flex items-center justify-center pointer-events-none"
