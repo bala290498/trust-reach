@@ -215,9 +215,6 @@ export default function MyActivityPage() {
     )
   }
 
-  const loading = activeTab === 'reviews' ? reviewsLoading : productsLoading
-  const hasItems = activeTab === 'reviews' ? reviews.length > 0 : products.length > 0
-
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
@@ -248,7 +245,7 @@ export default function MyActivityPage() {
               <div className="text-6xl mb-4">📝</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">No Reviews Yet</h3>
               <p className="text-gray-600 mb-6">
-                You haven't submitted any reviews yet.
+                You haven&apos;t submitted any reviews yet.
               </p>
               <Link
                 href="/"
@@ -481,8 +478,6 @@ export default function MyActivityPage() {
               </div>
             </div>
           </div>
-        )}
-
         )}
       </div>
     </div>
