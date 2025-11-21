@@ -162,21 +162,19 @@ export default function CategoryPage() {
 
   const renderTop5Card = (company: CompanyData, rank: number) => {
     const companySlug = generateSlug(company.name)
-    const firstReview = company.reviews[0]
-    const avatarInitial = getEmailName(firstReview?.email || '')
     
     return (
-      <div className="relative flex-shrink-0 w-[150px] sm:w-[170px]">
-        {/* Large Semi-Transparent Numeral Behind Card - Lower z-index, further left */}
+      <div className="relative flex-shrink-0 pt-4" style={{ width: '140px', marginRight: '24px' }}>
+        {/* Semi-Transparent Numeral Behind Card - Scaled smaller, beneath card, fully visible */}
         <div 
-          className="absolute -left-8 sm:-left-10 top-0 bottom-0 flex items-center justify-center pointer-events-none"
+          className="absolute -left-6 sm:-left-8 top-4 bottom-0 flex items-center justify-center pointer-events-none"
           style={{ 
             opacity: 0.12,
             zIndex: 0
           }}
         >
           <span 
-            className="text-[90px] sm:text-[110px] font-black leading-none text-gray-900"
+            className="text-[70px] sm:text-[85px] font-black leading-none text-gray-900"
             style={{ 
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontWeight: 900,
@@ -187,60 +185,35 @@ export default function CategoryPage() {
           </span>
         </div>
         
-        {/* Card - Higher z-index to sit above numeral */}
+        {/* Compact Card - Fixed width, only name, score, and review count */}
         <Link
           href={`/companies/${companySlug}`}
-          className="relative bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-lg hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer block h-full"
+          className="relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer block overflow-hidden justify-center"
           style={{ 
             boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)',
-            zIndex: 10
+            zIndex: 10,
+            width: '140px',
+            height: '120px',
+            minHeight: '120px',
+            maxHeight: '120px'
           }}
         >
-          {/* Centered Avatar - Smaller */}
-          <div className="flex justify-center mb-2 sm:mb-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-base sm:text-lg">
-              {avatarInitial}
-            </div>
-          </div>
-          
-          {/* Centered Company Name - Smaller */}
-          <div className="text-center mb-2 sm:mb-3">
-            <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 line-clamp-2 leading-tight" title={company.name}>
+          {/* Line 1: Company Name (bold) */}
+          <div className="text-center mb-3 flex-shrink-0">
+            <h3 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-2 leading-tight" title={company.name}>
               {company.name}
             </h3>
-            <p className="text-[10px] sm:text-xs text-gray-500 font-medium line-clamp-1" title={company.category}>
-              {company.category}
-            </p>
           </div>
           
-          {/* Centered Stats - Smaller */}
-          <div className="text-center mb-2 sm:mb-3">
-            <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-1">
-              <div className="scale-75 sm:scale-90 origin-center">
-                <StarRating rating={company.averageRating} onRatingChange={() => {}} readonly />
-              </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900">{company.averageRating.toFixed(1)}</span>
+          {/* Line 2: Average Score and Review Count */}
+          <div className="text-center flex-shrink-0">
+            <div className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
+              {company.averageRating.toFixed(1)}
             </div>
             <p className="text-xs sm:text-sm text-gray-600">
               {company.reviewCount} {company.reviewCount === 1 ? 'review' : 'reviews'}
             </p>
           </div>
-          
-          {/* External Link (if available) - Smaller */}
-          {company.website_url && (
-            <div className="mt-auto pt-2 sm:pt-3 border-t border-gray-100 text-center">
-              <a
-                href={company.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 transition-colors inline-flex items-center gap-1 text-[10px] sm:text-xs"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLink size={12} />
-                <span>Visit</span>
-              </a>
-            </div>
-          )}
         </Link>
       </div>
     )
@@ -346,19 +319,19 @@ export default function CategoryPage() {
 
         {/* Top 5 Players Section */}
         {top5Companies.length > 0 && (
-          <div className="mb-12">
+          <div className="mb-12 pt-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Top 5 Players</h2>
-            {/* Desktop: 5-up grid with even spacing, extra padding for numerals */}
-            <div className="hidden xl:flex xl:justify-center xl:gap-5 xl:px-8">
+            {/* Desktop: 5-up row with clear horizontal gaps (~24px) */}
+            <div className="hidden xl:flex xl:justify-center xl:items-start xl:px-12 xl:pt-4">
               {top5Companies.map((company, index) => (
                 <div key={`top5-${company.name}-${index}`} className="flex-shrink-0">
                   {renderTop5Card(company, index + 1)}
                 </div>
               ))}
             </div>
-            {/* Mobile/Tablet: Horizontal scroll with even spacing */}
-            <div className="xl:hidden overflow-x-auto scrollbar-hide pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-5 justify-start" style={{ width: 'max-content', paddingLeft: '2rem' }}>
+            {/* Mobile/Tablet: Horizontal scroll with clear spacing (~24px) */}
+            <div className="xl:hidden overflow-x-auto scrollbar-hide pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4">
+              <div className="flex justify-start items-start" style={{ width: 'max-content', paddingLeft: '3rem' }}>
                 {top5Companies.map((company, index) => (
                   <div key={`top5-${company.name}-${index}`} className="flex-shrink-0">
                     {renderTop5Card(company, index + 1)}
