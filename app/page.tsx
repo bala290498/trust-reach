@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { useUser } from '@clerk/nextjs'
+import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
@@ -78,6 +78,8 @@ export default function Home() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingReview, setDeletingReview] = useState<CompanyReview | null>(null)
   const [showSlider, setShowSlider] = useState(false)
+  const [pendingAddReview, setPendingAddReview] = useState(false)
+  const [showSignInModal, setShowSignInModal] = useState(false)
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -131,6 +133,15 @@ export default function Home() {
     filterReviews()
   }, [filterReviews])
 
+  // Handle opening add review form after sign-in
+  useEffect(() => {
+    if (isLoaded && user && pendingAddReview) {
+      setShowAddForm(true)
+      setPendingAddReview(false)
+      setShowSignInModal(false)
+    }
+  }, [isLoaded, user, pendingAddReview])
+
   // Generate search suggestions for dropdown
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
@@ -177,6 +188,19 @@ export default function Home() {
     // - subdomain.test.com
     const urlPattern = /^(https?:\/\/)?(www\.)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w \.-]*)*\/?$/i
     return urlPattern.test(url)
+  }
+
+  const handleAddReviewClick = () => {
+    if (!isLoaded) return
+    
+    if (user) {
+      // User is signed in, open form directly
+      setShowAddForm(true)
+    } else {
+      // User is not signed in, show sign-in modal
+      setPendingAddReview(true)
+      setShowSignInModal(true)
+    }
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -551,17 +575,13 @@ export default function Home() {
             )}
           </div>
 
-          {isLoaded && user ? (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
-            >
-              <Plus size={18} />
-              <span>Add Your Review</span>
-            </button>
-          ) : (
-            <p className="text-gray-600 text-sm">Please sign in to add reviews</p>
-          )}
+          <button
+            onClick={handleAddReviewClick}
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+          >
+            <Plus size={18} />
+            <span>Add Your Review</span>
+          </button>
         </div>
       </div>
 
@@ -661,6 +681,42 @@ export default function Home() {
                   className="bg-gray-200 text-gray-700 py-2.5 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sign In Modal for Add Review */}
+        {showSignInModal && !user && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
+            setShowSignInModal(false)
+            setPendingAddReview(false)
+          }}>
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
+              <p className="text-gray-600 mb-6">
+                Please sign in or create an account to add a review.
+              </p>
+              <div className="flex flex-col gap-3">
+                <SignInButton mode="modal">
+                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+                <button
+                  onClick={() => {
+                    setShowSignInModal(false)
+                    setPendingAddReview(false)
+                  }}
+                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -966,16 +1022,12 @@ export default function Home() {
                 Help others make better decisions by sharing your honest review
               </p>
             </div>
-            {isLoaded && user ? (
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
-              >
-                Write a Review
-              </button>
-            ) : (
-              <p className="text-gray-600 text-sm">Please sign in to add reviews</p>
-            )}
+            <button
+              onClick={handleAddReviewClick}
+              className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
+            >
+              Write a Review
+            </button>
           </div>
         </div>
 
@@ -1047,15 +1099,13 @@ export default function Home() {
                   ? 'No reviews match your search criteria. Try adjusting your filters.'
                   : 'No reviews have been submitted yet. Be the first to share your experience!'}
               </p>
-              {isLoaded && user && (
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <Plus size={20} />
-                  <span>Write Your First Review</span>
-                </button>
-              )}
+              <button
+                onClick={handleAddReviewClick}
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Plus size={20} />
+                <span>Write Your First Review</span>
+              </button>
             </div>
           </div>
         )}

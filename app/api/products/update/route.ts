@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { id, email, phone, platform_name, product_name, category, url, rating, review } = await request.json()
+    const { userId } = await auth()
 
-    console.log('📝 Update Product Request:', { id, email, phone })
-
-    if (!id || !email || !phone || !platform_name || !product_name || !category || !url || !rating || !review) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'ID, email, phone, platform name, product name, category, URL, rating, and review are required' },
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      )
+    }
+
+    const { id, platform_name, product_name, category, url, rating, review } = await request.json()
+
+    console.log('📝 Update Product Request:', { id, userId })
+
+    if (!id || !platform_name || !product_name || !category || !url || !rating || !review) {
+      return NextResponse.json(
+        { error: 'ID, platform name, product name, category, URL, rating, and review are required' },
         { status: 400 }
       )
     }
@@ -27,10 +37,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify that the product belongs to this email/phone
+    // Verify that the product belongs to this user
     const { data: existingProduct, error: fetchError } = await client
       .from('product_listings')
-      .select('email, phone')
+      .select('user_id')
       .eq('id', id)
       .single()
 
@@ -50,13 +60,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Normalize for comparison
-    const normalizedEmail = email.toLowerCase().trim()
-    const normalizedPhone = phone.replace(/\s/g, '').trim()
-    const existingEmail = existingProduct.email.toLowerCase().trim()
-    const existingPhone = existingProduct.phone.replace(/\s/g, '').trim()
-
-    if (normalizedEmail !== existingEmail || normalizedPhone !== existingPhone) {
+    // Verify ownership
+    if (existingProduct.user_id !== userId) {
       return NextResponse.json(
         { error: 'You can only modify your own products' },
         { status: 403 }

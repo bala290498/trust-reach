@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, ProductListing } from '@/lib/supabase'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
 import StarRating from '@/components/StarRating'
-import { Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, ChevronLeft, ChevronRight, Search, Edit, Trash2 } from 'lucide-react'
+import Link from 'next/link'
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
@@ -51,6 +53,7 @@ const categories = [
 const platforms = ['Amazon', 'Flipkart']
 
 export default function EcommercePage() {
+  const { user, isLoaded } = useUser()
   const [products, setProducts] = useState<ProductListing[]>([])
   const [filteredProducts, setFilteredProducts] = useState<ProductListing[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,6 +74,12 @@ export default function EcommercePage() {
     review: '',
   })
   const [loading, setLoading] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<ProductListing | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingProduct, setDeletingProduct] = useState<ProductListing | null>(null)
+  const [pendingAddProduct, setPendingAddProduct] = useState(false)
+  const [showSignInModal, setShowSignInModal] = useState(false)
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -121,6 +130,15 @@ export default function EcommercePage() {
     filterProducts()
   }, [filterProducts])
 
+  // Handle opening add product form after sign-in
+  useEffect(() => {
+    if (isLoaded && user && pendingAddProduct) {
+      setShowAddForm(true)
+      setPendingAddProduct(false)
+      setShowSignInModal(false)
+    }
+  }, [isLoaded, user, pendingAddProduct])
+
   // Generate search suggestions for dropdown
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
@@ -167,12 +185,30 @@ export default function EcommercePage() {
     return urlPattern.test(url)
   }
 
+  const handleAddProductClick = () => {
+    if (!isLoaded) return
+    
+    if (user) {
+      // User is signed in, open form directly
+      setShowAddForm(true)
+    } else {
+      // User is not signed in, show sign-in modal
+      setPendingAddProduct(true)
+      setShowSignInModal(true)
+    }
+  }
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validate required fields before showing OTP
-    if (!formData.email || !formData.phone || !formData.platform_name || !formData.product_name || !formData.category || !formData.url || !formData.review || formData.rating === 0) {
-      alert('Please fill in all required fields before verification.')
+    if (!user) {
+      alert('Please sign in to submit a product.')
+      return
+    }
+
+    // Validate required fields
+    if (!formData.phone || !formData.platform_name || !formData.product_name || !formData.category || !formData.url || !formData.review || formData.rating === 0) {
+      alert('Please fill in all required fields.')
       return
     }
 
@@ -187,6 +223,11 @@ export default function EcommercePage() {
   }
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please sign in to submit a product.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -203,6 +244,8 @@ export default function EcommercePage() {
       const normalizedFormData = {
         ...formData,
         url: normalizedUrl,
+        user_id: user.id,
+        email: user.primaryEmailAddress?.emailAddress || formData.email,
       }
       
       const { error } = await supabase.from('product_listings').insert([normalizedFormData])
@@ -225,6 +268,112 @@ export default function EcommercePage() {
     } catch (error) {
       console.error('Error adding product:', error)
       alert('Failed to add product. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditClick = (product: ProductListing) => {
+    setEditingProduct(product)
+    setShowEditForm(true)
+    setFormData({
+      email: product.email || '',
+      phone: product.phone,
+      platform_name: product.platform_name,
+      product_name: product.product_name,
+      category: product.category,
+      url: product.url,
+      rating: product.rating,
+      review: product.review,
+    })
+  }
+
+  const handleDeleteClick = (product: ProductListing) => {
+    setDeletingProduct(product)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingProduct || !user) {
+      alert('Please sign in to edit products.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const normalizedUrl = normalizeUrl(formData.url)
+      
+      const response = await fetch('/api/products/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingProduct.id,
+          platform_name: formData.platform_name,
+          product_name: formData.product_name,
+          category: formData.category,
+          url: normalizedUrl,
+          rating: formData.rating,
+          review: formData.review,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert('Product updated successfully!')
+        setShowEditForm(false)
+        setEditingProduct(null)
+        setFormData({
+          email: '',
+          phone: '',
+          platform_name: '',
+          product_name: '',
+          category: '',
+          url: '',
+          rating: 0,
+          review: '',
+        })
+        fetchProducts()
+      } else {
+        alert(data.error || 'Failed to update product')
+      }
+    } catch (error) {
+      console.error('Error updating product:', error)
+      alert('Failed to update product. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingProduct || !user) {
+      alert('Please sign in to delete products.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/products/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: deletingProduct.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert('Product deleted successfully!')
+        setShowDeleteConfirm(false)
+        setDeletingProduct(null)
+        fetchProducts()
+      } else {
+        alert(data.error || 'Failed to delete product')
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Failed to delete product. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -278,13 +427,17 @@ export default function EcommercePage() {
               </>
             )}
           </div>
+          {product.product_name && (
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{product.product_name}</h3>
+          )}
         </div>
         {product.url && (
           <a
             href={product.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary-600 hover:text-primary-700 transition-colors"
+            className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
           >
             <ExternalLink size={18} />
           </a>
@@ -299,10 +452,23 @@ export default function EcommercePage() {
           href={product.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors"
+          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors mb-3 inline-block"
+          onClick={(e) => e.stopPropagation()}
         >
           View Product →
         </a>
+      )}
+      {/* Edit/Delete buttons - only show for user's own products */}
+      {isLoaded && user && product.user_id === user.id && (
+        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+          <Link
+            href="/my-products"
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 text-center text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-2 px-3"
+          >
+            Manage in Your Products →
+          </Link>
+        </div>
       )}
     </div>
   )
@@ -378,7 +544,7 @@ export default function EcommercePage() {
           </div>
 
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={handleAddProductClick}
             className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
           >
             <Plus size={18} />
@@ -431,7 +597,7 @@ export default function EcommercePage() {
               </p>
             </div>
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={handleAddProductClick}
               className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
             >
               Add Product Review
@@ -439,25 +605,208 @@ export default function EcommercePage() {
           </div>
         </div>
 
-        {/* Add Product Form Modal */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-              <h2 className="text-2xl font-bold mb-4">Add New Product Listing</h2>
+        {/* Sign In Modal for Add Product */}
+        {showSignInModal && !user && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
+            setShowSignInModal(false)
+            setPendingAddProduct(false)
+          }}>
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
+              <p className="text-gray-600 mb-6">
+                Please sign in or create an account to add a product review.
+              </p>
+              <div className="flex flex-col gap-3">
+                <SignInButton mode="modal">
+                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+                <button
+                  onClick={() => {
+                    setShowSignInModal(false)
+                    setPendingAddProduct(false)
+                  }}
+                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Product Form Modal */}
+        {showEditForm && editingProduct && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
+              <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Product Listing</h2>
               
-              <form onSubmit={handleFormSubmit} className="space-y-5">
+              <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-5">
+                {user && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-700">
+                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Email ID <span className="text-red-500">*</span>
+                    Platform Name <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.platform_name}
+                    onChange={(e) => setFormData({ ...formData, platform_name: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  >
+                    <option value="">Select Platform</option>
+                    {platforms.map((platform) => (
+                      <option key={platform} value={platform}>
+                        {platform}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Product Name <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    value={formData.product_name}
+                    onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+                    placeholder="Enter product name"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Product URL <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://amazon.in/product or flipkart.com/product or www.example.com"
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Supports: https://example.com, example.in, www.example.com, etc.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Rating <span className="text-red-500">*</span>
+                  </label>
+                  <StarRating
+                    rating={formData.rating}
+                    onRatingChange={(rating) => setFormData({ ...formData, rating })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Review <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    value={formData.review}
+                    onChange={(e) => setFormData({ ...formData, review: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  />
+                </div>
+                <div className="flex space-x-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                  >
+                    {loading ? 'Updating...' : 'Update Product'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditForm(false)
+                      setEditingProduct(null)
+                    }}
+                    className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deletingProduct && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Delete Product</h2>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete your review for <strong>{deletingProduct.product_name || deletingProduct.platform_name}</strong>? This action cannot be undone.
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={loading}
+                  className="flex-1 bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false)
+                    setDeletingProduct(null)
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Product Form Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
+              <h2 className="text-3xl font-bold mb-6 text-gray-900">Add New Product Listing</h2>
+              
+              <form onSubmit={handleFormSubmit} className="space-y-5">
+                {user && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-700">
+                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Phone <span className="text-red-500">*</span>
@@ -573,7 +922,6 @@ export default function EcommercePage() {
                   </button>
                 </div>
               </form>
-              )}
             </div>
           </div>
         )}

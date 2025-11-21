@@ -24,6 +24,7 @@ export interface CompanyReview {
 
 export interface ProductListing {
   id?: string
+  user_id?: string
   email: string
   phone: string
   platform_name: string
