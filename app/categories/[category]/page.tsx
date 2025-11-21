@@ -320,7 +320,7 @@ export default function CategoryPage() {
         {/* Top 5 Players Section */}
         {top5Companies.length > 0 && (
           <div className="mb-12 pt-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Top 5 Players</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">TrustReach Top 5 Players</h2>
             {/* Desktop: 5-up row with clear horizontal gaps (~24px) */}
             <div className="hidden xl:flex xl:justify-center xl:items-start xl:px-12 xl:pt-4">
               {top5Companies.map((company, index) => (
