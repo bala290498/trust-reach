@@ -8,7 +8,7 @@ interface BulkOrder {
   description: string
   category: string
   deadline: string
-  status: 'featured' | 'inprogress' | 'development'
+  status: 'featured' | 'inprogress'
   created_at: string
 }
 
@@ -54,7 +54,7 @@ export async function GET() {
           description: content || data.description || '',
           category: data.category || '',
           deadline: data.deadline || '',
-          status: (data.status || 'featured') as 'featured' | 'inprogress' | 'development',
+          status: (data.status || 'featured') as 'featured' | 'inprogress',
           created_at: data.created_at || new Date().toISOString(),
         })
       }
