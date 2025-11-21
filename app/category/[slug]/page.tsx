@@ -33,8 +33,8 @@ export default function CategoryPage() {
         
         // Find the category name from the slug
         const slug = params.slug as string
-        const allCategories = Array.from(new Set(data.map((brand: BrandCard) => brand.category).filter(Boolean)))
-        const matchedCategory = allCategories.find((cat: string) => generateSlug(cat) === slug)
+        const allCategories = Array.from(new Set(data.map((brand: BrandCard) => brand.category).filter(Boolean))) as string[]
+        const matchedCategory = allCategories.find((cat) => generateSlug(cat) === slug)
         
         if (matchedCategory) {
           setCategory(matchedCategory)
