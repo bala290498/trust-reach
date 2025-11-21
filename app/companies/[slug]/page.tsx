@@ -364,7 +364,7 @@ export default function CompanyPage() {
           {/* Disclaimer */}
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
             <p className="text-sm text-blue-800 font-medium">
-              Companies on TrustReach aren't allowed to offer incentives or pay to hide reviews.
+              Companies on TrustReach aren&apos;t allowed to offer incentives or pay to hide reviews.
             </p>
           </div>
 
