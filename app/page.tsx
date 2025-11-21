@@ -6,58 +6,31 @@ import { useSearchParams } from 'next/navigation'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
-import FilterBar from '@/components/FilterBar'
-import CategoryCarousel from '@/components/CategoryCarousel'
 import StarRating from '@/components/StarRating'
-import { Search, Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, ChevronLeft, ChevronRight, Edit, Trash2, Menu } from 'lucide-react'
+import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Menu, Laptop, UtensilsCrossed, Heart, Plane } from 'lucide-react'
 import YourReviewsSlider from '@/components/YourReviewsSlider'
+import NotificationModal from '@/components/NotificationModal'
 
-const categories = [
-  'Hotels & Restaurants',
-  'Health & Medical',
-  'Travel & Vacation',
-  'Construction & Manufacturing',
-  'Home Services',
-  'Events & Entertainment',
-  'Beauty & Well-being',
-  'Electronics & Technology',
-  'Vehicles & Transportation',
-  'Local Services',
-  'Education & Training',
-]
-
-const getCategoryIcon = (category: string) => {
-  const iconMap: Record<string, any> = {
-    'Hotels & Restaurants': UtensilsCrossed,
-    'Health & Medical': Heart,
-    'Travel & Vacation': Plane,
-    'Construction & Manufacturing': Building2,
-    'Home Services': HomeIcon,
-    'Events & Entertainment': Music,
-    'Beauty & Well-being': Sparkles,
-    'Electronics & Technology': Laptop,
-    'Vehicles & Transportation': Car,
-    'Local Services': Building,
-    'Education & Training': GraduationCap,
-  }
-  const IconComponent = iconMap[category]
-  return IconComponent ? <IconComponent size={24} /> : null
+interface BrandCard {
+  id: string
+  brand_name: string
+  url?: string
+  category: string
+  email?: string
+  phone?: string
+  address?: string
+  about: string
+  created_at: string
 }
-
-const popularCategories = [
-  'Hotels & Restaurants',
-  'Health & Medical',
-  'Electronics & Technology',
-  'Beauty & Well-being',
-  'Travel & Vacation',
-  'Home Services',
-]
 
 function HomeContent() {
   const { user, isLoaded } = useUser()
   const searchParams = useSearchParams()
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [filteredReviews, setFilteredReviews] = useState<CompanyReview[]>([])
+  const [brandCards, setBrandCards] = useState<BrandCard[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [popularCategories, setPopularCategories] = useState<Array<{ name: string; icon: string; description: string }>>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedRating, setSelectedRating] = useState(0)
@@ -68,10 +41,7 @@ function HomeContent() {
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [formData, setFormData] = useState({
     email: '',
-    phone: '',
     company_name: '',
-    website_url: '',
-    category: '',
     rating: 0,
     review: '',
   })
@@ -89,6 +59,41 @@ function HomeContent() {
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
   const [companySortBy, setCompanySortBy] = useState<'date' | 'rating'>('date')
   const [companySortOrder, setCompanySortOrder] = useState<'asc' | 'desc'>('desc')
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: 'success' | 'error' | 'warning'; message: string }>({
+    isOpen: false,
+    type: 'success',
+    message: '',
+  })
+
+  const fetchBrandCards = useCallback(async () => {
+    try {
+      const response = await fetch('/api/brands')
+      if (response.ok) {
+        const data = await response.json()
+        setBrandCards(data || [])
+        
+        // Extract unique categories from brand cards
+        const uniqueCategories = Array.from(new Set(data.map((brand: BrandCard) => brand.category).filter(Boolean))) as string[]
+        setCategories(uniqueCategories.sort())
+      }
+    } catch (error) {
+      console.error('Error fetching brand cards:', error)
+      setBrandCards([])
+    }
+  }, [])
+
+  const fetchPopularCategories = useCallback(async () => {
+    try {
+      const response = await fetch('/api/popular-categories')
+      if (response.ok) {
+        const data = await response.json()
+        setPopularCategories(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching popular categories:', error)
+      setPopularCategories([])
+    }
+  }, [])
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -123,31 +128,17 @@ function HomeContent() {
       }
     }
 
-    if (selectedCategory) {
-      filtered = filtered.filter((review) => review.category === selectedCategory)
-    }
-
     if (selectedRating > 0) {
       filtered = filtered.filter((review) => review.rating >= selectedRating)
     }
 
     setFilteredReviews(filtered)
-  }, [reviews, searchQuery, selectedCategory, selectedRating])
+  }, [reviews, searchQuery, selectedRating])
 
-  // Handle URL parameters on page load
   useEffect(() => {
-    const categoryParam = searchParams.get('category')
-    if (categoryParam) {
-      setSelectedCategory(decodeURIComponent(categoryParam))
-      // Scroll to filter section after a short delay to ensure page is loaded
-      setTimeout(() => {
-        const filterSection = document.getElementById('filter-section')
-        if (filterSection) {
-          filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      }, 100)
-    }
-  }, [searchParams])
+    fetchBrandCards()
+    fetchPopularCategories()
+  }, [fetchBrandCards, fetchPopularCategories])
 
   useEffect(() => {
     fetchReviews()
@@ -181,6 +172,24 @@ function HomeContent() {
       setShowSignInModal(false)
     }
   }, [isLoaded, user, pendingAddReview])
+
+  // Handle company parameter from URL to pre-fill form
+  useEffect(() => {
+    const companyParam = searchParams.get('company')
+    if (companyParam && isLoaded) {
+      const decodedCompany = decodeURIComponent(companyParam)
+      if (user) {
+        // User is signed in, open form with pre-filled company name
+        setFormData(prev => ({ ...prev, company_name: decodedCompany }))
+        setShowAddForm(true)
+      } else {
+        // User is not signed in, set pending and show sign-in modal
+        setFormData(prev => ({ ...prev, company_name: decodedCompany }))
+        setPendingAddReview(true)
+        setShowSignInModal(true)
+      }
+    }
+  }, [searchParams, isLoaded, user])
 
   // Generate company name suggestions with debouncing - match by first word
   useEffect(() => {
@@ -322,19 +331,13 @@ function HomeContent() {
     e.preventDefault()
     
     // Validate required fields
-    if (!formData.phone || !formData.company_name || !formData.category || !formData.review || formData.rating === 0) {
-      alert('Please fill in all required fields.')
+    if (!formData.company_name || !formData.review || formData.rating === 0) {
+      setNotification({ isOpen: true, type: 'warning', message: 'Please fill in all required fields.' })
       return
     }
 
     if (!user) {
-      alert('Please sign in to submit a review.')
-      return
-    }
-
-    // Validate URL format if provided
-    if (formData.website_url && !isValidUrl(formData.website_url)) {
-      alert('Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)')
+      setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to submit a review.' })
       return
     }
 
@@ -344,40 +347,45 @@ function HomeContent() {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please sign in to submit a review.')
+      setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to submit a review.' })
       return
     }
 
     setLoading(true)
 
     try {
-      // Normalize the URL before submitting (add https:// if missing)
       const normalizedFormData = {
-        ...formData,
-        website_url: formData.website_url ? normalizeUrl(formData.website_url) : '',
         user_id: user.id,
         email: user.primaryEmailAddress?.emailAddress || formData.email,
+        company_name: formData.company_name,
+        rating: formData.rating,
+        review: formData.review,
       }
       
-      const { error } = await supabase.from('company_reviews').insert([normalizedFormData])
+      console.log('Submitting review:', normalizedFormData)
+      
+      const { data, error } = await supabase.from('company_reviews').insert([normalizedFormData]).select()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      console.log('Review submitted successfully:', data)
 
       setFormData({
         email: '',
-        phone: '',
         company_name: '',
-        website_url: '',
-        category: '',
         rating: 0,
         review: '',
       })
       setShowAddForm(false)
       fetchReviews()
-      alert('Review submitted successfully!')
-    } catch (error) {
+      setNotification({ isOpen: true, type: 'success', message: 'Review submitted successfully!' })
+    } catch (error: any) {
       console.error('Error adding review:', error)
-      alert('Failed to add review. Please try again.')
+      const errorMessage = error?.message || error?.details || 'Unknown error occurred'
+      setNotification({ isOpen: true, type: 'error', message: 'Failed to add review. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -389,10 +397,7 @@ function HomeContent() {
     setSelectedReview(null)
     setFormData({
       email: review.email || '',
-      phone: review.phone,
       company_name: review.company_name,
-      website_url: review.website_url || '',
-      category: review.category,
       rating: review.rating,
       review: review.review,
     })
@@ -405,7 +410,7 @@ function HomeContent() {
 
   const handleEditSubmit = async () => {
     if (!editingReview || !user) {
-      alert('Please sign in to edit reviews.')
+      setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to edit reviews.' })
       return
     }
 
@@ -417,8 +422,6 @@ function HomeContent() {
         body: JSON.stringify({
           id: editingReview.id,
           company_name: formData.company_name,
-          website_url: formData.website_url || null,
-          category: formData.category,
           rating: formData.rating,
           review: formData.review,
         }),
@@ -427,25 +430,22 @@ function HomeContent() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        alert('Review updated successfully!')
+        setNotification({ isOpen: true, type: 'success', message: 'Review updated successfully!' })
         setShowEditForm(false)
         setEditingReview(null)
         setFormData({
           email: '',
-          phone: '',
           company_name: '',
-          website_url: '',
-          category: '',
           rating: 0,
           review: '',
         })
         fetchReviews()
       } else {
-        alert(data.error || 'Failed to update review')
+        setNotification({ isOpen: true, type: 'error', message: data.error || 'Failed to update review' })
       }
     } catch (error) {
       console.error('Error updating review:', error)
-      alert('Failed to update review. Please try again.')
+      setNotification({ isOpen: true, type: 'error', message: 'Failed to update review. Please try again.' })
     } finally {
       setLoading(false)
     }
@@ -453,7 +453,7 @@ function HomeContent() {
 
   const handleDeleteConfirm = async () => {
     if (!deletingReview || !user) {
-      alert('Please sign in to delete reviews.')
+      setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to delete reviews.' })
       return
     }
 
@@ -469,21 +469,45 @@ function HomeContent() {
 
       const data = await response.json()
 
+      // Close delete confirmation modal first
+      setShowDeleteConfirm(false)
+      setDeletingReview(null)
+
       if (response.ok && data.success) {
-        alert('Review deleted successfully!')
-        setShowDeleteConfirm(false)
-        setDeletingReview(null)
         fetchReviews()
+        // Small delay to ensure delete modal closes before showing notification
+        setTimeout(() => {
+          setNotification({ 
+            isOpen: true, 
+            type: 'success', 
+            message: 'Review deleted successfully!' 
+          })
+        }, 150)
       } else {
         const errorMsg = data.error || data.message || 'Failed to delete review'
-        const details = data.details ? `\n\nDetails: ${data.details}` : ''
-        const code = data.code ? `\n\nError Code: ${data.code}` : ''
-        alert(`${errorMsg}${details}${code}\n\nPlease check the terminal logs for more information.`)
         console.error('Delete error response:', data)
+        // Small delay to ensure delete modal closes before showing notification
+        setTimeout(() => {
+          setNotification({ 
+            isOpen: true, 
+            type: 'error', 
+            message: errorMsg 
+          })
+        }, 150)
       }
     } catch (error) {
+      // Close delete confirmation modal first
+      setShowDeleteConfirm(false)
+      setDeletingReview(null)
       console.error('Error deleting review:', error)
-      alert('Failed to delete review. Please try again.')
+      // Small delay to ensure delete modal closes before showing notification
+      setTimeout(() => {
+        setNotification({ 
+          isOpen: true, 
+          type: 'error', 
+          message: 'Failed to delete review. Please try again.' 
+        })
+      }, 150)
     } finally {
       setLoading(false)
     }
@@ -493,8 +517,6 @@ function HomeContent() {
   // Group reviews by company name and calculate stats
   interface CompanyData {
     name: string
-    category: string
-    website_url?: string
     averageRating: number
     reviewCount: number
     reviews: CompanyReview[]
@@ -519,8 +541,6 @@ function HomeContent() {
       
       companies.push({
         name: companyName,
-        category: firstReview.category,
-        website_url: firstReview.website_url,
         averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
         reviewCount: reviews.length,
         reviews: reviews,
@@ -529,12 +549,6 @@ function HomeContent() {
 
     return companies
   }, [filteredReviews])
-
-  const groupedByCategory = categories.reduce((acc, category) => {
-    const companies = getCompaniesData()
-    acc[category] = companies.filter((c) => c.category === category)
-    return acc
-  }, {} as Record<string, CompanyData[]>)
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -585,28 +599,12 @@ function HomeContent() {
         href={`/companies/${companySlug}`}
         className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer block"
       >
-        <div className="flex items-start justify-between mb-2 flex-shrink-0">
+            <div className="flex items-start justify-between mb-2 flex-shrink-0">
           <div className="flex-1 min-w-0 pr-2">
             <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate" title={company.name}>
               {company.name}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-xs sm:text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={company.category}>
-                {company.category}
-              </p>
-            </div>
           </div>
-          {company.website_url && (
-            <a
-              href={company.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink size={16} />
-            </a>
-          )}
         </div>
         <div className="mb-2 flex-shrink-0">
           <div className="flex items-center gap-2 mb-1">
@@ -628,6 +626,14 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen && !!notification.message}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* Your Reviews Slider */}
       <YourReviewsSlider 
         isOpen={showSlider} 
@@ -697,7 +703,6 @@ function HomeContent() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="font-semibold text-gray-900">{review.company_name}</p>
-                          <p className="text-sm text-gray-500 mt-1">{review.category}</p>
                         </div>
                         <div className="flex-shrink-0">
                           <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
@@ -736,20 +741,6 @@ function HomeContent() {
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedCompany.name}</h2>
-                  {selectedCompany.reviews[0]?.category && (
-                    <p className="text-sm text-gray-500 font-medium mb-4">{selectedCompany.reviews[0].category}</p>
-                  )}
-                  {selectedCompany.reviews[0]?.website_url && (
-                    <a
-                      href={selectedCompany.reviews[0].website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2 mb-4"
-                    >
-                      <ExternalLink size={18} />
-                      <span>Visit Website</span>
-                    </a>
-                  )}
                   <div className="flex items-center gap-3 mb-4">
                     {(() => {
                       const avgRating = selectedCompany.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedCompany.reviews.length
@@ -884,7 +875,6 @@ function HomeContent() {
                 <div className="flex-1">
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedReview.company_name}</h2>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <p className="text-sm text-gray-500 font-medium">{selectedReview.category}</p>
                     {selectedReview.created_at ? (
                       <React.Fragment>
                         <span className="text-gray-300">•</span>
@@ -903,20 +893,6 @@ function HomeContent() {
                   </svg>
                 </button>
               </div>
-
-              {selectedReview.website_url && (
-                <div className="mb-6">
-                  <a
-                    href={selectedReview.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2"
-                  >
-                    <ExternalLink size={18} />
-                    <span>Visit Website</span>
-                  </a>
-                </div>
-              )}
 
               <div className="mb-6">
                 <StarRating rating={selectedReview.rating} onRatingChange={() => {}} readonly />
@@ -1028,19 +1004,6 @@ function HomeContent() {
                 )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Company or Brand Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -1077,37 +1040,6 @@ function HomeContent() {
                       </div>
                     )}
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Website or Insta Page URL
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://example.com or example.in or www.example.com or instagram.com/username"
-                    value={formData.website_url}
-                    onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Supports: https://example.com, example.in, www.example.com, instagram.com/username, etc.</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1169,19 +1101,6 @@ function HomeContent() {
                   )}
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Company or Brand Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1191,36 +1110,6 @@ function HomeContent() {
                       onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Website or Insta Page URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.website_url}
-                      onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                      placeholder="https://example.com or instagram.com/username"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1269,7 +1158,7 @@ function HomeContent() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && deletingReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9998] p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Delete Review</h2>
               <p className="text-gray-600 mb-6">
@@ -1297,35 +1186,85 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Popular Categories Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Categories</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
-            {popularCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 group w-full"
-              >
-                <div className="text-primary-600 group-hover:text-primary-700 transition-colors flex-shrink-0">
-                  {getCategoryIcon(category)}
-                </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-gray-900 text-center leading-tight">
-                  {category}
-                </span>
-              </button>
-            ))}
+        {/* Popular Categories */}
+        {popularCategories.length > 0 && (
+          <div className="mb-10 px-6">
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Popular Categories</h2>
+              <div className="flex flex-wrap justify-center gap-4">
+                {popularCategories.map((category, index) => {
+                  const iconMap: Record<string, any> = {
+                    Laptop: Laptop,
+                    UtensilsCrossed: UtensilsCrossed,
+                    Heart: Heart,
+                    Plane: Plane,
+                  }
+                  const IconComponent = iconMap[category.icon] || Laptop
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedCategory(category.name)
+                        // Scroll to filter section
+                        document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }}
+                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 transition-all duration-200 w-[180px] h-[140px] p-4 ${
+                        selectedCategory === category.name
+                          ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
+                      }`}
+                    >
+                      <IconComponent size={40} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
+                      <p className="font-semibold text-sm leading-tight text-center">{category.name}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Filter Bar */}
-        <div id="filter-section" className="mb-10">
-          <FilterBar
-            selectedCategory={selectedCategory}
-            selectedRating={selectedRating}
-            onCategoryChange={setSelectedCategory}
-            onRatingChange={setSelectedRating}
-          />
+        <div id="filter-section" className="mb-10 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center justify-center gap-6 flex-wrap">
+                {categories.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by Category:</label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[180px]"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by Rating:</label>
+                  <select
+                    value={selectedRating}
+                    onChange={(e) => setSelectedRating(Number(e.target.value))}
+                    className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[150px]"
+                  >
+                    <option value="0">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="2">2+ Stars</option>
+                    <option value="1">1+ Stars</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Promo Banner */}
@@ -1348,123 +1287,143 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* Category Sections with Carousel Layout */}
-        {categories.map((category) => {
-          const categoryCompanies = groupedByCategory[category] || []
-          if (categoryCompanies.length === 0) return null
+        {/* Category-Based Brand Sections */}
+        {brandCards.length > 0 && categories.length > 0 && (
+          <div className="mb-12 px-6">
+            <div className="max-w-7xl mx-auto">
+              {categories
+                .filter((category) => !selectedCategory || category === selectedCategory)
+                .map((category) => {
+                const categoryBrands = brandCards.filter((brand) => brand.category === category)
+                if (categoryBrands.length === 0) return null
 
-          return (
-            <div key={category} className="mb-12">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="text-primary-600">
-                    {getCategoryIcon(category)}
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-900">{category}</h2>
-                </div>
-                <Link
-                  href={`/categories/${encodeURIComponent(category)}`}
-                  className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
-                >
-                  View All →
-                </Link>
-              </div>
-              <div className="relative">
-                {/* Left Arrow */}
-                <button
-                  onClick={() => scrollCarousel(category, 'left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft size={24} className="text-gray-700" />
-                </button>
-                
-                {/* Carousel Container */}
-                <div
-                  ref={(el) => setCarouselRef(category, el)}
-                  className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {categoryCompanies.map((company, index) => (
-                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
-                      {renderCompanyCard(company)}
+                return (
+                  <div key={category} className="mb-12">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-gray-900">{category}</h2>
+                      <Link
+                        href={`/category/${generateSlug(category)}`}
+                        className="text-primary-600 hover:text-primary-700 font-semibold text-sm flex items-center gap-1 transition-colors"
+                      >
+                        View All
+                        <ChevronRight size={16} />
+                      </Link>
                     </div>
-                  ))}
-                </div>
-                
-                {/* Right Arrow */}
-                <button
-                  onClick={() => scrollCarousel(category, 'right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight size={24} className="text-gray-700" />
-                </button>
-              </div>
-            </div>
-          )
-        })}
+                    <div className="relative group">
+                      {/* Left Arrow Button - Desktop Only */}
+                      <button
+                        onClick={() => {
+                          const carousel = carouselRefs.current[category]
+                          if (carousel) {
+                            const scrollAmount = carousel.offsetWidth * 0.8
+                            carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+                          }
+                        }}
+                        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                        aria-label={`Scroll ${category} left`}
+                      >
+                        <ChevronLeft size={24} className="text-gray-700" />
+                      </button>
 
-        {/* Empty State - No Companies */}
-        {getCompaniesData().length === 0 && !loading && (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">🏢</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Companies Found</h3>
-              <p className="text-gray-600 mb-6">
-                {searchQuery || selectedCategory || selectedRating > 0
-                  ? 'No companies match your search criteria. Try adjusting your filters.'
-                  : 'No companies have been reviewed yet. Be the first to share your experience!'}
-              </p>
-              <button
-                onClick={handleAddReviewClick}
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                <Plus size={20} />
-                <span>Write Your First Review</span>
-              </button>
-            </div>
-          </div>
-        )}
+                      {/* Carousel Container */}
+                      <div
+                        ref={(el) => {
+                          if (el) carouselRefs.current[category] = el
+                        }}
+                        className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      >
+                        {categoryBrands.map((brand) => (
+                          <Link
+                            key={brand.id}
+                            href={`/brands/${brand.id}`}
+                            className="bg-white rounded-lg border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer group min-w-[200px] sm:min-w-[220px] md:min-w-[240px] flex-shrink-0"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors" title={brand.brand_name}>
+                                  {brand.brand_name}
+                                </h3>
+                                {brand.category && (
+                                  <p className="text-xs text-gray-500 font-medium truncate" title={brand.category}>
+                                    {brand.category}
+                                  </p>
+                                )}
+                              </div>
+                              {brand.url && (
+                                <a
+                                  href={brand.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink size={14} />
+                                </a>
+                              )}
+                            </div>
+                            
+                            {/* Star Rating and Review Count */}
+                            {(() => {
+                              const brandReviews = reviews.filter((review) => review.company_name === brand.brand_name)
+                              const reviewCount = brandReviews.length
+                              const averageRating = reviewCount > 0
+                                ? brandReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+                                : 0
+                              
+                              return (
+                                <div className="mt-3 flex-1 flex flex-col justify-end">
+                                  {reviewCount > 0 ? (
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <StarRating rating={Math.round(averageRating * 10) / 10} onRatingChange={() => {}} readonly />
+                                      <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <StarRating rating={0} onRatingChange={() => {}} readonly />
+                                      <span className="text-xs text-gray-400">No reviews</span>
+                                    </div>
+                                  )}
+                                  {reviewCount > 0 && (
+                                    <p className="text-xs text-gray-500 mb-2">
+                                      {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            })()}
+                            
+                            <div className="mt-3 pt-2 border-t border-gray-200">
+                              <p className="text-xs font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">
+                                View Details →
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
 
-        {/* All Companies Carousel (when no category filter) */}
-        {!selectedCategory && getCompaniesData().length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">All Companies</h2>
-            <div className="relative">
-              {/* Left Arrow */}
-              <button
-                onClick={() => scrollCarousel('all-companies', 'left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft size={24} className="text-gray-700" />
-              </button>
-              
-              {/* Carousel Container */}
-              <div
-                ref={(el) => setCarouselRef('all-companies', el)}
-                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {getCompaniesData().map((company, index) => (
-                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
-                    {renderCompanyCard(company)}
+                      {/* Right Arrow Button - Desktop Only */}
+                      <button
+                        onClick={() => {
+                          const carousel = carouselRefs.current[category]
+                          if (carousel) {
+                            const scrollAmount = carousel.offsetWidth * 0.8
+                            carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+                          }
+                        }}
+                        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                        aria-label={`Scroll ${category} right`}
+                      >
+                        <ChevronRight size={24} className="text-gray-700" />
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Right Arrow */}
-              <button
-                onClick={() => scrollCarousel('all-companies', 'right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
-                aria-label="Scroll right"
-              >
-                <ChevronRight size={24} className="text-gray-700" />
-              </button>
+                )
+              })}
             </div>
           </div>
         )}
+
       </div>
     </div>
   )

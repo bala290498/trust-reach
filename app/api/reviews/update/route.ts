@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { id, company_name, website_url, category, rating, review } = await request.json()
+    const { id, company_name, rating, review } = await request.json()
 
     console.log('📝 Update Review Request:', { id, userId })
 
-    if (!id || !company_name || !category || !rating || !review) {
+    if (!id || !company_name || !rating || !review) {
       return NextResponse.json(
-        { error: 'ID, company name, category, rating, and review are required' },
+        { error: 'ID, company name, rating, and review are required' },
         { status: 400 }
       )
     }
@@ -69,15 +69,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the review
+    const updateData = {
+      company_name,
+      rating,
+      review,
+    }
+    
     const { error: updateError } = await client
       .from('company_reviews')
-      .update({
-        company_name,
-        website_url: website_url || null,
-        category,
-        rating,
-        review,
-      })
+      .update(updateData)
       .eq('id', id)
 
     if (updateError) {

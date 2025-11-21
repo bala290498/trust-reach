@@ -13,10 +13,7 @@ export interface CompanyReview {
   id?: string
   user_id?: string
   email: string
-  phone: string
   company_name: string
-  website_url?: string
-  category: string
   rating: number
   review: string
   created_at?: string

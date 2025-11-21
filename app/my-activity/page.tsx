@@ -6,6 +6,7 @@ import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
 import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import NotificationModal from '@/components/NotificationModal'
 
 const categories = [
   'Hotels & Restaurants',
@@ -33,15 +34,17 @@ export default function MyActivityPage() {
   const [deletingReview, setDeletingReview] = useState<CompanyReview | null>(null)
   const [reviewFormData, setReviewFormData] = useState({
     email: '',
-    phone: '',
     company_name: '',
-    website_url: '',
-    category: '',
     rating: 0,
     review: '',
   })
   
   const [submitting, setSubmitting] = useState(false)
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: 'success' | 'error' | 'warning'; message: string }>({
+    isOpen: false,
+    type: 'success',
+    message: '',
+  })
 
   const fetchMyReviews = useCallback(async () => {
     if (!user?.id) {
@@ -104,10 +107,7 @@ export default function MyActivityPage() {
     setEditingReview(review)
     setReviewFormData({
       email: review.email || '',
-      phone: review.phone || '',
       company_name: review.company_name || '',
-      website_url: review.website_url || '',
-      category: review.category || '',
       rating: review.rating || 0,
       review: review.review || '',
     })
@@ -130,8 +130,6 @@ export default function MyActivityPage() {
         body: JSON.stringify({
           id: editingReview.id,
           company_name: reviewFormData.company_name,
-          website_url: reviewFormData.website_url ? normalizeUrl(reviewFormData.website_url) : '',
-          category: reviewFormData.category,
           rating: reviewFormData.rating,
           review: reviewFormData.review,
         }),
@@ -146,10 +144,10 @@ export default function MyActivityPage() {
       setShowEditReviewForm(false)
       setEditingReview(null)
       fetchMyReviews()
-      alert('Review updated successfully!')
+      setNotification({ isOpen: true, type: 'success', message: 'Review updated successfully!' })
     } catch (error: any) {
       console.error('Error updating review:', error)
-      alert(error.message || 'Failed to update review. Please try again.')
+      setNotification({ isOpen: true, type: 'error', message: error.message || 'Failed to update review. Please try again.' })
     } finally {
       setSubmitting(false)
     }
@@ -174,13 +172,24 @@ export default function MyActivityPage() {
         throw new Error(data.error || 'Failed to delete review')
       }
 
+      // Close delete confirmation modal first
       setShowDeleteReviewConfirm(false)
       setDeletingReview(null)
+      
       fetchMyReviews()
-      alert('Review deleted successfully!')
+      // Small delay to ensure delete modal closes before showing notification
+      setTimeout(() => {
+        setNotification({ isOpen: true, type: 'success', message: 'Review deleted successfully!' })
+      }, 150)
     } catch (error: any) {
+      // Close delete confirmation modal first
+      setShowDeleteReviewConfirm(false)
+      setDeletingReview(null)
       console.error('Error deleting review:', error)
-      alert(error.message || 'Failed to delete review. Please try again.')
+      // Small delay to ensure delete modal closes before showing notification
+      setTimeout(() => {
+        setNotification({ isOpen: true, type: 'error', message: error.message || 'Failed to delete review. Please try again.' })
+      }, 150)
     } finally {
       setSubmitting(false)
     }
@@ -217,6 +226,14 @@ export default function MyActivityPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen && !!notification.message}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         {/* Header */}
         <div className="mb-8">
@@ -335,35 +352,16 @@ export default function MyActivityPage() {
               <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Company Review</h2>
               
               <form onSubmit={(e) => { e.preventDefault(); handleEditReviewSubmit(); }} className="space-y-4">
+                {user && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-gray-700">
+                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Email ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={user?.primaryEmailAddress?.emailAddress || reviewFormData.email}
-                    onChange={(e) => setReviewFormData({ ...reviewFormData, email: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={user?.primaryPhoneNumber?.phoneNumber || reviewFormData.phone}
-                    onChange={(e) => setReviewFormData({ ...reviewFormData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Company Name <span className="text-red-500">*</span>
+                    Company or Brand Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -372,36 +370,6 @@ export default function MyActivityPage() {
                     onChange={(e) => setReviewFormData({ ...reviewFormData, company_name: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Website URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={reviewFormData.website_url}
-                    onChange={(e) => setReviewFormData({ ...reviewFormData, website_url: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    placeholder="https://example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={reviewFormData.category}
-                    onChange={(e) => setReviewFormData({ ...reviewFormData, category: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -421,9 +389,8 @@ export default function MyActivityPage() {
                     required
                     value={reviewFormData.review}
                     onChange={(e) => setReviewFormData({ ...reviewFormData, review: e.target.value })}
-                    rows={5}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
-                    placeholder="Write your review here..."
+                    rows={4}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   />
                 </div>
                 <div className="flex space-x-4">

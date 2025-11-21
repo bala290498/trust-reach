@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { orderId, email, phone, quantity, message } = await request.json()
+    const { email, phone } = await request.json()
 
-    console.log('📦 Bulk Order Interest Request:', { orderId, userId, email, phone, quantity })
+    console.log('📦 Bulk Order Interest Request:', { userId, email, phone })
 
-    if (!orderId || !email || !phone || !quantity || quantity <= 0) {
+    if (!email || !phone) {
       return NextResponse.json(
-        { error: 'Order ID, email, phone, and valid quantity are required' },
+        { error: 'Email and phone are required' },
         { status: 400 }
       )
     }
@@ -36,25 +36,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert bulk order interest
+    // Insert bulk order interest - only store email and phone
     const { error: insertError } = await client
       .from('bulk_order_interests')
       .insert([{
-        order_id: orderId,
-        user_id: userId,
-        email,
-        phone,
-        quantity,
-        message: message || null,
+        email: email.trim(),
+        phone: phone.trim(),
       }])
 
     if (insertError) {
-      console.error('Error submitting bulk order interest:', insertError)
+      console.error('❌ Error submitting bulk order interest:', insertError)
+      console.error('Error details:', JSON.stringify(insertError, null, 2))
       return NextResponse.json(
-        { error: 'Failed to submit interest', message: insertError.message },
+        { 
+          success: false,
+          error: 'Failed to submit interest', 
+          message: insertError.message,
+          details: insertError.details,
+          code: insertError.code
+        },
         { status: 500 }
       )
     }
+
+    console.log('✅ Bulk order interest saved successfully')
 
     return NextResponse.json({
       success: true,

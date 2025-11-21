@@ -6,6 +6,7 @@ import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
 import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import NotificationModal from '@/components/NotificationModal'
 
 export default function MyReviewsPage() {
   const { user, isLoaded } = useUser()
@@ -17,14 +18,16 @@ export default function MyReviewsPage() {
   const [deletingReview, setDeletingReview] = useState<CompanyReview | null>(null)
   const [formData, setFormData] = useState({
     email: '',
-    phone: '',
     company_name: '',
-    website_url: '',
-    category: '',
     rating: 0,
     review: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: 'success' | 'error' | 'warning'; message: string }>({
+    isOpen: false,
+    type: 'success',
+    message: '',
+  })
 
   const fetchMyReviews = useCallback(async () => {
     if (!user?.id) {
@@ -86,10 +89,7 @@ export default function MyReviewsPage() {
     setEditingReview(review)
     setFormData({
       email: review.email || '',
-      phone: review.phone || '',
       company_name: review.company_name || '',
-      website_url: review.website_url || '',
-      category: review.category || '',
       rating: review.rating || 0,
       review: review.review || '',
     })
@@ -112,8 +112,6 @@ export default function MyReviewsPage() {
         body: JSON.stringify({
           id: editingReview.id,
           company_name: formData.company_name,
-          website_url: formData.website_url ? normalizeUrl(formData.website_url) : '',
-          category: formData.category,
           rating: formData.rating,
           review: formData.review,
         }),
@@ -128,10 +126,10 @@ export default function MyReviewsPage() {
       setShowEditForm(false)
       setEditingReview(null)
       fetchMyReviews()
-      alert('Review updated successfully!')
+      setNotification({ isOpen: true, type: 'success', message: 'Review updated successfully!' })
     } catch (error: any) {
       console.error('Error updating review:', error)
-      alert(error.message || 'Failed to update review. Please try again.')
+      setNotification({ isOpen: true, type: 'error', message: error.message || 'Failed to update review. Please try again.' })
     } finally {
       setSubmitting(false)
     }
@@ -156,13 +154,24 @@ export default function MyReviewsPage() {
         throw new Error(data.error || 'Failed to delete review')
       }
 
+      // Close delete confirmation modal first
       setShowDeleteConfirm(false)
       setDeletingReview(null)
+      
       fetchMyReviews()
-      alert('Review deleted successfully!')
+      // Small delay to ensure delete modal closes before showing notification
+      setTimeout(() => {
+        setNotification({ isOpen: true, type: 'success', message: 'Review deleted successfully!' })
+      }, 150)
     } catch (error: any) {
+      // Close delete confirmation modal first
+      setShowDeleteConfirm(false)
+      setDeletingReview(null)
       console.error('Error deleting review:', error)
-      alert(error.message || 'Failed to delete review. Please try again.')
+      // Small delay to ensure delete modal closes before showing notification
+      setTimeout(() => {
+        setNotification({ isOpen: true, type: 'error', message: error.message || 'Failed to delete review. Please try again.' })
+      }, 150)
     } finally {
       setSubmitting(false)
     }
@@ -198,6 +207,14 @@ export default function MyReviewsPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen && !!notification.message}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         {/* Header */}
         <div className="mb-8">

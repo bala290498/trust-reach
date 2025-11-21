@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar } from 'lucide-react'
+import NotificationModal from '@/components/NotificationModal'
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
@@ -58,10 +59,19 @@ export default function BulkOrdersPage() {
   const [showInterestForm, setShowInterestForm] = useState(false)
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
   const [formData, setFormData] = useState({
     phone: '',
     quantity: 1,
+    message: '',
+  })
+  const [submittedData, setSubmittedData] = useState<{
+    phone: string
+    quantity: number
+    message: string
+  } | null>(null)
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: 'success' | 'error' | 'warning'; message: string }>({
+    isOpen: false,
+    type: 'success',
     message: '',
   })
 
@@ -132,7 +142,7 @@ export default function BulkOrdersPage() {
     if (!user || !selectedOrder) return
 
     if (!formData.phone || formData.quantity <= 0) {
-      alert('Please fill in phone number and quantity.')
+      setNotification({ isOpen: true, type: 'warning', message: 'Please fill in phone number and quantity.' })
       return
     }
 
@@ -142,30 +152,50 @@ export default function BulkOrdersPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: selectedOrder.id,
           email: user.primaryEmailAddress?.emailAddress || '',
           phone: formData.phone,
-          quantity: formData.quantity,
-          message: formData.message || null,
         }),
       })
 
       const data = await response.json()
 
       if (response.ok && data.success) {
-        setSubmitSuccess(true)
+        // Store submitted data before resetting form
+        const savedData = {
+          phone: formData.phone,
+          quantity: formData.quantity,
+          message: formData.message,
+        }
+        setSubmittedData(savedData)
+        
+        // Create WhatsApp template message with exact format
+        const whatsappMessage = `Order: ${selectedOrder.title}\n\nEmail: ${user.primaryEmailAddress?.emailAddress || 'N/A'}\n\nPhone Number *\n${savedData.phone}\n\nQuantity Needed *\n${savedData.quantity}\n\nMessage (Optional)\n${savedData.message || ''}`
+        const encodedMessage = encodeURIComponent(whatsappMessage)
+        const whatsappUrl = `https://wa.me/7010584543?text=${encodedMessage}`
+        
+        // Show success notification modal
+        setNotification({ isOpen: true, type: 'success', message: 'Interest submitted. Open WhatsApp to continue.' })
+        
+        // Open WhatsApp after 1 second
+        setTimeout(() => {
+          window.open(whatsappUrl, '_blank')
+        }, 1000)
+        
+        // Reset form
         setFormData({ phone: '', quantity: 1, message: '' })
+        
+        // Close form after showing notification
         setTimeout(() => {
           setShowInterestForm(false)
           setSelectedOrder(null)
-          setSubmitSuccess(false)
-        }, 3000)
+          setSubmittedData(null)
+        }, 2500)
       } else {
-        alert(data.error || 'Failed to submit interest. Please try again.')
+        setNotification({ isOpen: true, type: 'error', message: data.error || 'Failed to submit interest. Please try again.' })
       }
     } catch (error) {
       console.error('Error submitting interest:', error)
-      alert('Failed to submit interest. Please try again.')
+      setNotification({ isOpen: true, type: 'error', message: 'Failed to submit interest. Please try again.' })
     } finally {
       setSubmitting(false)
     }
@@ -339,37 +369,27 @@ export default function BulkOrdersPage() {
             if (!submitting) {
               setShowInterestForm(false)
               setSelectedOrder(null)
-              setSubmitSuccess(false)
             }
           }}>
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              {submitSuccess ? (
-                <div className="text-center">
-                  <div className="text-6xl mb-4">✅</div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Interest Submitted!</h2>
-                  <p className="text-gray-600 mb-6">
-                    Team will reach you shortly.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Express Interest</h2>
-                  <p className="text-gray-600 mb-6">
+            <div className="bg-white rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-3 sm:p-4 md:p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <>
+                  <h2 className="text-xl font-bold text-gray-900 mb-3">Express Interest</h2>
+                  <p className="text-sm text-gray-600 mb-4">
                     Fill in the details below to express your interest in this bulk order.
                   </p>
                   
-                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p className="text-sm text-gray-700">
+                  <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs text-gray-700">
                       <strong>Order:</strong> {selectedOrder.title}
                     </p>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-xs text-gray-700 mt-1">
                       <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress || 'N/A'}
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmitInterest} className="space-y-4">
+                  <form onSubmit={handleSubmitInterest} className="space-y-3">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      <label className="block text-xs font-semibold text-gray-900 mb-1.5">
                         Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -377,22 +397,22 @@ export default function BulkOrdersPage() {
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                         placeholder="Enter your phone number"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      <label className="block text-xs font-semibold text-gray-900 mb-1.5">
                         Quantity Needed <span className="text-red-500">*</span>
                       </label>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleQuantityChange(-1)}
-                          className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                         >
-                          <Minus size={20} />
+                          <Minus size={18} />
                         </button>
                         <input
                           type="number"
@@ -405,36 +425,36 @@ export default function BulkOrdersPage() {
                               setFormData((prev) => ({ ...prev, quantity: 1 }))
                             }
                           }}
-                          className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-center"
+                          className="flex-1 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-center"
                         />
                         <button
                           type="button"
                           onClick={() => handleQuantityChange(1)}
-                          className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                         >
-                          <Plus size={20} />
+                          <Plus size={18} />
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      <label className="block text-xs font-semibold text-gray-900 mb-1.5">
                         Message (Optional)
                       </label>
                       <textarea
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        rows={3}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                        rows={2}
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
                         placeholder="Any additional information..."
                       />
                     </div>
 
-                    <div className="flex space-x-4">
+                    <div className="flex space-x-2 pt-2">
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                        className="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-primary-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
                       >
                         {submitting ? 'Submitting...' : 'Submit Interest'}
                       </button>
@@ -445,14 +465,13 @@ export default function BulkOrdersPage() {
                           setSelectedOrder(null)
                         }}
                         disabled={submitting}
-                        className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
+                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-all duration-200 disabled:opacity-50"
                       >
                         Cancel
                       </button>
                     </div>
                   </form>
-                </>
-              )}
+              </>
             </div>
           </div>
         )}

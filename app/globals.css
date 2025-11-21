@@ -40,6 +40,15 @@
     padding-top: 5rem;
   }
 
+  /* Hide scrollbar for carousels */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Responsive typography using clamp - no raw vw */
   h1 {
     font-size: clamp(1.75rem, 1.25rem + 2vw, 2.5rem);
@@ -142,11 +151,60 @@
     display: none;
   }
   
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .line-clamp-4 {
     display: -webkit-box;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* Brand content styling */
+  .brand-content h2 {
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .brand-content h3 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .brand-content h3:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .brand-content p {
+    margin-bottom: 1.25rem;
+    line-height: 1.75;
+  }
+
+  .brand-content ul {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-left: 1rem;
+  }
+
+  .brand-content li {
+    margin-bottom: 0.75rem;
+    line-height: 1.75;
   }
 
   /* Mobile menu slide-in animation from right */
