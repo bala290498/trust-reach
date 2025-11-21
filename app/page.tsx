@@ -513,16 +513,16 @@ export default function Home() {
 
   const renderCompanyCard = (company: CompanyData) => {
     return <div 
-        className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
+        className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
         onClick={() => setSelectedCompany({ name: company.name, reviews: company.reviews })}
       >
-        <div className="flex items-start justify-between mb-4 flex-shrink-0">
+        <div className="flex items-start justify-between mb-2 flex-shrink-0">
           <div className="flex-1 min-w-0 pr-2">
-            <h3 className="text-xl font-bold text-gray-900 mb-2 truncate" title={company.name}>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate" title={company.name}>
               {company.name}
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={company.category}>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={company.category}>
                 {company.category}
               </p>
             </div>
@@ -535,21 +535,21 @@ export default function Home() {
               className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <ExternalLink size={18} />
+              <ExternalLink size={16} />
             </a>
           )}
         </div>
-        <div className="mb-4 flex-shrink-0">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="mb-2 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-1">
             <StarRating rating={company.averageRating} onRatingChange={() => {}} readonly />
-            <span className="text-lg font-bold text-gray-900">{company.averageRating.toFixed(1)}</span>
+            <span className="text-base sm:text-lg font-bold text-gray-900">{company.averageRating.toFixed(1)}</span>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs sm:text-sm text-gray-600">
             {company.reviewCount} {company.reviewCount === 1 ? 'review' : 'reviews'}
           </p>
         </div>
-        <div className="mt-auto pt-4 border-t border-gray-200">
-          <p className="text-sm font-medium text-primary-600 text-center">
+        <div className="mt-auto pt-2 border-t border-gray-200">
+          <p className="text-xs sm:text-sm font-medium text-primary-600 text-center">
             View All Reviews →
           </p>
         </div>
@@ -1318,11 +1318,11 @@ export default function Home() {
                 {/* Carousel Container */}
                 <div
                   ref={(el) => setCarouselRef(category, el)}
-                  className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                  className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categoryCompanies.map((company, index) => (
-                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                       {renderCompanyCard(company)}
                     </div>
                   ))}
@@ -1380,11 +1380,11 @@ export default function Home() {
               {/* Carousel Container */}
               <div
                 ref={(el) => setCarouselRef('all-companies', el)}
-                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {getCompaniesData().map((company, index) => (
-                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                     {renderCompanyCard(company)}
                   </div>
                 ))}

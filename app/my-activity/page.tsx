@@ -430,25 +430,25 @@ export default function MyActivityPage() {
 
         {/* Reviews Grid */}
         {!loading && activeTab === 'reviews' && reviews.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
+                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
               >
-                <div className="flex items-start justify-between mb-3 flex-shrink-0">
+                <div className="flex items-start justify-between mb-2 flex-shrink-0">
                   <div className="flex-1 min-w-0 pr-2">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1 truncate" title={review.company_name}>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate" title={review.company_name}>
                       {review.company_name}
                     </h3>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={review.category}>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs sm:text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={review.category}>
                         {review.category}
                       </p>
                       {review.created_at && (
                         <>
                           <span className="text-gray-300">•</span>
-                          <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                         </>
                       )}
                     </div>
@@ -460,37 +460,37 @@ export default function MyActivityPage() {
                       rel="noopener noreferrer"
                       className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
                     >
-                      <ExternalLink size={18} />
+                      <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
-                <div className="mb-3 flex-shrink-0">
+                <div className="mb-2 flex-shrink-0">
                   <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
                 </div>
-                <div className="mb-3 flex-shrink-0 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                <div className="mb-2 flex-shrink-0 flex items-center gap-1.5">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-xs sm:text-sm flex-shrink-0">
                     {getEmailName(review.email)}
                   </div>
-                  <p className="text-sm text-gray-600 font-medium truncate" title={review.email}>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate" title={review.email}>
                     {getEmailDisplayName(review.email)}
                   </p>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 overflow-hidden mb-4" title={review.review}>
+                <p className="text-gray-700 leading-relaxed text-xs sm:text-sm line-clamp-2 flex-1 overflow-hidden mb-2" title={review.review}>
                   {review.review}
                 </p>
-                <div className="flex gap-2 mt-auto pt-4 border-t border-gray-200">
+                <div className="flex gap-1.5 mt-auto pt-2 border-t border-gray-200">
                   <button
                     onClick={() => handleEditReviewClick(review)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
                   >
-                    <Edit size={16} />
+                    <Edit size={14} />
                     <span>Edit</span>
                   </button>
                   <button
                     onClick={() => handleDeleteReviewClick(review)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                     <span>Delete</span>
                   </button>
                 </div>
@@ -501,27 +501,27 @@ export default function MyActivityPage() {
 
         {/* Products Grid */}
         {!loading && activeTab === 'products' && products.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
+                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
               >
-                <div className="flex items-start justify-between mb-3 flex-shrink-0">
+                <div className="flex items-start justify-between mb-2 flex-shrink-0">
                   <div className="flex-1 min-w-0 pr-2">
-                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                      <span className="text-sm font-bold text-primary-600">{product.platform_name}</span>
-                      <span className="text-sm text-gray-400">•</span>
-                      <span className="text-sm text-gray-500 font-medium">{product.category}</span>
+                    <div className="flex items-center space-x-1.5 mb-1.5 flex-wrap">
+                      <span className="text-xs sm:text-sm font-bold text-primary-600">{product.platform_name}</span>
+                      <span className="text-xs text-gray-400">•</span>
+                      <span className="text-xs sm:text-sm text-gray-500 font-medium">{product.category}</span>
                       {product.created_at && (
                         <>
-                          <span className="text-sm text-gray-400">•</span>
-                          <span className="text-sm text-gray-500 whitespace-nowrap">{formatDate(product.created_at)}</span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatDate(product.created_at)}</span>
                         </>
                       )}
                     </div>
                     {product.product_name && (
-                      <h3 className="text-lg font-bold text-gray-900 mb-1 truncate" title={product.product_name}>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2" title={product.product_name}>
                         {product.product_name}
                       </h3>
                     )}
@@ -533,14 +533,14 @@ export default function MyActivityPage() {
                       rel="noopener noreferrer"
                       className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
                     >
-                      <ExternalLink size={18} />
+                      <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
-                <div className="mb-3 flex-shrink-0">
+                <div className="mb-2 flex-shrink-0">
                   <StarRating rating={product.rating} onRatingChange={() => {}} readonly />
                 </div>
-                <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 overflow-hidden mb-4" title={product.review}>
+                <p className="text-gray-700 leading-relaxed text-xs sm:text-sm line-clamp-2 flex-1 overflow-hidden mb-2" title={product.review}>
                   {product.review}
                 </p>
                 {product.url && (
@@ -548,24 +548,24 @@ export default function MyActivityPage() {
                     href={product.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors mb-3 inline-block"
+                    className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-semibold transition-colors mb-2 inline-block"
                   >
                     View Product →
                   </a>
                 )}
-                <div className="flex gap-2 mt-auto pt-4 border-t border-gray-200">
+                <div className="flex gap-1.5 mt-auto pt-2 border-t border-gray-200">
                   <button
                     onClick={() => handleEditProductClick(product)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
                   >
-                    <Edit size={16} />
+                    <Edit size={14} />
                     <span>Edit</span>
                   </button>
                   <button
                     onClick={() => handleDeleteProductClick(product)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                     <span>Delete</span>
                   </button>
                 </div>

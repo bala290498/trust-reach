@@ -459,22 +459,22 @@ export default function EcommercePage() {
   }, [])
 
   const renderProductCard = (product: ProductListing) => (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2 flex-wrap">
-            <span className="text-sm font-bold text-primary-600">{product.platform_name}</span>
-            <span className="text-sm text-gray-400">•</span>
-            <span className="text-sm text-gray-500 font-medium">{product.category}</span>
+          <div className="flex items-center space-x-1.5 mb-1.5 flex-wrap">
+            <span className="text-xs sm:text-sm font-bold text-primary-600">{product.platform_name}</span>
+            <span className="text-xs text-gray-400">•</span>
+            <span className="text-xs sm:text-sm text-gray-500 font-medium">{product.category}</span>
             {product.created_at && (
               <>
-                <span className="text-sm text-gray-400">•</span>
-                <span className="text-sm text-gray-500">{formatDate(product.created_at)}</span>
+                <span className="text-xs text-gray-400">•</span>
+                <span className="text-xs sm:text-sm text-gray-500">{formatDate(product.created_at)}</span>
               </>
             )}
           </div>
           {product.product_name && (
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{product.product_name}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 line-clamp-2">{product.product_name}</h3>
           )}
         </div>
         {product.url && (
@@ -485,20 +485,20 @@ export default function EcommercePage() {
             className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <ExternalLink size={18} />
+            <ExternalLink size={16} />
           </a>
         )}
       </div>
-      <div className="mb-4">
+      <div className="mb-2">
         <StarRating rating={product.rating} onRatingChange={() => {}} readonly />
       </div>
-      <p className="text-gray-700 mb-4 leading-relaxed text-sm">{product.review}</p>
+      <p className="text-gray-700 mb-2 leading-relaxed text-xs sm:text-sm line-clamp-3">{product.review}</p>
       {product.url && (
         <a
           href={product.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors mb-3 inline-block"
+          className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-semibold transition-colors mb-2 inline-block"
           onClick={(e) => e.stopPropagation()}
         >
           View Product →
@@ -506,13 +506,13 @@ export default function EcommercePage() {
       )}
       {/* Edit/Delete buttons - only show for user's own products */}
       {isLoaded && user && product.user_id === user.id && (
-        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+        <div className="mt-2 pt-2 border-t border-gray-200 flex gap-2">
           <Link
             href="/my-products"
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 text-center text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-2 px-3"
+            className="flex-1 text-center text-xs sm:text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-1.5 px-2"
           >
-            Manage in Your Products →
+            Manage →
           </Link>
         </div>
       )}
@@ -1039,11 +1039,11 @@ export default function EcommercePage() {
                 {/* Carousel Container */}
                 <div
                   ref={(el) => setCarouselRef(category, el)}
-                  className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                  className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categoryProducts.map((product) => (
-                    <div key={product.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                    <div key={product.id} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                       {renderProductCard(product)}
                     </div>
                   ))}
@@ -1079,11 +1079,11 @@ export default function EcommercePage() {
               {/* Carousel Container */}
               <div
                 ref={(el) => setCarouselRef('all-products', el)}
-                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                  <div key={product.id} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                     {renderProductCard(product)}
                   </div>
                 ))}

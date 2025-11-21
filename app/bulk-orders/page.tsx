@@ -251,44 +251,44 @@ export default function BulkOrdersPage() {
 
         {/* Orders Grid */}
         {!loading && filteredOrders.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
+                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{order.title}</h3>
-                    <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 line-clamp-2">{order.title}</h3>
+                    <div className="flex items-center gap-1.5 mb-2">
                       {getCategoryIcon(order.category) && (
                         <div className="text-primary-600">
                           {getCategoryIcon(order.category)}
                         </div>
                       )}
-                      <p className="text-sm text-gray-500 font-medium">{order.category}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 font-medium">{order.category}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mb-4 flex-1">
+                <div className="mb-2 flex-1">
                   <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown className="text-gray-700 text-sm line-clamp-4">
+                    <ReactMarkdown className="text-gray-700 text-xs sm:text-sm line-clamp-3">
                       {order.description}
                     </ReactMarkdown>
                   </div>
                 </div>
 
                 {order.deadline && (
-                  <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar size={16} />
+                  <div className="mb-2 flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                    <Calendar size={14} />
                     <span>Deadline: {formatDate(order.deadline)}</span>
                   </div>
                 )}
 
                 <button
                   onClick={() => handleShowInterest(order)}
-                  className="w-full mt-auto bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full mt-auto bg-primary-600 text-white py-2 sm:py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Show Interest
                 </button>

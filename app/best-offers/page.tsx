@@ -152,39 +152,39 @@ export default function BestOffersPage() {
   }, [])
 
   const renderOfferCard = (offer: Offer) => (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2 flex-wrap">
-            <h3 className="text-lg font-bold text-gray-900">{offer.business_name}</h3>
+          <div className="flex items-center space-x-1.5 mb-1.5 flex-wrap">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 line-clamp-1">{offer.business_name}</h3>
             {offer.verified && (
-              <div className="flex items-center space-x-1 text-secondary-500 bg-secondary-50 px-2 py-1 rounded-lg">
-                <CheckCircle2 size={16} />
+              <div className="flex items-center space-x-1 text-secondary-500 bg-secondary-50 px-1.5 py-0.5 rounded-lg">
+                <CheckCircle2 size={14} />
                 <span className="text-xs font-bold">Verified</span>
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-500 font-medium mb-3">{offer.category}</p>
+          <p className="text-xs sm:text-sm text-gray-500 font-medium mb-2">{offer.category}</p>
         </div>
       </div>
-      <div className="mb-4">
-        <p className="text-sm font-bold text-gray-900 mb-2">Services/Offers:</p>
-        <div className="prose prose-sm max-w-none text-gray-700">
+      <div className="mb-2">
+        <p className="text-xs sm:text-sm font-bold text-gray-900 mb-1">Services/Offers:</p>
+        <div className="prose prose-sm max-w-none text-gray-700 text-xs sm:text-sm line-clamp-3">
           <ReactMarkdown>{offer.services}</ReactMarkdown>
         </div>
       </div>
       {offer.offer_deals && (
-        <div className="mb-4">
-          <p className="text-sm font-bold text-gray-900 mb-2">Deals/Stock Clearance:</p>
-          <div className="prose prose-sm max-w-none text-gray-700">
+        <div className="mb-2">
+          <p className="text-xs sm:text-sm font-bold text-gray-900 mb-1">Deals/Stock Clearance:</p>
+          <div className="prose prose-sm max-w-none text-gray-700 text-xs sm:text-sm line-clamp-2">
             <ReactMarkdown>{offer.offer_deals}</ReactMarkdown>
           </div>
         </div>
       )}
       {offer.quantity_left && (
-        <div className="mb-4 p-3 bg-primary-50 rounded-xl">
-          <p className="text-sm font-semibold text-gray-900">
-            Products Left: <span className="text-primary-600 font-bold text-base">{offer.quantity_left}</span>
+        <div className="mb-2 p-2 bg-primary-50 rounded-lg">
+          <p className="text-xs sm:text-sm font-semibold text-gray-900">
+            Products Left: <span className="text-primary-600 font-bold text-sm sm:text-base">{offer.quantity_left}</span>
           </p>
         </div>
       )}
@@ -193,7 +193,7 @@ export default function BestOffersPage() {
           href={offer.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors inline-flex items-center"
+          className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-semibold transition-colors inline-flex items-center"
         >
           Visit Business →
         </a>
@@ -374,11 +374,11 @@ export default function BestOffersPage() {
                 {/* Carousel Container */}
                 <div
                   ref={(el) => setCarouselRef(category, el)}
-                  className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                  className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categoryOffers.map((offer) => (
-                    <div key={offer.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                    <div key={offer.id} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                       {renderOfferCard(offer)}
                     </div>
                   ))}
@@ -414,11 +414,11 @@ export default function BestOffersPage() {
               {/* Carousel Container */}
               <div
                 ref={(el) => setCarouselRef('all-offers', el)}
-                className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8 sm:px-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {filteredOffers.map((offer) => (
-                  <div key={offer.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                  <div key={offer.id} className="flex-shrink-0 w-full max-w-[18rem] sm:w-[18rem]">
                     {renderOfferCard(offer)}
                   </div>
                 ))}

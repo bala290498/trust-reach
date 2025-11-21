@@ -137,53 +137,53 @@ export default function BlogsPage() {
 
         {/* Blogs Grid */}
         {!loading && filteredBlogs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredBlogs.map((blog) => (
               <div
                 key={blog.id}
-                className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
+                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
                 onClick={() => setSelectedBlog(blog)}
               >
                 {blog.featured_image && (
-                  <div className="mb-4 -mx-6 -mt-6">
+                  <div className="mb-2 -mx-3 -mt-3 sm:-mx-4 sm:-mt-4">
                     <img
                       src={blog.featured_image}
                       alt={blog.title}
-                      className="w-full h-48 object-cover rounded-t-2xl"
+                      className="w-full h-32 sm:h-40 object-cover rounded-t-xl"
                     />
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                  <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded-lg font-medium text-xs">
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 mb-2">
+                  <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary-100 text-primary-700 rounded-lg font-medium text-xs">
                     {blog.category}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Calendar size={14} />
+                    <Calendar size={12} />
                     {formatDate(blog.date)}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{blog.title}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                  <User size={14} />
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 line-clamp-2">{blog.title}</h3>
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 mb-2">
+                  <User size={12} />
                   <span>{blog.author}</span>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 mb-4">
+                <p className="text-gray-700 leading-relaxed text-xs sm:text-sm line-clamp-2 flex-1 mb-2">
                   {blog.excerpt}
                 </p>
                 {blog.tags && blog.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {blog.tags.slice(0, 3).map((tag, index) => (
                       <span
                         key={index}
-                        className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
+                        className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded"
                       >
-                        <Tag size={12} />
+                        <Tag size={10} />
                         {tag}
                       </span>
                     ))}
                   </div>
                 )}
-                <button className="text-primary-600 hover:text-primary-700 font-semibold text-sm text-left">
+                <button className="text-primary-600 hover:text-primary-700 font-semibold text-xs sm:text-sm text-left">
                   Read More →
                 </button>
               </div>
