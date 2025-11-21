@@ -11,6 +11,7 @@ export default function Navbar() {
     { href: '/', label: 'Reviews' },
     { href: '/ecommerce', label: 'Ecommerce' },
     { href: '/best-offers', label: 'Best Offers' },
+    { href: '/bulk-orders', label: 'Bulk Orders' },
     { href: '/blogs', label: 'Blogs' },
   ]
 
