@@ -1,16 +1,15 @@
 # TrustReach.in
 
-A platform for trusted company reviews, ecommerce product listings, and best offers.
+A platform for trusted company reviews and best offers.
 
 ## Features
 
 - **Sticky Navigation Bar** with logo and menu items
 - **Homepage Review Section** - Add and view company reviews
-- **Ecommerce Product Listings** - Add and view product reviews
 - **Best Offers/Stock Clearances** - Manually updated offers via markdown
 - **Category-wise Carousels** with filtering options
-- **Supabase Integration** for reviews and product listings
-- **OTP Verification** - Email-based OTP verification using Brevo for adding/modifying/deleting reviews and products
+- **Supabase Integration** for reviews
+- **OTP Verification** - Email-based OTP verification using Brevo for adding/modifying/deleting reviews
 
 ## Setup
 

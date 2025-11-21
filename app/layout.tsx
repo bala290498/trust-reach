@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'TrustReach.in - Trusted Reviews and Offers',
-  description: 'Find trusted company reviews, ecommerce products, and best offers',
+  description: 'Find trusted company reviews and best offers',
 }
 
 export const viewport: Viewport = {

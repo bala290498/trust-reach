@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { supabase, CompanyReview, ProductListing } from '@/lib/supabase'
+import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
 import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -21,17 +21,10 @@ const categories = [
   'Education & Training',
 ]
 
-const platforms = ['Amazon', 'Flipkart']
-
-type TabType = 'reviews' | 'products'
-
 export default function MyActivityPage() {
   const { user, isLoaded } = useUser()
-  const [activeTab, setActiveTab] = useState<TabType>('reviews')
   const [reviews, setReviews] = useState<CompanyReview[]>([])
-  const [products, setProducts] = useState<ProductListing[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
-  const [productsLoading, setProductsLoading] = useState(true)
   
   // Review states
   const [showEditReviewForm, setShowEditReviewForm] = useState(false)
@@ -44,22 +37,6 @@ export default function MyActivityPage() {
     company_name: '',
     website_url: '',
     category: '',
-    rating: 0,
-    review: '',
-  })
-  
-  // Product states
-  const [showEditProductForm, setShowEditProductForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<ProductListing | null>(null)
-  const [showDeleteProductConfirm, setShowDeleteProductConfirm] = useState(false)
-  const [deletingProduct, setDeletingProduct] = useState<ProductListing | null>(null)
-  const [productFormData, setProductFormData] = useState({
-    email: '',
-    phone: '',
-    platform_name: '',
-    product_name: '',
-    category: '',
-    url: '',
     rating: 0,
     review: '',
   })
@@ -90,36 +67,11 @@ export default function MyActivityPage() {
     }
   }, [user?.id])
 
-  const fetchMyProducts = useCallback(async () => {
-    if (!user?.id) {
-      setProducts([])
-      setProductsLoading(false)
-      return
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('product_listings')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setProducts(data || [])
-    } catch (error) {
-      console.error('Error fetching my products:', error)
-      setProducts([])
-    } finally {
-      setProductsLoading(false)
-    }
-  }, [user?.id])
-
   useEffect(() => {
     if (isLoaded) {
       fetchMyReviews()
-      fetchMyProducts()
     }
-  }, [isLoaded, fetchMyReviews, fetchMyProducts])
+  }, [isLoaded, fetchMyReviews])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -234,96 +186,6 @@ export default function MyActivityPage() {
     }
   }
 
-  // Product handlers
-  const handleEditProductClick = (product: ProductListing) => {
-    setEditingProduct(product)
-    setProductFormData({
-      email: product.email || '',
-      phone: product.phone || '',
-      platform_name: product.platform_name || '',
-      product_name: product.product_name || '',
-      category: product.category || '',
-      url: product.url || '',
-      rating: product.rating || 0,
-      review: product.review || '',
-    })
-    setShowEditProductForm(true)
-  }
-
-  const handleDeleteProductClick = (product: ProductListing) => {
-    setDeletingProduct(product)
-    setShowDeleteProductConfirm(true)
-  }
-
-  const handleEditProductSubmit = async () => {
-    if (!editingProduct || !user) return
-
-    setSubmitting(true)
-    try {
-      const normalizedUrl = normalizeUrl(productFormData.url)
-      
-      const response = await fetch('/api/products/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editingProduct.id,
-          platform_name: productFormData.platform_name,
-          product_name: productFormData.product_name,
-          category: productFormData.category,
-          url: normalizedUrl,
-          rating: productFormData.rating,
-          review: productFormData.review,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update product')
-      }
-
-      setShowEditProductForm(false)
-      setEditingProduct(null)
-      fetchMyProducts()
-      alert('Product updated successfully!')
-    } catch (error: any) {
-      console.error('Error updating product:', error)
-      alert(error.message || 'Failed to update product. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleDeleteProductConfirm = async () => {
-    if (!deletingProduct || !user) return
-
-    setSubmitting(true)
-    try {
-      const response = await fetch('/api/products/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: deletingProduct.id,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete product')
-      }
-
-      setShowDeleteProductConfirm(false)
-      setDeletingProduct(null)
-      fetchMyProducts()
-      alert('Product deleted successfully!')
-    } catch (error: any) {
-      console.error('Error deleting product:', error)
-      alert(error.message || 'Failed to delete product. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   if (!isLoaded) {
     return (
@@ -369,67 +231,37 @@ export default function MyActivityPage() {
             <span>Back to Home</span>
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Activity</h1>
-          <p className="text-gray-600">Manage and edit your reviews and product listings</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8 border-b border-gray-200">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('reviews')}
-              className={`pb-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
-                activeTab === 'reviews'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Your Reviews ({reviews.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`pb-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
-                activeTab === 'products'
-                  ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Your Products ({products.length})
-            </button>
-          </div>
+          <p className="text-gray-600">Manage and edit your reviews</p>
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {reviewsLoading && (
           <div className="text-center py-16">
-            <div className="text-gray-600">Loading your {activeTab}...</div>
+            <div className="text-gray-600">Loading your reviews...</div>
           </div>
         )}
 
         {/* Empty State */}
-        {!loading && !hasItems && (
+        {!reviewsLoading && reviews.length === 0 && (
           <div className="text-center py-16">
             <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">{activeTab === 'reviews' ? '📝' : '📦'}</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {activeTab === 'reviews' ? 'No Reviews Yet' : 'No Products Yet'}
-              </h3>
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Reviews Yet</h3>
               <p className="text-gray-600 mb-6">
-                {activeTab === 'reviews' 
-                  ? "You haven't submitted any reviews yet."
-                  : "You haven't submitted any product reviews yet."}
+                You haven't submitted any reviews yet.
               </p>
               <Link
-                href={activeTab === 'reviews' ? '/' : '/ecommerce'}
+                href="/"
                 className="inline-flex items-center space-x-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                <span>{activeTab === 'reviews' ? 'Add Your First Review' : 'Add Your First Product Review'}</span>
+                <span>Add Your First Review</span>
               </Link>
             </div>
           </div>
         )}
 
         {/* Reviews Grid */}
-        {!loading && activeTab === 'reviews' && reviews.length > 0 && (
+        {!reviewsLoading && reviews.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {reviews.map((review) => (
               <div
@@ -488,81 +320,6 @@ export default function MyActivityPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteReviewClick(review)}
-                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Products Grid */}
-        {!loading && activeTab === 'products' && products.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
-              >
-                <div className="flex items-start justify-between mb-2 flex-shrink-0">
-                  <div className="flex-1 min-w-0 pr-2">
-                    <div className="flex items-center space-x-1.5 mb-1.5 flex-wrap">
-                      <span className="text-xs sm:text-sm font-bold text-primary-600">{product.platform_name}</span>
-                      <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs sm:text-sm text-gray-500 font-medium">{product.category}</span>
-                      {product.created_at && (
-                        <>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatDate(product.created_at)}</span>
-                        </>
-                      )}
-                    </div>
-                    {product.product_name && (
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2" title={product.product_name}>
-                        {product.product_name}
-                      </h3>
-                    )}
-                  </div>
-                  {product.url && (
-                    <a
-                      href={product.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
-                </div>
-                <div className="mb-2 flex-shrink-0">
-                  <StarRating rating={product.rating} onRatingChange={() => {}} readonly />
-                </div>
-                <p className="text-gray-700 leading-relaxed text-xs sm:text-sm line-clamp-2 flex-1 overflow-hidden mb-2" title={product.review}>
-                  {product.review}
-                </p>
-                {product.url && (
-                  <a
-                    href={product.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-semibold transition-colors mb-2 inline-block"
-                  >
-                    View Product →
-                  </a>
-                )}
-                <div className="flex gap-1.5 mt-auto pt-2 border-t border-gray-200">
-                  <button
-                    onClick={() => handleEditProductClick(product)}
-                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
-                  >
-                    <Edit size={14} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProductClick(product)}
                     className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                   >
                     <Trash2 size={14} />
@@ -726,151 +483,6 @@ export default function MyActivityPage() {
           </div>
         )}
 
-        {/* Edit Product Form Modal */}
-        {showEditProductForm && editingProduct && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Product Listing</h2>
-              
-              <form onSubmit={(e) => { e.preventDefault(); handleEditProductSubmit(); }} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Platform Name <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={productFormData.platform_name}
-                    onChange={(e) => setProductFormData({ ...productFormData, platform_name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select Platform</option>
-                    {platforms.map((platform) => (
-                      <option key={platform} value={platform}>
-                        {platform}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Product Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={productFormData.product_name}
-                    onChange={(e) => setProductFormData({ ...productFormData, product_name: e.target.value })}
-                    placeholder="Enter product name"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={productFormData.category}
-                    onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Product URL <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="https://amazon.in/product or flipkart.com/product or www.example.com"
-                    value={productFormData.url}
-                    onChange={(e) => setProductFormData({ ...productFormData, url: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Supports: https://example.com, example.in, www.example.com, etc.</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Rating <span className="text-red-500">*</span>
-                  </label>
-                  <StarRating
-                    rating={productFormData.rating}
-                    onRatingChange={(rating) => setProductFormData({ ...productFormData, rating })}
-                    readonly={false}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Review <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    required
-                    value={productFormData.review}
-                    onChange={(e) => setProductFormData({ ...productFormData, review: e.target.value })}
-                    rows={5}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
-                    placeholder="Write your review here..."
-                  />
-                </div>
-                <div className="flex space-x-4">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-                  >
-                    {submitting ? 'Updating...' : 'Update Product'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditProductForm(false)
-                      setEditingProduct(null)
-                    }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Product Confirmation Modal */}
-        {showDeleteProductConfirm && deletingProduct && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Delete Product</h2>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete your review for <strong>{deletingProduct.product_name || deletingProduct.platform_name}</strong>? This action cannot be undone.
-              </p>
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleDeleteProductConfirm}
-                  disabled={submitting}
-                  className="flex-1 bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
-                >
-                  {submitting ? 'Deleting...' : 'Delete'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDeleteProductConfirm(false)
-                    setDeletingProduct(null)
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
