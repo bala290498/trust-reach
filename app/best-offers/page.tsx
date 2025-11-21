@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
@@ -60,6 +61,7 @@ interface Offer {
 }
 
 export default function BestOffersPage() {
+  const searchParams = useSearchParams()
   const [offers, setOffers] = useState<Offer[]>([])
   const [filteredOffers, setFilteredOffers] = useState<Offer[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -119,6 +121,21 @@ export default function BestOffersPage() {
 
     setFilteredOffers(filtered)
   }, [offers, selectedCategory, newArrivals, verifiedOnly])
+
+  // Handle URL parameters on page load
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setSelectedCategory(decodeURIComponent(categoryParam))
+      // Scroll to filter section after a short delay to ensure page is loaded
+      setTimeout(() => {
+        const filterSection = document.getElementById('filter-section')
+        if (filterSection) {
+          filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchOffers()
@@ -310,7 +327,7 @@ export default function BestOffersPage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="mb-10">
+        <div id="filter-section" className="mb-10">
           <FilterBar
             selectedCategory={selectedCategory}
             selectedRating={0}
@@ -354,12 +371,21 @@ export default function BestOffersPage() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">{category}</h2>
                 </div>
-                <a
-                  href={`/best-offers?category=${encodeURIComponent(category)}`}
+                <button
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    // Scroll to filter section
+                    setTimeout(() => {
+                      const filterSection = document.getElementById('filter-section')
+                      if (filterSection) {
+                        filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 50)
+                  }}
                   className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
                 >
                   View All →
-                </a>
+                </button>
               </div>
               <div className="relative">
                 {/* Left Arrow */}

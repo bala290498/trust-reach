@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
+import { generateSlug } from '@/lib/utils'
 import FilterBar from '@/components/FilterBar'
 import CategoryCarousel from '@/components/CategoryCarousel'
 import StarRating from '@/components/StarRating'
@@ -53,6 +55,7 @@ const popularCategories = [
 
 export default function Home() {
   const { user, isLoaded } = useUser()
+  const searchParams = useSearchParams()
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [filteredReviews, setFilteredReviews] = useState<CompanyReview[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -82,6 +85,7 @@ export default function Home() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
   const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
   const [companySortBy, setCompanySortBy] = useState<'date' | 'rating'>('date')
   const [companySortOrder, setCompanySortOrder] = useState<'asc' | 'desc'>('desc')
@@ -130,6 +134,21 @@ export default function Home() {
     setFilteredReviews(filtered)
   }, [reviews, searchQuery, selectedCategory, selectedRating])
 
+  // Handle URL parameters on page load
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setSelectedCategory(decodeURIComponent(categoryParam))
+      // Scroll to filter section after a short delay to ensure page is loaded
+      setTimeout(() => {
+        const filterSection = document.getElementById('filter-section')
+        if (filterSection) {
+          filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     fetchReviews()
   }, [fetchReviews])
@@ -163,30 +182,78 @@ export default function Home() {
     }
   }, [isLoaded, user, pendingAddReview])
 
-  // Generate company name suggestions
+  // Generate company name suggestions with debouncing - match by first word
   useEffect(() => {
-    if (showAddForm) {
-      const uniqueNames = getUniqueCompanyNames()
-      const trimmedName = formData.company_name?.trim() || ''
-      
-      if (trimmedName.length > 0) {
-        // Filter based on input
-        const query = normalizeText(trimmedName)
-        const matches = uniqueNames.filter((name) => {
-          const normalizedName = normalizeText(name)
-          return normalizedName.includes(query) || query.includes(normalizedName)
-        })
-        setCompanyNameSuggestions(matches.slice(0, 10)) // Limit to 10 suggestions
-        setShowCompanyNameDropdown(matches.length > 0)
-      } else {
-        // When input is empty, show all unique names (limited to 10 most recent)
-        setCompanyNameSuggestions(uniqueNames.slice(0, 10))
-        setShowCompanyNameDropdown(uniqueNames.length > 0)
-      }
-    } else {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    if (!showAddForm) {
       // Only clear when form is closed
       setCompanyNameSuggestions([])
       setShowCompanyNameDropdown(false)
+      return
+    }
+
+    const trimmedName = formData.company_name?.trim() || ''
+    
+    // If input is empty, hide suggestions immediately
+    if (trimmedName.length === 0) {
+      setCompanyNameSuggestions([])
+      setShowCompanyNameDropdown(false)
+      return
+    }
+
+    // Extract first word from user input (case-insensitive)
+    const firstWord = trimmedName.split(/\s+/)[0].toLowerCase()
+    
+    // If first word is less than 2 characters, hide suggestions immediately
+    if (firstWord.length < 2) {
+      setCompanyNameSuggestions([])
+      setShowCompanyNameDropdown(false)
+      return
+    }
+
+    // Immediately check for matches (synchronous check to hide if no matches)
+    const uniqueNames = getUniqueCompanyNames()
+    const immediateMatches = uniqueNames.filter((name) => {
+      const companyFirstWord = name.split(/\s+/)[0].toLowerCase()
+      return companyFirstWord.startsWith(firstWord) || firstWord.startsWith(companyFirstWord)
+    })
+
+    // If no matches, hide immediately (no debounce delay)
+    if (immediateMatches.length === 0) {
+      setCompanyNameSuggestions([])
+      setShowCompanyNameDropdown(false)
+      return
+    }
+
+    // Debounce the search (200ms delay) for better performance
+    debounceTimerRef.current = setTimeout(() => {
+      // Re-check matches after debounce (in case user continued typing)
+      const finalMatches = uniqueNames.filter((name) => {
+        const companyFirstWord = name.split(/\s+/)[0].toLowerCase()
+        return companyFirstWord.startsWith(firstWord) || firstWord.startsWith(companyFirstWord)
+      })
+      
+      // Only show dropdown if there are matches
+      if (finalMatches.length > 0) {
+        setCompanyNameSuggestions(finalMatches.slice(0, 10)) // Limit to 10 suggestions
+        setShowCompanyNameDropdown(true)
+      } else {
+        // Hide dropdown when there are no matches
+        setCompanyNameSuggestions([])
+        setShowCompanyNameDropdown(false)
+      }
+    }, 200) // 200ms debounce delay
+
+    // Cleanup function
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+      }
     }
   }, [formData.company_name, showAddForm, getUniqueCompanyNames])
 
@@ -512,9 +579,11 @@ export default function Home() {
   }
 
   const renderCompanyCard = (company: CompanyData) => {
-    return <div 
-        className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
-        onClick={() => setSelectedCompany({ name: company.name, reviews: company.reviews })}
+    const companySlug = generateSlug(company.name)
+    return (
+      <Link 
+        href={`/companies/${companySlug}`}
+        className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer block"
       >
         <div className="flex items-start justify-between mb-2 flex-shrink-0">
           <div className="flex-1 min-w-0 pr-2">
@@ -553,7 +622,8 @@ export default function Home() {
             View All Reviews →
           </p>
         </div>
-      </div>
+      </Link>
+    )
   }
 
   return (
@@ -981,13 +1051,6 @@ export default function Home() {
                       onChange={(e) => {
                         setFormData({ ...formData, company_name: e.target.value })
                       }}
-                      onFocus={() => {
-                        // Always show dropdown when focused if there are suggestions available
-                        const uniqueNames = getUniqueCompanyNames()
-                        if (uniqueNames.length > 0) {
-                          setShowCompanyNameDropdown(true)
-                        }
-                      }}
                       onBlur={() => {
                         // Delay to allow clicking on suggestions
                         setTimeout(() => setShowCompanyNameDropdown(false), 200)
@@ -1255,7 +1318,7 @@ export default function Home() {
         </div>
 
         {/* Filter Bar */}
-        <div className="mb-10">
+        <div id="filter-section" className="mb-10">
           <FilterBar
             selectedCategory={selectedCategory}
             selectedRating={selectedRating}
@@ -1298,12 +1361,21 @@ export default function Home() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">{category}</h2>
                 </div>
-                <a
-                  href={`/?category=${encodeURIComponent(category)}`}
+                <button
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    // Scroll to filter section
+                    setTimeout(() => {
+                      const filterSection = document.getElementById('filter-section')
+                      if (filterSection) {
+                        filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 50)
+                  }}
                   className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
                 >
                   View All →
-                </a>
+                </button>
               </div>
               <div className="relative">
                 {/* Left Arrow */}

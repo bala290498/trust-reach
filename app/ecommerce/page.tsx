@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, ProductListing } from '@/lib/supabase'
 import FilterBar from '@/components/FilterBar'
@@ -54,6 +55,7 @@ const platforms = ['Amazon', 'Flipkart']
 
 export default function EcommercePage() {
   const { user, isLoaded } = useUser()
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<ProductListing[]>([])
   const [filteredProducts, setFilteredProducts] = useState<ProductListing[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -123,6 +125,21 @@ export default function EcommercePage() {
 
     setFilteredProducts(filtered)
   }, [products, searchQuery, selectedCategory, selectedRating])
+
+  // Handle URL parameters on page load
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setSelectedCategory(decodeURIComponent(categoryParam))
+      // Scroll to filter section after a short delay to ensure page is loaded
+      setTimeout(() => {
+        const filterSection = document.getElementById('filter-section')
+        if (filterSection) {
+          filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchProducts()
@@ -622,7 +639,7 @@ export default function EcommercePage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="mb-10">
+        <div id="filter-section" className="mb-10">
           <FilterBar
             selectedCategory={selectedCategory}
             selectedRating={selectedRating}
@@ -1019,12 +1036,21 @@ export default function EcommercePage() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">{category}</h2>
                 </div>
-                <a
-                  href={`/ecommerce?category=${encodeURIComponent(category)}`}
+                <button
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    // Scroll to filter section
+                    setTimeout(() => {
+                      const filterSection = document.getElementById('filter-section')
+                      if (filterSection) {
+                        filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 50)
+                  }}
                   className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
                 >
                   View All →
-                </a>
+                </button>
               </div>
               <div className="relative">
                 {/* Left Arrow */}
