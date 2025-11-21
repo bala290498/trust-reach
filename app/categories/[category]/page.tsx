@@ -52,8 +52,6 @@ function decodeCategoryName(encoded: string): string {
 
 interface CompanyData {
   name: string
-  category: string
-  website_url?: string
   averageRating: number
   reviewCount: number
   reviews: CompanyReview[]
@@ -79,10 +77,11 @@ export default function CategoryPage() {
     if (!categoryName) return
 
     try {
+      // Note: category field no longer exists in company_reviews
+      // This page may need to be updated to work with the new brand-based system
       const { data, error } = await supabase
         .from('company_reviews')
         .select('*')
-        .eq('category', categoryName)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -117,12 +116,9 @@ export default function CategoryPage() {
     companyMap.forEach((reviews, companyName) => {
       const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0)
       const averageRating = totalRating / reviews.length
-      const firstReview = reviews[0]
 
       companiesData.push({
         name: companyName,
-        category: firstReview.category,
-        website_url: firstReview.website_url || undefined,
         averageRating,
         reviewCount: reviews.length,
         reviews,
@@ -226,28 +222,12 @@ export default function CategoryPage() {
         href={`/companies/${companySlug}`}
         className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer block"
       >
-        <div className="flex items-start justify-between mb-2 flex-shrink-0">
+          <div className="flex items-start justify-between mb-2 flex-shrink-0">
           <div className="flex-1 min-w-0 pr-2">
             <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 truncate" title={company.name}>
               {company.name}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-xs sm:text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={company.category}>
-                {company.category}
-              </p>
-            </div>
           </div>
-          {company.website_url && (
-            <a
-              href={company.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink size={16} />
-            </a>
-          )}
         </div>
         <div className="mb-2 flex-shrink-0">
           <div className="flex items-center gap-2 mb-1">
