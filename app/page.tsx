@@ -162,13 +162,13 @@ export default function Home() {
 
   // Generate company name suggestions
   useEffect(() => {
-    const trimmedName = formData.company_name?.trim() || ''
-    
-    if (showAddForm && trimmedName.length > 0) {
-      const query = normalizeText(trimmedName)
+    if (showAddForm) {
       const uniqueNames = getUniqueCompanyNames()
+      const trimmedName = formData.company_name?.trim() || ''
       
-      if (query.length > 0) {
+      if (trimmedName.length > 0) {
+        // Filter based on input
+        const query = normalizeText(trimmedName)
         const matches = uniqueNames.filter((name) => {
           const normalizedName = normalizeText(name)
           return normalizedName.includes(query) || query.includes(normalizedName)
@@ -176,10 +176,12 @@ export default function Home() {
         setCompanyNameSuggestions(matches.slice(0, 10)) // Limit to 10 suggestions
         setShowCompanyNameDropdown(matches.length > 0)
       } else {
-        setCompanyNameSuggestions([])
-        setShowCompanyNameDropdown(false)
+        // When input is empty, show all unique names (limited to 10 most recent)
+        setCompanyNameSuggestions(uniqueNames.slice(0, 10))
+        setShowCompanyNameDropdown(uniqueNames.length > 0)
       }
     } else {
+      // Only clear when form is closed
       setCompanyNameSuggestions([])
       setShowCompanyNameDropdown(false)
     }
@@ -806,8 +808,9 @@ export default function Home() {
                         setFormData({ ...formData, company_name: e.target.value })
                       }}
                       onFocus={() => {
-                        const trimmedName = formData.company_name?.trim() || ''
-                        if (trimmedName.length > 0 && companyNameSuggestions.length > 0) {
+                        // Always show dropdown when focused if there are suggestions available
+                        const uniqueNames = getUniqueCompanyNames()
+                        if (uniqueNames.length > 0) {
                           setShowCompanyNameDropdown(true)
                         }
                       }}

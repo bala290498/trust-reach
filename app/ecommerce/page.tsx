@@ -159,13 +159,13 @@ export default function EcommercePage() {
 
   // Generate product name suggestions
   useEffect(() => {
-    const trimmedName = formData.product_name?.trim() || ''
-    
-    if (showAddForm && trimmedName.length > 0) {
-      const query = normalizeText(trimmedName)
+    if (showAddForm) {
       const uniqueNames = getUniqueProductNames()
+      const trimmedName = formData.product_name?.trim() || ''
       
-      if (query.length > 0) {
+      if (trimmedName.length > 0) {
+        // Filter based on input
+        const query = normalizeText(trimmedName)
         const matches = uniqueNames.filter((name) => {
           const normalizedName = normalizeText(name)
           return normalizedName.includes(query) || query.includes(normalizedName)
@@ -173,10 +173,12 @@ export default function EcommercePage() {
         setProductNameSuggestions(matches.slice(0, 10)) // Limit to 10 suggestions
         setShowProductNameDropdown(matches.length > 0)
       } else {
-        setProductNameSuggestions([])
-        setShowProductNameDropdown(false)
+        // When input is empty, show all unique names (limited to 10 most recent)
+        setProductNameSuggestions(uniqueNames.slice(0, 10))
+        setShowProductNameDropdown(uniqueNames.length > 0)
       }
     } else {
+      // Only clear when form is closed
       setProductNameSuggestions([])
       setShowProductNameDropdown(false)
     }
@@ -893,8 +895,9 @@ export default function EcommercePage() {
                         setFormData({ ...formData, product_name: e.target.value })
                       }}
                       onFocus={() => {
-                        const trimmedName = formData.product_name?.trim() || ''
-                        if (trimmedName.length > 0 && productNameSuggestions.length > 0) {
+                        // Always show dropdown when focused if there are suggestions available
+                        const uniqueNames = getUniqueProductNames()
+                        if (uniqueNames.length > 0) {
                           setShowProductNameDropdown(true)
                         }
                       }}
