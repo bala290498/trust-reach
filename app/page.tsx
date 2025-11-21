@@ -82,7 +82,6 @@ export default function Home() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
   const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
-  const [selectedCompanyName, setSelectedCompanyName] = useState<string | null>(null)
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -173,7 +172,7 @@ export default function Home() {
           return normalizedName.includes(query) || query.includes(normalizedName)
         })
         setCompanyNameSuggestions(matches.slice(0, 10)) // Limit to 10 suggestions
-        setShowCompanyNameDropdown(matches.length > 0 && formData.company_name !== matches[0])
+        setShowCompanyNameDropdown(matches.length > 0)
       } else {
         setCompanyNameSuggestions([])
         setShowCompanyNameDropdown(false)
@@ -183,18 +182,6 @@ export default function Home() {
       setShowCompanyNameDropdown(false)
     }
   }, [formData.company_name, showAddForm, getUniqueCompanyNames])
-
-  // Check if current company name matches an existing one
-  useEffect(() => {
-    if (formData.company_name) {
-      const query = normalizeText(formData.company_name)
-      const uniqueNames = getUniqueCompanyNames()
-      const exactMatch = uniqueNames.find((name) => normalizeText(name) === query)
-      setSelectedCompanyName(exactMatch || null)
-    } else {
-      setSelectedCompanyName(null)
-    }
-  }, [formData.company_name, getUniqueCompanyNames])
 
   // Generate search suggestions for dropdown
   useEffect(() => {
@@ -311,7 +298,6 @@ export default function Home() {
         rating: 0,
         review: '',
       })
-      setSelectedCompanyName(null)
       setShowAddForm(false)
       fetchReviews()
       alert('Review submitted successfully!')
@@ -815,9 +801,7 @@ export default function Home() {
                       required
                       value={formData.company_name}
                       onChange={(e) => {
-                        const value = e.target.value
-                        setFormData({ ...formData, company_name: value })
-                        setSelectedCompanyName(null) // Reset selection when typing
+                        setFormData({ ...formData, company_name: e.target.value })
                       }}
                       onFocus={() => {
                         if (companyNameSuggestions.length > 0) {
@@ -828,19 +812,9 @@ export default function Home() {
                         // Delay to allow clicking on suggestions
                         setTimeout(() => setShowCompanyNameDropdown(false), 200)
                       }}
-                      readOnly={selectedCompanyName !== null && formData.company_name === selectedCompanyName}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
-                        selectedCompanyName !== null && formData.company_name === selectedCompanyName
-                          ? 'border-green-300 bg-green-50'
-                          : 'border-gray-200'
-                      }`}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                       placeholder="Type to search existing companies or enter new"
                     />
-                    {selectedCompanyName && formData.company_name === selectedCompanyName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">
-                        ✓ Selected
-                      </div>
-                    )}
                     {/* Company Name Suggestions Dropdown */}
                     {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
@@ -850,7 +824,6 @@ export default function Home() {
                             type="button"
                             onClick={() => {
                               setFormData({ ...formData, company_name: name })
-                              setSelectedCompanyName(name)
                               setShowCompanyNameDropdown(false)
                             }}
                             className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
@@ -861,12 +834,6 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  {selectedCompanyName && formData.company_name === selectedCompanyName && (
-                    <p className="text-xs text-green-600 mt-1">✓ This company already exists. You can add a new review for it.</p>
-                  )}
-                  {formData.company_name && !selectedCompanyName && companyNameSuggestions.length === 0 && (
-                    <p className="text-xs text-blue-600 mt-1">ℹ This will be a new company name.</p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -932,7 +899,6 @@ export default function Home() {
                     type="button"
                     onClick={() => {
                       setShowAddForm(false)
-                      setSelectedCompanyName(null)
                     }}
                     className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
                   >
