@@ -82,6 +82,9 @@ export default function Home() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
   const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
+  const [companySortBy, setCompanySortBy] = useState<'date' | 'rating'>('date')
+  const [companySortOrder, setCompanySortOrder] = useState<'asc' | 'desc'>('desc')
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -420,10 +423,51 @@ export default function Home() {
   }
 
 
+  // Group reviews by company name and calculate stats
+  interface CompanyData {
+    name: string
+    category: string
+    website_url?: string
+    averageRating: number
+    reviewCount: number
+    reviews: CompanyReview[]
+  }
+
+  const getCompaniesData = useCallback(() => {
+    const companyMap = new Map<string, CompanyReview[]>()
+    
+    filteredReviews.forEach((review) => {
+      const companyName = review.company_name
+      if (!companyMap.has(companyName)) {
+        companyMap.set(companyName, [])
+      }
+      companyMap.get(companyName)!.push(review)
+    })
+
+    const companies: CompanyData[] = []
+    companyMap.forEach((reviews, companyName) => {
+      const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0)
+      const averageRating = totalRating / reviews.length
+      const firstReview = reviews[0]
+      
+      companies.push({
+        name: companyName,
+        category: firstReview.category,
+        website_url: firstReview.website_url,
+        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        reviewCount: reviews.length,
+        reviews: reviews,
+      })
+    })
+
+    return companies
+  }, [filteredReviews])
+
   const groupedByCategory = categories.reduce((acc, category) => {
-    acc[category] = filteredReviews.filter((r) => r.category === category)
+    const companies = getCompaniesData()
+    acc[category] = companies.filter((c) => c.category === category)
     return acc
-  }, {} as Record<string, CompanyReview[]>)
+  }, {} as Record<string, CompanyData[]>)
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -466,31 +510,25 @@ export default function Home() {
     return namePart.charAt(0).toUpperCase() + namePart.slice(1)
   }
 
-  const renderReviewCard = (review: CompanyReview) => {
+  const renderCompanyCard = (company: CompanyData) => {
     return <div 
-        className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 h-[280px] flex flex-col cursor-pointer"
-        onClick={() => setSelectedReview(review)}
+        className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
+        onClick={() => setSelectedCompany({ name: company.name, reviews: company.reviews })}
       >
-        <div className="flex items-start justify-between mb-3 flex-shrink-0">
+        <div className="flex items-start justify-between mb-4 flex-shrink-0">
           <div className="flex-1 min-w-0 pr-2">
-            <h3 className="text-lg font-bold text-gray-900 mb-1 truncate" title={review.company_name}>
-              {review.company_name}
+            <h3 className="text-xl font-bold text-gray-900 mb-2 truncate" title={company.name}>
+              {company.name}
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={review.category}>
-                {review.category}
+              <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={company.category}>
+                {company.category}
               </p>
-              {review.created_at && (
-                <>
-                  <span className="text-gray-300">•</span>
-                  <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                </>
-              )}
             </div>
           </div>
-          {review.website_url && (
+          {company.website_url && (
             <a
-              href={review.website_url}
+              href={company.website_url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
@@ -500,32 +538,20 @@ export default function Home() {
             </a>
           )}
         </div>
-        <div className="mb-3 flex-shrink-0">
-          <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
-        </div>
-        <div className="mb-3 flex-shrink-0 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
-            {getEmailName(review.email)}
+        <div className="mb-4 flex-shrink-0">
+          <div className="flex items-center gap-3 mb-2">
+            <StarRating rating={company.averageRating} onRatingChange={() => {}} readonly />
+            <span className="text-lg font-bold text-gray-900">{company.averageRating.toFixed(1)}</span>
           </div>
-          <p className="text-sm text-gray-600 font-medium truncate" title={review.email}>
-            {getEmailDisplayName(review.email)}
+          <p className="text-sm text-gray-600">
+            {company.reviewCount} {company.reviewCount === 1 ? 'review' : 'reviews'}
           </p>
         </div>
-        <p className="text-gray-700 leading-relaxed text-sm line-clamp-3 flex-1 overflow-hidden" title={review.review}>
-          {review.review}
-        </p>
-        {/* View in Your Reviews link - only show for user's own reviews */}
-        {isLoaded && user && review.user_id === user.id && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <Link
-              href="/my-reviews"
-              onClick={(e) => e.stopPropagation()}
-              className="block text-center text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-2 px-3"
-            >
-              Manage in Your Reviews →
-            </Link>
-          </div>
-        )}
+        <div className="mt-auto pt-4 border-t border-gray-200">
+          <p className="text-sm font-medium text-primary-600 text-center">
+            View All Reviews →
+          </p>
+        </div>
       </div>
   }
 
@@ -631,6 +657,153 @@ export default function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+
+        {/* Company Details Modal with All Reviews */}
+        {selectedCompany && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedCompany(null)}>
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex-1">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedCompany.name}</h2>
+                  {selectedCompany.reviews[0]?.category && (
+                    <p className="text-sm text-gray-500 font-medium mb-4">{selectedCompany.reviews[0].category}</p>
+                  )}
+                  {selectedCompany.reviews[0]?.website_url && (
+                    <a
+                      href={selectedCompany.reviews[0].website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-2 mb-4"
+                    >
+                      <ExternalLink size={18} />
+                      <span>Visit Website</span>
+                    </a>
+                  )}
+                  <div className="flex items-center gap-3 mb-4">
+                    {(() => {
+                      const avgRating = selectedCompany.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedCompany.reviews.length
+                      return (
+                        <>
+                          <StarRating rating={Math.round(avgRating * 10) / 10} onRatingChange={() => {}} readonly />
+                          <span className="text-lg font-bold text-gray-900">
+                            {avgRating.toFixed(1)}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            ({selectedCompany.reviews.length} {selectedCompany.reviews.length === 1 ? 'review' : 'reviews'})
+                          </span>
+                        </>
+                      )
+                    })()}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedCompany(null)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Sorting Options */}
+              <div className="mb-6 flex items-center gap-4 flex-wrap">
+                <label className="text-sm font-semibold text-gray-700">Sort by:</label>
+                <select
+                  value={companySortBy}
+                  onChange={(e) => setCompanySortBy(e.target.value as 'date' | 'rating')}
+                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="date">Date</option>
+                  <option value="rating">Rating</option>
+                </select>
+                <select
+                  value={companySortOrder}
+                  onChange={(e) => setCompanySortOrder(e.target.value as 'asc' | 'desc')}
+                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="desc">Newest/Highest First</option>
+                  <option value="asc">Oldest/Lowest First</option>
+                </select>
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                {(() => {
+                  const sortedReviews = [...selectedCompany.reviews].sort((a, b) => {
+                    if (companySortBy === 'date') {
+                      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+                      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+                      return companySortOrder === 'desc' ? dateB - dateA : dateA - dateB
+                    } else {
+                      return companySortOrder === 'desc' ? b.rating - a.rating : a.rating - b.rating
+                    }
+                  })
+
+                  return sortedReviews.map((review) => (
+                    <div key={review.id} className="border-2 border-gray-200 rounded-xl p-6 hover:border-primary-300 transition-all">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm">
+                              {getEmailName(review.email)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(review.email)}</p>
+                              <p className="text-xs text-gray-500">{review.email}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {review.created_at && (
+                          <p className="text-sm text-gray-500 whitespace-nowrap ml-4">{formatDate(review.created_at)}</p>
+                        )}
+                      </div>
+                      <div className="mb-3">
+                        <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
+                      </div>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{review.review}</p>
+                      {/* Edit/Delete buttons - only show for user's own reviews */}
+                      {isLoaded && user && review.user_id === user.id && (
+                        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-3">
+                          <button
+                            onClick={() => {
+                              handleEditClick(review)
+                              setSelectedCompany(null)
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                          >
+                            <Edit size={16} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteClick(review)
+                              setSelectedCompany(null)
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                })()}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setSelectedCompany(null)}
+                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Review Details Modal */}
         {selectedReview && (
@@ -1112,8 +1285,8 @@ export default function Home() {
 
         {/* Category Sections with Carousel Layout */}
         {categories.map((category) => {
-          const categoryReviews = groupedByCategory[category] || []
-          if (categoryReviews.length === 0) return null
+          const categoryCompanies = groupedByCategory[category] || []
+          if (categoryCompanies.length === 0) return null
 
           return (
             <div key={category} className="mb-12">
@@ -1147,9 +1320,9 @@ export default function Home() {
                   className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  {categoryReviews.map((review) => (
-                    <div key={review.id} className="flex-shrink-0 w-[380px]">
-                      {renderReviewCard(review)}
+                  {categoryCompanies.map((company, index) => (
+                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-[380px]">
+                      {renderCompanyCard(company)}
                     </div>
                   ))}
                 </div>
@@ -1167,16 +1340,16 @@ export default function Home() {
           )
         })}
 
-        {/* Empty State - No Reviews */}
-        {filteredReviews.length === 0 && !loading && (
+        {/* Empty State - No Companies */}
+        {getCompaniesData().length === 0 && !loading && (
           <div className="text-center py-16">
             <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Reviews Found</h3>
+              <div className="text-6xl mb-4">🏢</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Companies Found</h3>
               <p className="text-gray-600 mb-6">
                 {searchQuery || selectedCategory || selectedRating > 0
-                  ? 'No reviews match your search criteria. Try adjusting your filters.'
-                  : 'No reviews have been submitted yet. Be the first to share your experience!'}
+                  ? 'No companies match your search criteria. Try adjusting your filters.'
+                  : 'No companies have been reviewed yet. Be the first to share your experience!'}
               </p>
               <button
                 onClick={handleAddReviewClick}
@@ -1189,14 +1362,14 @@ export default function Home() {
           </div>
         )}
 
-        {/* All Reviews Carousel (when no category filter) */}
-        {!selectedCategory && filteredReviews.length > 0 && (
+        {/* All Companies Carousel (when no category filter) */}
+        {!selectedCategory && getCompaniesData().length > 0 && (
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">All Reviews</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">All Companies</h2>
             <div className="relative">
               {/* Left Arrow */}
               <button
-                onClick={() => scrollCarousel('all-reviews', 'left')}
+                onClick={() => scrollCarousel('all-companies', 'left')}
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
                 aria-label="Scroll left"
               >
@@ -1205,20 +1378,20 @@ export default function Home() {
               
               {/* Carousel Container */}
               <div
-                ref={(el) => setCarouselRef('all-reviews', el)}
+                ref={(el) => setCarouselRef('all-companies', el)}
                 className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-                {filteredReviews.map((review) => (
-                  <div key={review.id} className="flex-shrink-0 w-[380px]">
-                    {renderReviewCard(review)}
+                {getCompaniesData().map((company, index) => (
+                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-[380px]">
+                    {renderCompanyCard(company)}
                   </div>
                 ))}
               </div>
               
               {/* Right Arrow */}
               <button
-                onClick={() => scrollCarousel('all-reviews', 'right')}
+                onClick={() => scrollCarousel('all-companies', 'right')}
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
                 aria-label="Scroll right"
               >
