@@ -1361,21 +1361,12 @@ function HomeContent() {
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">{category}</h2>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedCategory(category)
-                    // Scroll to filter section
-                    setTimeout(() => {
-                      const filterSection = document.getElementById('filter-section')
-                      if (filterSection) {
-                        filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }
-                    }, 50)
-                  }}
+                <Link
+                  href={`/categories/${encodeURIComponent(category)}`}
                   className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
                 >
                   View All →
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 {/* Left Arrow */}

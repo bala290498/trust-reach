@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, User, Tag, ArrowLeft, ExternalLink } from 'lucide-react'
 import CustomSelect from '@/components/CustomSelect'
 
@@ -145,11 +146,12 @@ export default function BlogsPage() {
                 onClick={() => setSelectedBlog(blog)}
               >
                 {blog.featured_image && (
-                  <div className="mb-2 -mx-3 -mt-3 sm:-mx-4 sm:-mt-4">
-                    <img
+                  <div className="mb-2 -mx-3 -mt-3 sm:-mx-4 sm:-mt-4 relative w-full h-32 sm:h-40">
+                    <Image
                       src={blog.featured_image}
                       alt={blog.title}
-                      className="w-full h-32 sm:h-40 object-cover rounded-t-xl"
+                      fill
+                      className="object-cover rounded-t-xl"
                     />
                   </div>
                 )}
@@ -206,11 +208,12 @@ export default function BlogsPage() {
               </button>
 
               {selectedBlog.featured_image && (
-                <div className="mb-6 -mx-8 -mt-8">
-                  <img
+                <div className="mb-6 -mx-8 -mt-8 relative w-full h-64">
+                  <Image
                     src={selectedBlog.featured_image}
                     alt={selectedBlog.title}
-                    className="w-full h-64 object-cover rounded-t-2xl"
+                    fill
+                    className="object-cover rounded-t-2xl"
                   />
                 </div>
               )}
