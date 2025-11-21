@@ -7,7 +7,7 @@ import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { ExternalLink, ArrowLeft, Edit, Trash2, Plus, Search } from 'lucide-react'
+import { ExternalLink, ArrowLeft, Edit, Trash2, Plus, Search, CheckCircle, XCircle } from 'lucide-react'
 
 interface CompanyData {
   name: string
@@ -48,6 +48,11 @@ export default function CompanyPage() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [pendingAddReview, setPendingAddReview] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [notification, setNotification] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  })
   const [formData, setFormData] = useState({
     phone: '',
     website_url: '',
@@ -119,6 +124,15 @@ export default function CompanyPage() {
     fetchCompanyData()
   }, [fetchCompanyData])
 
+  // Auto-close notification modal after 3 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ show: false, message: '', type: 'success' })
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [notification.show])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -153,7 +167,7 @@ export default function CompanyPage() {
 
   const handleDeleteConfirm = async () => {
     if (!deletingReview || !user) {
-      alert('Please sign in to delete reviews.')
+      setNotification({ show: true, message: 'Please sign in to delete reviews.', type: 'error' })
       return
     }
 
@@ -169,22 +183,22 @@ export default function CompanyPage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        alert('Review deleted successfully!')
         setShowDeleteConfirm(false)
         setDeletingReview(null)
         fetchCompanyData() // Refresh data
+        setNotification({ show: true, message: 'Review deleted successfully!', type: 'success' })
       } else {
-        alert(data.error || 'Failed to delete review')
+        setNotification({ show: true, message: data.error || 'Failed to delete review', type: 'error' })
       }
     } catch (error) {
       console.error('Error deleting review:', error)
-      alert('Failed to delete review. Please try again.')
+      setNotification({ show: true, message: 'Failed to delete review. Please try again.', type: 'error' })
     }
   }
 
   const handleEditClick = (review: CompanyReview) => {
     if (!user) {
-      alert('Please sign in to edit reviews.')
+      setNotification({ show: true, message: 'Please sign in to edit reviews.', type: 'error' })
       return
     }
     setEditingReview(review)
@@ -246,18 +260,18 @@ export default function CompanyPage() {
     
     // Validate required fields
     if (!formData.phone || !formData.review || formData.rating === 0) {
-      alert('Please fill in all required fields.')
+      setNotification({ show: true, message: 'Please fill in all required fields.', type: 'error' })
       return
     }
 
     if (!user || !company) {
-      alert('Please sign in to submit a review.')
+      setNotification({ show: true, message: 'Please sign in to submit a review.', type: 'error' })
       return
     }
 
     // Validate URL format if provided
     if (formData.website_url && !isValidUrl(formData.website_url)) {
-      alert('Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)')
+      setNotification({ show: true, message: 'Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)', type: 'error' })
       return
     }
 
@@ -291,10 +305,10 @@ export default function CompanyPage() {
       
       // Refresh company data to show new review
       fetchCompanyData()
-      alert('Review submitted successfully!')
+      setNotification({ show: true, message: 'Review submitted successfully!', type: 'success' })
     } catch (error) {
       console.error('Error adding review:', error)
-      alert('Failed to add review. Please try again.')
+      setNotification({ show: true, message: 'Failed to add review. Please try again.', type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -304,19 +318,19 @@ export default function CompanyPage() {
     e.preventDefault()
     
     if (!editingReview || !user) {
-      alert('Please sign in to edit reviews.')
+      setNotification({ show: true, message: 'Please sign in to edit reviews.', type: 'error' })
       return
     }
 
     // Validate required fields
     if (!formData.phone || !formData.review || formData.rating === 0) {
-      alert('Please fill in all required fields.')
+      setNotification({ show: true, message: 'Please fill in all required fields.', type: 'error' })
       return
     }
 
     // Validate URL format if provided
     if (formData.website_url && !isValidUrl(formData.website_url)) {
-      alert('Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)')
+      setNotification({ show: true, message: 'Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)', type: 'error' })
       return
     }
 
@@ -351,10 +365,10 @@ export default function CompanyPage() {
       
       // Refresh company data to show updated review
       fetchCompanyData()
-      alert('Review updated successfully!')
+      setNotification({ show: true, message: 'Review updated successfully!', type: 'success' })
     } catch (error) {
       console.error('Error updating review:', error)
-      alert('Failed to update review. Please try again.')
+      setNotification({ show: true, message: 'Failed to update review. Please try again.', type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -594,7 +608,7 @@ export default function CompanyPage() {
       {showAddForm && company && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900">Add Review for {company.name}</h2>
+            <h2 className="text-3xl font-bold mb-6 text-gray-900 text-center">Add Review for {company.name}</h2>
             
             <form onSubmit={handleFormSubmit} className="space-y-4">
               {user && (
@@ -725,7 +739,7 @@ export default function CompanyPage() {
       {showEditForm && editingReview && company && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Review for {company.name}</h2>
+            <h2 className="text-3xl font-bold mb-6 text-gray-900 text-center">Edit Review for {company.name}</h2>
             
             <form onSubmit={handleEditSubmit} className="space-y-4">
               {user && (
@@ -849,6 +863,22 @@ export default function CompanyPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Modal */}
+      {notification.show && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl text-center">
+            <div className="flex justify-center mb-4">
+              {notification.type === 'success' ? (
+                <CheckCircle className="w-16 h-16 text-green-500" />
+              ) : (
+                <XCircle className="w-16 h-16 text-red-500" />
+              )}
+            </div>
+            <p className="text-lg font-medium text-gray-900">{notification.message}</p>
           </div>
         </div>
       )}
