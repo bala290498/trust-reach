@@ -22,7 +22,8 @@ export async function GET() {
     const categories: PopularCategory[] = []
     
     // Match h2 headings with icon and description
-    const categoryRegex = /##\s+(.+?)\nicon:\s*(.+?)\ndescription:\s*(.+?)(?=\n##|$)/gs
+    // Use [\s\S] instead of . with s flag for ES2017 compatibility
+    const categoryRegex = /##\s+([\s\S]+?)\nicon:\s*([\s\S]+?)\ndescription:\s*([\s\S]+?)(?=\n##|$)/g
     let match
     
     while ((match = categoryRegex.exec(fileContents)) !== null) {
