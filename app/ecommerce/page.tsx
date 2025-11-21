@@ -80,6 +80,9 @@ export default function EcommercePage() {
   const [deletingProduct, setDeletingProduct] = useState<ProductListing | null>(null)
   const [pendingAddProduct, setPendingAddProduct] = useState(false)
   const [showSignInModal, setShowSignInModal] = useState(false)
+  const [productNameSuggestions, setProductNameSuggestions] = useState<string[]>([])
+  const [showProductNameDropdown, setShowProductNameDropdown] = useState(false)
+  const [selectedProductName, setSelectedProductName] = useState<string | null>(null)
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -130,6 +133,22 @@ export default function EcommercePage() {
     filterProducts()
   }, [filterProducts])
 
+  // Normalize text for comparison (remove spaces, special chars, lowercase)
+  const normalizeText = (text: string): string => {
+    return text.toLowerCase().replace(/[^a-z0-9]/g, '')
+  }
+
+  // Get unique product names from products
+  const getUniqueProductNames = useCallback(() => {
+    const uniqueNames = new Set<string>()
+    products.forEach((product) => {
+      if (product.product_name) {
+        uniqueNames.add(product.product_name)
+      }
+    })
+    return Array.from(uniqueNames).sort()
+  }, [products])
+
   // Handle opening add product form after sign-in
   useEffect(() => {
     if (isLoaded && user && pendingAddProduct) {
@@ -138,6 +157,41 @@ export default function EcommercePage() {
       setShowSignInModal(false)
     }
   }, [isLoaded, user, pendingAddProduct])
+
+  // Generate product name suggestions
+  useEffect(() => {
+    if (showAddForm && formData.product_name) {
+      const query = normalizeText(formData.product_name)
+      const uniqueNames = getUniqueProductNames()
+      
+      if (query.length > 0) {
+        const matches = uniqueNames.filter((name) => {
+          const normalizedName = normalizeText(name)
+          return normalizedName.includes(query) || query.includes(normalizedName)
+        })
+        setProductNameSuggestions(matches.slice(0, 10)) // Limit to 10 suggestions
+        setShowProductNameDropdown(matches.length > 0 && formData.product_name !== matches[0])
+      } else {
+        setProductNameSuggestions([])
+        setShowProductNameDropdown(false)
+      }
+    } else {
+      setProductNameSuggestions([])
+      setShowProductNameDropdown(false)
+    }
+  }, [formData.product_name, showAddForm, getUniqueProductNames])
+
+  // Check if current product name matches an existing one
+  useEffect(() => {
+    if (formData.product_name) {
+      const query = normalizeText(formData.product_name)
+      const uniqueNames = getUniqueProductNames()
+      const exactMatch = uniqueNames.find((name) => normalizeText(name) === query)
+      setSelectedProductName(exactMatch || null)
+    } else {
+      setSelectedProductName(null)
+    }
+  }, [formData.product_name, getUniqueProductNames])
 
   // Generate search suggestions for dropdown
   useEffect(() => {
@@ -262,6 +316,7 @@ export default function EcommercePage() {
         rating: 0,
         review: '',
       })
+      setSelectedProductName(null)
       setShowAddForm(false)
       fetchProducts()
       alert('Product submitted successfully!')
@@ -841,14 +896,64 @@ export default function EcommercePage() {
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Product Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.product_name}
-                    onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
-                    placeholder="Enter product name"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={formData.product_name}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setFormData({ ...formData, product_name: value })
+                        setSelectedProductName(null) // Reset selection when typing
+                      }}
+                      onFocus={() => {
+                        if (productNameSuggestions.length > 0) {
+                          setShowProductNameDropdown(true)
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay to allow clicking on suggestions
+                        setTimeout(() => setShowProductNameDropdown(false), 200)
+                      }}
+                      readOnly={selectedProductName !== null && formData.product_name === selectedProductName}
+                      placeholder="Type to search existing products or enter new"
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
+                        selectedProductName !== null && formData.product_name === selectedProductName
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-gray-200'
+                      }`}
+                    />
+                    {selectedProductName && formData.product_name === selectedProductName && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">
+                        ✓ Selected
+                      </div>
+                    )}
+                    {/* Product Name Suggestions Dropdown */}
+                    {showProductNameDropdown && productNameSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                        {productNameSuggestions.map((name, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, product_name: name })
+                              setSelectedProductName(name)
+                              setShowProductNameDropdown(false)
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <p className="font-semibold text-gray-900">{name}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {selectedProductName && formData.product_name === selectedProductName && (
+                    <p className="text-xs text-green-600 mt-1">✓ This product already exists. You can add a new review for it.</p>
+                  )}
+                  {formData.product_name && !selectedProductName && productNameSuggestions.length === 0 && (
+                    <p className="text-xs text-blue-600 mt-1">ℹ This will be a new product name.</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -915,6 +1020,7 @@ export default function EcommercePage() {
                     type="button"
                     onClick={() => {
                       setShowAddForm(false)
+                      setSelectedProductName(null)
                     }}
                     className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
                   >
