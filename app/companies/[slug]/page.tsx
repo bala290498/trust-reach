@@ -11,8 +11,6 @@ import { ExternalLink, ArrowLeft, Edit, Trash2, Plus, Search, CheckCircle, XCirc
 
 interface CompanyData {
   name: string
-  category: string
-  website_url?: string
   averageRating: number
   reviewCount: number
   reviews: CompanyReview[]
@@ -54,8 +52,6 @@ export default function CompanyPage() {
     type: 'success'
   })
   const [formData, setFormData] = useState({
-    phone: '',
-    website_url: '',
     rating: 0,
     review: '',
   })
@@ -97,8 +93,6 @@ export default function CompanyPage() {
           
           foundCompany = {
             name: companyName,
-            category: firstReview.category,
-            website_url: firstReview.website_url,
             averageRating: Math.round(averageRating * 10) / 10,
             reviewCount: reviews.length,
             reviews: reviews,
@@ -203,8 +197,6 @@ export default function CompanyPage() {
     }
     setEditingReview(review)
     setFormData({
-      phone: review.phone,
-      website_url: review.website_url || '',
       rating: review.rating,
       review: review.review,
     })
@@ -226,8 +218,6 @@ export default function CompanyPage() {
     if (user) {
       // User is signed in, open form directly with pre-filled company info
       setFormData({
-        phone: '',
-        website_url: company?.website_url || '',
         rating: 0,
         review: '',
       })
@@ -259,7 +249,7 @@ export default function CompanyPage() {
     e.preventDefault()
     
     // Validate required fields
-    if (!formData.phone || !formData.review || formData.rating === 0) {
+    if (!formData.review || formData.rating === 0) {
       setNotification({ show: true, message: 'Please fill in all required fields.', type: 'error' })
       return
     }
@@ -269,22 +259,12 @@ export default function CompanyPage() {
       return
     }
 
-    // Validate URL format if provided
-    if (formData.website_url && !isValidUrl(formData.website_url)) {
-      setNotification({ show: true, message: 'Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)', type: 'error' })
-      return
-    }
-
     setSubmitting(true)
 
     try {
-      // Normalize the URL before submitting
       const normalizedFormData = {
         email: user.primaryEmailAddress?.emailAddress || '',
-        phone: formData.phone,
         company_name: company.name,
-        website_url: formData.website_url ? normalizeUrl(formData.website_url) : company.website_url || null,
-        category: company.category,
         rating: formData.rating,
         review: formData.review,
         user_id: user.id,
@@ -296,8 +276,6 @@ export default function CompanyPage() {
 
       // Reset form and close modal
       setFormData({
-        phone: '',
-        website_url: company.website_url || '',
         rating: 0,
         review: '',
       })
@@ -323,24 +301,15 @@ export default function CompanyPage() {
     }
 
     // Validate required fields
-    if (!formData.phone || !formData.review || formData.rating === 0) {
+    if (!formData.review || formData.rating === 0) {
       setNotification({ show: true, message: 'Please fill in all required fields.', type: 'error' })
-      return
-    }
-
-    // Validate URL format if provided
-    if (formData.website_url && !isValidUrl(formData.website_url)) {
-      setNotification({ show: true, message: 'Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)', type: 'error' })
       return
     }
 
     setSubmitting(true)
 
     try {
-      // Normalize the URL before submitting
       const normalizedFormData = {
-        phone: formData.phone,
-        website_url: formData.website_url ? normalizeUrl(formData.website_url) : company?.website_url || null,
         rating: formData.rating,
         review: formData.review,
       }
@@ -355,8 +324,6 @@ export default function CompanyPage() {
 
       // Reset form and close modal
       setFormData({
-        phone: '',
-        website_url: company?.website_url || '',
         rating: 0,
         review: '',
       })
@@ -425,14 +392,11 @@ export default function CompanyPage() {
       <div className="fixed top-[5rem] left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6 h-20 sm:h-24">
-            {/* Left - Company name and category (two lines) */}
+            {/* Left - Company name */}
             <div className="flex flex-col justify-center flex-1 min-w-0">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {company.name}
               </h2>
-              <span className="text-sm sm:text-base text-gray-500 truncate">
-                {company.category}
-              </span>
             </div>
 
             {/* Center - Rating value + stars (vertically centered) */}
@@ -701,8 +665,6 @@ export default function CompanyPage() {
                   onClick={() => {
                     setShowAddForm(false)
                     setFormData({
-                      phone: '',
-                      website_url: company.website_url || '',
                       rating: 0,
                       review: '',
                     })
@@ -833,8 +795,6 @@ export default function CompanyPage() {
                     setShowEditForm(false)
                     setEditingReview(null)
                     setFormData({
-                      phone: '',
-                      website_url: company.website_url || '',
                       rating: 0,
                       review: '',
                     })
