@@ -43,6 +43,8 @@ export default function CompanyPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingReview, setDeletingReview] = useState<CompanyReview | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingReview, setEditingReview] = useState<CompanyReview | null>(null)
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [pendingAddReview, setPendingAddReview] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -181,7 +183,18 @@ export default function CompanyPage() {
   }
 
   const handleEditClick = (review: CompanyReview) => {
-    router.push(`/review?id=${review.id}`)
+    if (!user) {
+      alert('Please sign in to edit reviews.')
+      return
+    }
+    setEditingReview(review)
+    setFormData({
+      phone: review.phone,
+      website_url: review.website_url || '',
+      rating: review.rating,
+      review: review.review,
+    })
+    setShowEditForm(true)
   }
 
   // Handle opening add review form after sign-in
@@ -282,6 +295,66 @@ export default function CompanyPage() {
     } catch (error) {
       console.error('Error adding review:', error)
       alert('Failed to add review. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingReview || !user) {
+      alert('Please sign in to edit reviews.')
+      return
+    }
+
+    // Validate required fields
+    if (!formData.phone || !formData.review || formData.rating === 0) {
+      alert('Please fill in all required fields.')
+      return
+    }
+
+    // Validate URL format if provided
+    if (formData.website_url && !isValidUrl(formData.website_url)) {
+      alert('Please enter a valid website URL (e.g., example.com, www.example.in, https://example.com)')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      // Normalize the URL before submitting
+      const normalizedFormData = {
+        phone: formData.phone,
+        website_url: formData.website_url ? normalizeUrl(formData.website_url) : company?.website_url || null,
+        rating: formData.rating,
+        review: formData.review,
+      }
+      
+      const { error } = await supabase
+        .from('company_reviews')
+        .update(normalizedFormData)
+        .eq('id', editingReview.id)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Reset form and close modal
+      setFormData({
+        phone: '',
+        website_url: company?.website_url || '',
+        rating: 0,
+        review: '',
+      })
+      setShowEditForm(false)
+      setEditingReview(null)
+      
+      // Refresh company data to show updated review
+      fetchCompanyData()
+      alert('Review updated successfully!')
+    } catch (error) {
+      console.error('Error updating review:', error)
+      alert('Failed to update review. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -639,6 +712,138 @@ export default function CompanyPage() {
                     <>
                       <Plus size={18} />
                       <span>Submit Review</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Review Form Modal */}
+      {showEditForm && editingReview && company && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
+            <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Review for {company.name}</h2>
+            
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {user && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-gray-700">
+                    <strong>Editing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                  </p>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Company Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={company.name}
+                  disabled
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={company.category}
+                  disabled
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Website URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.website_url}
+                  onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  placeholder="https://example.com (optional)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Rating <span className="text-red-500">*</span>
+                </label>
+                <StarRating
+                  rating={formData.rating}
+                  onRatingChange={(rating) => setFormData({ ...formData, rating })}
+                  readonly={false}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Review <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  required
+                  value={formData.review}
+                  onChange={(e) => setFormData({ ...formData, review: e.target.value })}
+                  rows={6}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none"
+                  placeholder="Share your experience with this company..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false)
+                    setEditingReview(null)
+                    setFormData({
+                      phone: '',
+                      website_url: company.website_url || '',
+                      rating: 0,
+                      review: '',
+                    })
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 flex items-center justify-center gap-2"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit size={18} />
+                      <span>Update Review</span>
                     </>
                   )}
                 </button>
