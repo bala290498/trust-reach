@@ -58,24 +58,14 @@ export default function Navbar() {
               </SignedOut>
               <SignedIn>
                 <Link
-                  href="/my-reviews"
+                  href="/my-activity"
                   className={`text-sm font-medium transition-all duration-200 ${
-                    pathname === '/my-reviews'
+                    pathname === '/my-activity'
                       ? 'text-primary-600 font-semibold'
                       : 'text-gray-600 hover:text-primary-600'
                   }`}
                 >
-                  Your Reviews
-                </Link>
-                <Link
-                  href="/my-products"
-                  className={`text-sm font-medium transition-all duration-200 ${
-                    pathname === '/my-products'
-                      ? 'text-primary-600 font-semibold'
-                      : 'text-gray-600 hover:text-primary-600'
-                  }`}
-                >
-                  Your Products
+                  Your Activity
                 </Link>
                 <UserButton afterSignOutUrl="/" />
               </SignedIn>
