@@ -42,7 +42,7 @@ export default function CustomSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm font-medium bg-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all flex items-center justify-between cursor-pointer hover:border-gray-400"
+        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all flex items-center justify-between cursor-pointer hover:border-gray-300"
       >
         <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
           {displayValue}
@@ -54,7 +54,7 @@ export default function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute z-[100] w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl overflow-hidden">
           <div className="max-h-60 overflow-y-auto">
             {options.map((option) => (
               <button

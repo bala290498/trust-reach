@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
 import { Calendar, User, Tag, ArrowLeft, ExternalLink } from 'lucide-react'
+import CustomSelect from '@/components/CustomSelect'
 
 interface Blog {
   id: string
@@ -99,19 +100,16 @@ export default function BlogsPage() {
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
-          <div className="md:w-64">
-            <select
+          <div className="w-full md:w-64">
+            <CustomSelect
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-            >
-              <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setSelectedCategory(String(value))}
+              options={[
+                { value: '', label: 'All Categories' },
+                ...categories.map((category) => ({ value: category, label: category })),
+              ]}
+              minWidth="100%"
+            />
           </div>
         </div>
 
