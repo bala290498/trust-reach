@@ -162,8 +162,10 @@ export default function Home() {
 
   // Generate company name suggestions
   useEffect(() => {
-    if (showAddForm && formData.company_name) {
-      const query = normalizeText(formData.company_name)
+    const trimmedName = formData.company_name?.trim() || ''
+    
+    if (showAddForm && trimmedName.length > 0) {
+      const query = normalizeText(trimmedName)
       const uniqueNames = getUniqueCompanyNames()
       
       if (query.length > 0) {
@@ -804,7 +806,8 @@ export default function Home() {
                         setFormData({ ...formData, company_name: e.target.value })
                       }}
                       onFocus={() => {
-                        if (companyNameSuggestions.length > 0) {
+                        const trimmedName = formData.company_name?.trim() || ''
+                        if (trimmedName.length > 0 && companyNameSuggestions.length > 0) {
                           setShowCompanyNameDropdown(true)
                         }
                       }}

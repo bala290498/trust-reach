@@ -159,8 +159,10 @@ export default function EcommercePage() {
 
   // Generate product name suggestions
   useEffect(() => {
-    if (showAddForm && formData.product_name) {
-      const query = normalizeText(formData.product_name)
+    const trimmedName = formData.product_name?.trim() || ''
+    
+    if (showAddForm && trimmedName.length > 0) {
+      const query = normalizeText(trimmedName)
       const uniqueNames = getUniqueProductNames()
       
       if (query.length > 0) {
@@ -891,7 +893,8 @@ export default function EcommercePage() {
                         setFormData({ ...formData, product_name: e.target.value })
                       }}
                       onFocus={() => {
-                        if (productNameSuggestions.length > 0) {
+                        const trimmedName = formData.product_name?.trim() || ''
+                        if (trimmedName.length > 0 && productNameSuggestions.length > 0) {
                           setShowProductNameDropdown(true)
                         }
                       }}
