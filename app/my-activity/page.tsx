@@ -8,7 +8,7 @@ import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -17,7 +17,7 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 

@@ -13,7 +13,7 @@ import { Search, Plus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, H
 import YourReviewsSlider from '@/components/YourReviewsSlider'
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -22,13 +22,13 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
-    'Restaurants & Bars': UtensilsCrossed,
+    'Hotels & Restaurants': UtensilsCrossed,
     'Health & Medical': Heart,
     'Travel & Vacation': Plane,
     'Construction & Manufacturing': Building2,
@@ -37,7 +37,7 @@ const getCategoryIcon = (category: string) => {
     'Beauty & Well-being': Sparkles,
     'Electronics & Technology': Laptop,
     'Vehicles & Transportation': Car,
-    'Public & Local Services': Building,
+    'Local Services': Building,
     'Education & Training': GraduationCap,
   }
   const IconComponent = iconMap[category]
@@ -45,7 +45,7 @@ const getCategoryIcon = (category: string) => {
 }
 
 const popularCategories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Electronics & Technology',
   'Beauty & Well-being',
@@ -1041,7 +1041,7 @@ function HomeContent() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Company Name <span className="text-red-500">*</span>
+                    Company or Brand Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1080,16 +1080,16 @@ function HomeContent() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Website URL (Optional)
+                    Website or Insta Page URL
                   </label>
                   <input
                     type="text"
-                    placeholder="https://example.com or example.in or www.example.com"
+                    placeholder="https://example.com or example.in or www.example.com or instagram.com/username"
                     value={formData.website_url}
                     onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Supports: https://example.com, example.in, www.example.com, etc.</p>
+                  <p className="text-xs text-gray-500 mt-1">Supports: https://example.com, example.in, www.example.com, instagram.com/username, etc.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1182,7 +1182,7 @@ function HomeContent() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Company Name <span className="text-red-500">*</span>
+                      Company or Brand Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1194,13 +1194,14 @@ function HomeContent() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Website URL (Optional)
+                      Website or Insta Page URL
                     </label>
                     <input
                       type="url"
                       value={formData.website_url}
                       onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      placeholder="https://example.com or instagram.com/username"
                     />
                   </div>
                   <div>

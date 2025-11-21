@@ -9,7 +9,7 @@ import { CheckCircle2, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIco
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
-    'Restaurants & Bars': UtensilsCrossed,
+    'Hotels & Restaurants': UtensilsCrossed,
     'Health & Medical': Heart,
     'Travel & Vacation': Plane,
     'Construction & Manufacturing': Building2,
@@ -18,7 +18,7 @@ const getCategoryIcon = (category: string) => {
     'Beauty & Well-being': Sparkles,
     'Electronics & Technology': Laptop,
     'Vehicles & Transportation': Car,
-    'Public & Local Services': Building,
+    'Local Services': Building,
     'Education & Training': GraduationCap,
   }
   const IconComponent = iconMap[category]
@@ -26,7 +26,7 @@ const getCategoryIcon = (category: string) => {
 }
 
 const popularCategories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Electronics & Technology',
   'Beauty & Well-being',
@@ -35,7 +35,7 @@ const popularCategories = [
 ]
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -44,7 +44,7 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 

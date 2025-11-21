@@ -375,7 +375,7 @@ export default function MyReviewsPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   >
                     <option value="">Select a category</option>
-                    <option value="Restaurants & Bars">Restaurants & Bars</option>
+                    <option value="Hotels & Restaurants">Hotels & Restaurants</option>
                     <option value="Health & Medical">Health & Medical</option>
                     <option value="Travel & Vacation">Travel & Vacation</option>
                     <option value="Construction & Manufacturing">Construction & Manufacturing</option>
@@ -384,7 +384,7 @@ export default function MyReviewsPage() {
                     <option value="Beauty & Well-being">Beauty & Well-being</option>
                     <option value="Electronics & Technology">Electronics & Technology</option>
                     <option value="Vehicles & Transportation">Vehicles & Transportation</option>
-                    <option value="Public & Local Services">Public & Local Services</option>
+                    <option value="Local Services">Local Services</option>
                     <option value="Education & Training">Education & Training</option>
                   </select>
                 </div>

@@ -34,7 +34,7 @@ function Toggle({ checked, onChange, color = 'primary' }: ToggleProps) {
 }
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -43,7 +43,7 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 

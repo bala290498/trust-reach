@@ -19,7 +19,7 @@ interface CompanyData {
 }
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -28,7 +28,7 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 
@@ -659,14 +659,14 @@ export default function CompanyPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Website URL
+                  Website or Insta Page URL
                 </label>
                 <input
                   type="url"
                   value={formData.website_url}
                   onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  placeholder="https://example.com (optional)"
+                  placeholder="https://example.com or instagram.com/username (optional)"
                 />
               </div>
 
@@ -790,14 +790,14 @@ export default function CompanyPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Website URL
+                  Website or Insta Page URL
                 </label>
                 <input
                   type="url"
                   value={formData.website_url}
                   onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  placeholder="https://example.com (optional)"
+                  placeholder="https://example.com or instagram.com/username (optional)"
                 />
               </div>
 

@@ -9,7 +9,7 @@ import StarRating from '@/components/StarRating'
 import { ArrowLeft, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap } from 'lucide-react'
 
 const categories = [
-  'Restaurants & Bars',
+  'Hotels & Restaurants',
   'Health & Medical',
   'Travel & Vacation',
   'Construction & Manufacturing',
@@ -18,13 +18,13 @@ const categories = [
   'Beauty & Well-being',
   'Electronics & Technology',
   'Vehicles & Transportation',
-  'Public & Local Services',
+  'Local Services',
   'Education & Training',
 ]
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
-    'Restaurants & Bars': UtensilsCrossed,
+    'Hotels & Restaurants': UtensilsCrossed,
     'Health & Medical': Heart,
     'Travel & Vacation': Plane,
     'Construction & Manufacturing': Building2,
@@ -33,7 +33,7 @@ const getCategoryIcon = (category: string) => {
     'Beauty & Well-being': Sparkles,
     'Electronics & Technology': Laptop,
     'Vehicles & Transportation': Car,
-    'Public & Local Services': Building,
+    'Local Services': Building,
     'Education & Training': GraduationCap,
   }
   const IconComponent = iconMap[category]
