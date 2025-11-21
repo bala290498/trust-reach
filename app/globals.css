@@ -8,8 +8,8 @@
   :root {
     --foreground-rgb: 15, 23, 42;
     --background-rgb: 255, 255, 255;
-    /* Base font size for rem calculations - 16px default */
-    font-size: clamp(0.875rem, 0.5rem + 1vw, 1rem);
+    /* Base font size for rem calculations - minimum 16px to prevent mobile zoom */
+    font-size: clamp(1rem, 0.875rem + 0.5vw, 1.125rem); /* Minimum 1rem (16px), scales up on larger screens */
   }
 
   * {
@@ -33,8 +33,8 @@
     -moz-osx-font-smoothing: grayscale;
     /* Prevent horizontal overflow */
     overflow-x: hidden;
-    /* Use clamp for responsive base font size */
-    font-size: clamp(0.875rem, 0.5rem + 1vw, 1rem);
+    /* Use clamp for responsive base font size - minimum 16px to prevent zoom */
+    font-size: clamp(1rem, 0.875rem + 0.5vw, 1.125rem); /* Minimum 1rem (16px), scales up on larger screens */
     line-height: 1.6;
   }
 
@@ -97,6 +97,32 @@
   select {
     width: 100%;
     max-width: 100%;
+  }
+
+  /* Prevent mobile zoom on focus - iOS Safari requires minimum 16px */
+  /* This prevents automatic zoom when focusing on input fields */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  textarea,
+  select {
+    font-size: 1rem !important; /* 16px minimum to prevent iOS zoom */
+    -webkit-text-size-adjust: 100%;
+    /* Ensure consistent appearance */
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  /* Ensure select dropdowns also have proper font size */
+  select {
+    font-size: 1rem !important;
+    background-image: none;
   }
 }
 
