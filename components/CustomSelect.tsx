@@ -16,7 +16,7 @@ export default function CustomSelect({
   onChange,
   options,
   placeholder = 'Select...',
-  minWidth = '150px',
+  minWidth = '9.375rem',
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const selectRef = useRef<HTMLDivElement>(null)
@@ -38,11 +38,11 @@ export default function CustomSelect({
   const displayValue = selectedOption ? selectedOption.label : placeholder
 
   return (
-    <div className="relative" ref={selectRef} style={{ minWidth }}>
+    <div className="relative w-full sm:w-auto" ref={selectRef} style={{ minWidth }}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium bg-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all flex items-center justify-between cursor-pointer hover:border-gray-400"
+        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm font-medium bg-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all flex items-center justify-between cursor-pointer hover:border-gray-400"
       >
         <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
           {displayValue}

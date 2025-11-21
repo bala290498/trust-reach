@@ -32,7 +32,8 @@ export default function CategoryCarousel<T extends Card = Card>({
   const scroll = (direction: 'left' | 'right') => {
     const container = document.getElementById(`carousel-${category.replace(/[^a-zA-Z0-9]/g, '-')}`)
     if (container) {
-      const scrollAmount = 400
+      // Use rem-based scroll amount (approximately 25rem = 400px at 16px base)
+      const scrollAmount = container.offsetWidth * 0.8 // Scroll 80% of container width
       const currentScroll = container.scrollLeft
       const newPosition =
         direction === 'left'
@@ -70,7 +71,7 @@ export default function CategoryCarousel<T extends Card = Card>({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {cards.map((card, index) => (
-            <div key={card.id || index} className="flex-shrink-0 w-80">
+            <div key={card.id || index} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
               {renderCard(card)}
             </div>
           ))}

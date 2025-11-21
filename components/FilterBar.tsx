@@ -76,11 +76,12 @@ export default function FilterBar({
 }: FilterBarProps) {
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mb-6">
-      <div className="flex flex-wrap items-center justify-center gap-6">
+    <div className="w-full max-w-full sm:max-w-4xl mx-auto px-4 sm:px-0">
+      <div className="bg-white p-3 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-6">
             {/* Category Filter */}
-            <div className="flex items-center space-x-3">
-              <label className="text-sm font-semibold text-gray-700">Category:</label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
+              <label className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Category:</label>
               <CustomSelect
                 value={selectedCategory}
                 onChange={(value) => onCategoryChange(String(value))}
@@ -88,14 +89,14 @@ export default function FilterBar({
                   { value: '', label: 'All Categories' },
                   ...categories.map((cat) => ({ value: cat, label: cat })),
                 ]}
-                minWidth="200px"
+                minWidth="9.375rem"
               />
             </div>
 
             {/* Rating Filter */}
             {showRating && (
-              <div className="flex items-center space-x-3">
-                <label className="text-sm font-semibold text-gray-700">Rating:</label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
+                <label className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Rating:</label>
                 <CustomSelect
                   value={selectedRating}
                   onChange={(value) => onRatingChange(Number(value))}
@@ -107,34 +108,39 @@ export default function FilterBar({
                     { value: 2, label: '2+ Stars' },
                     { value: 1, label: '1+ Stars' },
                   ]}
-                  minWidth="150px"
+                  minWidth="9.375rem"
                 />
               </div>
             )}
 
         {/* New Arrivals Toggle */}
         {showNewArrivals && onNewArrivalsChange && (
-          <div className="flex items-center space-x-3">
-            <label className="text-sm font-semibold text-gray-700">New Arrivals:</label>
-            <Toggle
-              checked={newArrivalsChecked}
-              onChange={onNewArrivalsChange}
-              color="primary"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">New Arrivals:</label>
+            <div className="flex items-center">
+              <Toggle
+                checked={newArrivalsChecked}
+                onChange={onNewArrivalsChange}
+                color="primary"
+              />
+            </div>
           </div>
         )}
 
         {/* Verified Toggle */}
         {showVerified && onVerifiedChange && (
-          <div className="flex items-center space-x-3">
-            <label className="text-sm font-semibold text-gray-700">Verified by TrustReach:</label>
-            <Toggle
-              checked={verifiedChecked}
-              onChange={onVerifiedChange}
-              color="secondary"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Verified by TrustReach:</label>
+            <div className="flex items-center">
+              <Toggle
+                checked={verifiedChecked}
+                onChange={onVerifiedChange}
+                color="secondary"
+              />
+            </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

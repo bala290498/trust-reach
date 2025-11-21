@@ -483,7 +483,8 @@ export default function Home() {
     const carousel = carouselRefs.current[category]
     if (!carousel) return
     
-    const scrollAmount = 400 // Scroll by approximately one card width + gap
+    // Use responsive scroll amount based on container width
+    const scrollAmount = carousel.offsetWidth * 0.8 // Scroll 80% of container width
     const scrollDirection = direction === 'left' ? -scrollAmount : scrollAmount
     carousel.scrollBy({ left: scrollDirection, behavior: 'smooth' })
   }
@@ -521,7 +522,7 @@ export default function Home() {
               {company.name}
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={company.category}>
+              <p className="text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={company.category}>
                 {company.category}
               </p>
             </div>
@@ -586,8 +587,8 @@ export default function Home() {
             Discover authentic reviews from real customers. Make informed decisions with trusted insights. {isLoaded && !user && 'Sign in to add your own reviews.'}
           </p>
           
-          {/* Wide Search Bar */}
-          <div className="max-w-2xl mx-auto mb-6">
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto mb-6">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
@@ -1235,17 +1236,17 @@ export default function Home() {
         {/* Popular Categories Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Categories</h2>
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
             {popularCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 group min-w-[120px]"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 group w-full"
               >
-                <div className="text-primary-600 group-hover:text-primary-700 transition-colors">
+                <div className="text-primary-600 group-hover:text-primary-700 transition-colors flex-shrink-0">
                   {getCategoryIcon(category)}
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 text-center">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-gray-900 text-center leading-tight">
                   {category}
                 </span>
               </button>
@@ -1321,7 +1322,7 @@ export default function Home() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categoryCompanies.map((company, index) => (
-                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-[380px]">
+                    <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
                       {renderCompanyCard(company)}
                     </div>
                   ))}
@@ -1383,7 +1384,7 @@ export default function Home() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {getCompaniesData().map((company, index) => (
-                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-[380px]">
+                  <div key={`${company.name}-${index}`} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
                     {renderCompanyCard(company)}
                   </div>
                 ))}

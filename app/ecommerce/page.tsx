@@ -82,9 +82,6 @@ export default function EcommercePage() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [productNameSuggestions, setProductNameSuggestions] = useState<string[]>([])
   const [showProductNameDropdown, setShowProductNameDropdown] = useState(false)
-  const [selectedPlatform, setSelectedPlatform] = useState<{ name: string; products: ProductListing[] } | null>(null)
-  const [platformSortBy, setPlatformSortBy] = useState<'date' | 'rating'>('date')
-  const [platformSortOrder, setPlatformSortOrder] = useState<'asc' | 'desc'>('desc')
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -428,49 +425,10 @@ export default function EcommercePage() {
   }
 
 
-  // Group products by platform name and calculate stats
-  interface PlatformData {
-    name: string
-    category: string
-    averageRating: number
-    productCount: number
-    products: ProductListing[]
-  }
-
-  const getPlatformsData = useCallback(() => {
-    const platformMap = new Map<string, ProductListing[]>()
-    
-    filteredProducts.forEach((product) => {
-      const platformName = product.platform_name
-      if (!platformMap.has(platformName)) {
-        platformMap.set(platformName, [])
-      }
-      platformMap.get(platformName)!.push(product)
-    })
-
-    const platforms: PlatformData[] = []
-    platformMap.forEach((products, platformName) => {
-      const totalRating = products.reduce((sum, p) => sum + p.rating, 0)
-      const averageRating = totalRating / products.length
-      const firstProduct = products[0]
-      
-      platforms.push({
-        name: platformName,
-        category: firstProduct.category,
-        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-        productCount: products.length,
-        products: products,
-      })
-    })
-
-    return platforms
-  }, [filteredProducts])
-
   const groupedByCategory = categories.reduce((acc, category) => {
-    const platforms = getPlatformsData()
-    acc[category] = platforms.filter((p) => p.category === category)
+    acc[category] = filteredProducts.filter((p) => p.category === category)
     return acc
-  }, {} as Record<string, PlatformData[]>)
+  }, {} as Record<string, ProductListing[]>)
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -486,7 +444,8 @@ export default function EcommercePage() {
     const carousel = carouselRefs.current[category]
     if (!carousel) return
     
-    const scrollAmount = 400
+    // Use responsive scroll amount based on container width
+    const scrollAmount = carousel.offsetWidth * 0.8 // Scroll 80% of container width
     const scrollDirection = direction === 'left' ? -scrollAmount : scrollAmount
     carousel.scrollBy({ left: scrollDirection, behavior: 'smooth' })
   }
@@ -499,37 +458,64 @@ export default function EcommercePage() {
     }
   }, [])
 
-  const renderPlatformCard = (platform: PlatformData) => (
-    <div 
-      className="bg-white rounded-2xl border-2 border-gray-300 p-6 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer"
-      onClick={() => setSelectedPlatform({ name: platform.name, products: platform.products })}
-    >
-      <div className="flex items-start justify-between mb-4 flex-shrink-0">
-        <div className="flex-1 min-w-0 pr-2">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 truncate" title={platform.name}>
-            {platform.name}
-          </h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={platform.category}>
-              {platform.category}
-            </p>
+  const renderProductCard = (product: ProductListing) => (
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-2 flex-wrap">
+            <span className="text-sm font-bold text-primary-600">{product.platform_name}</span>
+            <span className="text-sm text-gray-400">•</span>
+            <span className="text-sm text-gray-500 font-medium">{product.category}</span>
+            {product.created_at && (
+              <>
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm text-gray-500">{formatDate(product.created_at)}</span>
+              </>
+            )}
           </div>
+          {product.product_name && (
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{product.product_name}</h3>
+          )}
         </div>
+        {product.url && (
+          <a
+            href={product.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={18} />
+          </a>
+        )}
       </div>
-      <div className="mb-4 flex-shrink-0">
-        <div className="flex items-center gap-3 mb-2">
-          <StarRating rating={platform.averageRating} onRatingChange={() => {}} readonly />
-          <span className="text-lg font-bold text-gray-900">{platform.averageRating.toFixed(1)}</span>
+      <div className="mb-4">
+        <StarRating rating={product.rating} onRatingChange={() => {}} readonly />
+      </div>
+      <p className="text-gray-700 mb-4 leading-relaxed text-sm">{product.review}</p>
+      {product.url && (
+        <a
+          href={product.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors mb-3 inline-block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          View Product →
+        </a>
+      )}
+      {/* Edit/Delete buttons - only show for user's own products */}
+      {isLoaded && user && product.user_id === user.id && (
+        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+          <Link
+            href="/my-products"
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 text-center text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors py-2 px-3"
+          >
+            Manage in Your Products →
+          </Link>
         </div>
-        <p className="text-sm text-gray-600">
-          {platform.productCount} {platform.productCount === 1 ? 'product' : 'products'}
-        </p>
-      </div>
-      <div className="mt-auto pt-4 border-t border-gray-200">
-        <p className="text-sm font-medium text-primary-600 text-center">
-          View All Products →
-        </p>
-      </div>
+      )}
     </div>
   )
 
@@ -545,7 +531,7 @@ export default function EcommercePage() {
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-6">
+          <div className="max-w-xl mx-auto mb-6">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
@@ -617,17 +603,17 @@ export default function EcommercePage() {
         {/* Popular Categories Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Categories</h2>
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
             {popularCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 group min-w-[120px]"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl hover:bg-gray-50 transition-all duration-200 group w-full"
               >
-                <div className="text-primary-600 group-hover:text-primary-700 transition-colors">
+                <div className="text-primary-600 group-hover:text-primary-700 transition-colors flex-shrink-0">
                   {getCategoryIcon(category)}
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 text-center">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-gray-900 text-center leading-tight">
                   {category}
                 </span>
               </button>
@@ -853,156 +839,6 @@ export default function EcommercePage() {
           </div>
         )}
 
-        {/* Platform Details Modal with All Products */}
-        {selectedPlatform && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedPlatform(null)}>
-            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedPlatform.name}</h2>
-                  {selectedPlatform.products[0]?.category && (
-                    <p className="text-sm text-gray-500 font-medium mb-4">{selectedPlatform.products[0].category}</p>
-                  )}
-                  <div className="flex items-center gap-3 mb-4">
-                    {(() => {
-                      const avgRating = selectedPlatform.products.reduce((sum, p) => sum + p.rating, 0) / selectedPlatform.products.length
-                      return (
-                        <>
-                          <StarRating rating={Math.round(avgRating * 10) / 10} onRatingChange={() => {}} readonly />
-                          <span className="text-lg font-bold text-gray-900">
-                            {avgRating.toFixed(1)}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            ({selectedPlatform.products.length} {selectedPlatform.products.length === 1 ? 'product' : 'products'})
-                          </span>
-                        </>
-                      )
-                    })()}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedPlatform(null)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Sorting Options */}
-              <div className="mb-6 flex items-center gap-4 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700">Sort by:</label>
-                <select
-                  value={platformSortBy}
-                  onChange={(e) => setPlatformSortBy(e.target.value as 'date' | 'rating')}
-                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="date">Date</option>
-                  <option value="rating">Rating</option>
-                </select>
-                <select
-                  value={platformSortOrder}
-                  onChange={(e) => setPlatformSortOrder(e.target.value as 'asc' | 'desc')}
-                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="desc">Newest/Highest First</option>
-                  <option value="asc">Oldest/Lowest First</option>
-                </select>
-              </div>
-
-              {/* Products List */}
-              <div className="space-y-4">
-                {(() => {
-                  const sortedProducts = [...selectedPlatform.products].sort((a, b) => {
-                    if (platformSortBy === 'date') {
-                      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
-                      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
-                      return platformSortOrder === 'desc' ? dateB - dateA : dateA - dateB
-                    } else {
-                      return platformSortOrder === 'desc' ? b.rating - a.rating : a.rating - b.rating
-                    }
-                  })
-
-                  return sortedProducts.map((product) => (
-                    <div key={product.id} className="border-2 border-gray-200 rounded-xl p-6 hover:border-primary-300 transition-all">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          {product.product_name && (
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{product.product_name}</h3>
-                          )}
-                          {product.created_at && (
-                            <p className="text-sm text-gray-500">{formatDate(product.created_at)}</p>
-                          )}
-                        </div>
-                        {product.url && (
-                          <a
-                            href={product.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-4"
-                          >
-                            <ExternalLink size={18} />
-                          </a>
-                        )}
-                      </div>
-                      <div className="mb-3">
-                        <StarRating rating={product.rating} onRatingChange={() => {}} readonly />
-                      </div>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap mb-3">{product.review}</p>
-                      {product.url && (
-                        <a
-                          href={product.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-700 text-sm font-semibold transition-colors inline-block mb-3"
-                        >
-                          View Product →
-                        </a>
-                      )}
-                      {/* Edit/Delete buttons - only show for user's own products */}
-                      {isLoaded && user && product.user_id === user.id && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-3">
-                          <button
-                            onClick={() => {
-                              handleEditClick(product)
-                              setSelectedPlatform(null)
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            <Edit size={16} />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleDeleteClick(product)
-                              setSelectedPlatform(null)
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                })()}
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={() => setSelectedPlatform(null)}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Add Product Form Modal */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1171,8 +1007,8 @@ export default function EcommercePage() {
 
         {/* Category Sections with Carousel Layout */}
         {categories.map((category) => {
-          const categoryPlatforms = groupedByCategory[category] || []
-          if (categoryPlatforms.length === 0) return null
+          const categoryProducts = groupedByCategory[category] || []
+          if (categoryProducts.length === 0) return null
 
           return (
             <div key={category} className="mb-12">
@@ -1206,9 +1042,9 @@ export default function EcommercePage() {
                   className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  {categoryPlatforms.map((platform, index) => (
-                    <div key={`${platform.name}-${index}`} className="flex-shrink-0 w-[380px]">
-                      {renderPlatformCard(platform)}
+                  {categoryProducts.map((product) => (
+                    <div key={product.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                      {renderProductCard(product)}
                     </div>
                   ))}
                 </div>
@@ -1226,14 +1062,14 @@ export default function EcommercePage() {
           )
         })}
 
-        {/* All Platforms Carousel (when no category filter) */}
-        {!selectedCategory && getPlatformsData().length > 0 && (
+        {/* All Products Carousel (when no category filter) */}
+        {!selectedCategory && filteredProducts.length > 0 && (
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">All Platforms</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">All Products</h2>
             <div className="relative">
               {/* Left Arrow */}
               <button
-                onClick={() => scrollCarousel('all-platforms', 'left')}
+                onClick={() => scrollCarousel('all-products', 'left')}
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
                 aria-label="Scroll left"
               >
@@ -1242,20 +1078,20 @@ export default function EcommercePage() {
               
               {/* Carousel Container */}
               <div
-                ref={(el) => setCarouselRef('all-platforms', el)}
+                ref={(el) => setCarouselRef('all-products', el)}
                 className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth px-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-                {getPlatformsData().map((platform, index) => (
-                  <div key={`${platform.name}-${index}`} className="flex-shrink-0 w-[380px]">
-                    {renderPlatformCard(platform)}
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+                    {renderProductCard(product)}
                   </div>
                 ))}
               </div>
               
               {/* Right Arrow */}
               <button
-                onClick={() => scrollCarousel('all-platforms', 'right')}
+                onClick={() => scrollCarousel('all-products', 'right')}
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border-2 border-gray-300 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
                 aria-label="Scroll right"
               >
