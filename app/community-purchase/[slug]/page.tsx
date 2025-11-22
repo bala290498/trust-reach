@@ -179,7 +179,7 @@ export default function CommunityPurchaseDetailPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
           <nav className="mb-6" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-2 text-base">
+            <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
               <li>
                 <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
                   Home
@@ -223,21 +223,21 @@ export default function CommunityPurchaseDetailPage() {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
         {/* Breadcrumb */}
-        <nav className="mb-6" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-base">
-            <li>
-              <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
-                Home
-              </Link>
-            </li>
-            <li className="text-gray-400">/</li>
-            <li>
-              <Link href="/wholesale" className="text-gray-600 hover:text-primary-600 transition-colors">
-                WholeSale
-              </Link>
-            </li>
-          </ol>
-        </nav>
+          <nav className="mb-6" aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
+              <li>
+                <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li className="text-gray-400">/</li>
+              <li>
+                <Link href="/wholesale" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  WholeSale
+                </Link>
+              </li>
+            </ol>
+          </nav>
 
         {/* Hero Banner */}
         <div className="bg-gradient-to-r from-primary-50 via-white to-secondary-50 rounded-2xl p-6 md:p-8 mb-8 border-2 border-gray-200">

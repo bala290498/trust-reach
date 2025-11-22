@@ -215,7 +215,7 @@ export default function BrandPage() {
         <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
           {/* Breadcrumb */}
           <nav className="mb-6" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-2 text-base">
+            <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
               <li>
                 <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
                   Home
@@ -260,7 +260,7 @@ export default function BrandPage() {
       <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
         {/* Breadcrumb */}
         <nav className="mb-6" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-base">
+          <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
             <li>
               <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
                 Home
