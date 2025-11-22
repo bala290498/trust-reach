@@ -833,8 +833,11 @@ function HomeContent() {
                     // Calculate average rating for brand if it's a brand type
                     let averageRating = 0
                     let reviewCount = 0
+                    let brandId: string | null = null
                     
-                    if (suggestion.type === 'brand') {
+                    if (suggestion.type === 'brand' && suggestion.data) {
+                      const brand = suggestion.data as BrandCard
+                      brandId = brand.id
                       const brandReviews = reviews.filter(
                         (r) => r.company_name.toLowerCase() === suggestion.name.toLowerCase()
                       )
@@ -848,6 +851,46 @@ function HomeContent() {
                       reviewCount = 1
                     }
                     
+                    // For brand type suggestions, use Link to navigate to brand page
+                    if (suggestion.type === 'brand' && brandId) {
+                      return (
+                        <Link
+                          key={`${suggestion.type}-${suggestion.name}-${index}`}
+                          href={`/brands/${brandId}`}
+                          onClick={() => {
+                            setShowSearchDropdown(false)
+                          }}
+                          className="block w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{suggestion.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {suggestion.data && (suggestion.data as BrandCard).category && (
+                                  <span>{(suggestion.data as BrandCard).category}</span>
+                                )}
+                                {reviewCount > 0 && (
+                                  <span className="ml-2">{reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}</span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0 flex items-center gap-2">
+                              {averageRating > 0 && (
+                                <>
+                                  <StarRating rating={averageRating} onRatingChange={() => {}} readonly />
+                                  <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                                </>
+                              )}
+                              {averageRating === 0 && (
+                                <span className="text-xs text-gray-400">No reviews</span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    }
+                    
+                    // For review type suggestions, keep as button to set search query
                     return (
                       <button
                         key={`${suggestion.type}-${suggestion.name}-${index}`}
@@ -863,16 +906,6 @@ function HomeContent() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <p className="font-semibold text-gray-900">{suggestion.name}</p>
-                            {suggestion.type === 'brand' && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {suggestion.data && (suggestion.data as BrandCard).category && (
-                                  <span>{(suggestion.data as BrandCard).category}</span>
-                                )}
-                                {reviewCount > 0 && (
-                                  <span className="ml-2">{reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}</span>
-                                )}
-                              </p>
-                            )}
                           </div>
                           <div className="flex-shrink-0 flex items-center gap-2">
                             {averageRating > 0 && (
@@ -880,9 +913,6 @@ function HomeContent() {
                                 <StarRating rating={averageRating} onRatingChange={() => {}} readonly />
                                 <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
                               </>
-                            )}
-                            {suggestion.type === 'brand' && averageRating === 0 && (
-                              <span className="text-xs text-gray-400">No reviews</span>
                             )}
                           </div>
                         </div>
