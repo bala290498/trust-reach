@@ -50,7 +50,7 @@ interface BulkOrder {
 
 type TabType = 'featured' | 'inprogress'
 
-export default function BulkOrdersPage() {
+export default function GroupPurchasingPage() {
   const { user, isLoaded } = useUser()
   const [orders, setOrders] = useState<BulkOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,13 +77,13 @@ export default function BulkOrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await fetch('/api/bulk-orders')
+      const response = await fetch('/api/group-purchasing')
       if (response.ok) {
         const data = await response.json()
         setOrders(data)
       }
     } catch (error) {
-      console.error('Error fetching bulk orders:', error)
+      console.error('Error fetching Group Purchasing opportunities:', error)
     } finally {
       setLoading(false)
     }
@@ -148,7 +148,7 @@ export default function BulkOrdersPage() {
 
     setSubmitting(true)
     try {
-      const response = await fetch('/api/bulk-orders/submit', {
+      const response = await fetch('/api/group-purchasing/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -214,10 +214,10 @@ export default function BulkOrdersPage() {
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            Bulk Orders
+            Group Purchasing
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Express your interest in bulk orders. Our team will reach out to you shortly.
+            Express your interest in Group Purchasing. Our team will reach out to you shortly.
           </p>
         </div>
       </div>
@@ -253,15 +253,15 @@ export default function BulkOrdersPage() {
         <div className="mb-8 text-center">
           <p className="text-sm text-gray-600 max-w-2xl mx-auto">
             {activeTab === 'featured' 
-              ? 'Featured bulk orders are available for interest submission. Orders are not currently being processed, but you can express your interest for future consideration.'
-              : 'In Progress bulk orders are currently ongoing. You can show your interest and our team will reach out to you shortly.'}
+              ? 'Featured Group Purchasing opportunities are available for interest submission. Orders are not currently being processed, but you can express your interest for future consideration.'
+              : 'In Progress Group Purchasing opportunities are currently ongoing. You can show your interest and our team will reach out to you shortly.'}
           </p>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
-            <div className="text-gray-600">Loading bulk orders...</div>
+            <div className="text-gray-600">Loading Group Purchasing opportunities...</div>
           </div>
         )}
 
@@ -336,7 +336,7 @@ export default function BulkOrdersPage() {
             <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
               <p className="text-gray-600 mb-6">
-                Please sign in or create an account to express interest in bulk orders.
+                Please sign in or create an account to express interest in Group Purchasing.
               </p>
               <div className="flex flex-col gap-3">
                 <SignInButton mode="modal">

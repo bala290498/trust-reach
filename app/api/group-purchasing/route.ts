@@ -14,7 +14,7 @@ interface BulkOrder {
 
 export async function GET() {
   try {
-    const ordersDirectory = path.join(process.cwd(), 'content', 'bulk-orders')
+    const ordersDirectory = path.join(process.cwd(), 'content', 'group-purchasing')
     
     // Check if directory exists
     if (!fs.existsSync(ordersDirectory)) {
