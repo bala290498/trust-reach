@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
-import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar } from 'lucide-react'
+import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar, ChevronDown, Filter } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
 import NotificationModal from '@/components/NotificationModal'
 import Link from 'next/link'
@@ -45,18 +45,20 @@ interface BulkOrder {
   title: string
   description: string
   category: string
-  deadline: string
-  status: 'featured' | 'inprogress'
+  valid_until: string
+  status: 'monthly' | 'special'
   created_at: string
 }
 
-type TabType = 'featured' | 'inprogress'
+type TabType = 'monthly' | 'special'
 
 export default function GroupPurchasingPage() {
   const { user, isLoaded } = useUser()
   const [orders, setOrders] = useState<BulkOrder[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabType>('featured')
+  const [activeTab, setActiveTab] = useState<TabType>('monthly')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<BulkOrder | null>(null)
   const [showInterestForm, setShowInterestForm] = useState(false)
   const [showSignInModal, setShowSignInModal] = useState(false)
@@ -95,7 +97,19 @@ export default function GroupPurchasingPage() {
     fetchOrders()
   }, [fetchOrders])
 
-  const filteredOrders = orders.filter((order) => order.status === activeTab)
+  // Get unique categories dynamically from orders filtered by active tab
+  const tabFilteredOrders = orders.filter((order) => {
+    return activeTab === 'monthly'
+      ? (order.status === 'monthly' || order.status === 'everyday' || order.status === 'featured')
+      : (order.status === 'special' || order.status === 'inprogress')
+  })
+  
+  const availableCategories = Array.from(new Set(tabFilteredOrders.map(order => order.category).filter(Boolean))).sort()
+
+  const filteredOrders = tabFilteredOrders.filter((order) => {
+    // Filter by category
+    return selectedCategory === 'all' || order.category === selectedCategory
+  })
 
   const formatDate = (dateString: string) => {
     if (!dateString) return ''
@@ -229,24 +243,30 @@ export default function GroupPurchasingPage() {
         <div className="mb-8 border-b border-gray-200">
           <div className="flex justify-center space-x-8">
             <button
-              onClick={() => setActiveTab('featured')}
+              onClick={() => {
+                setActiveTab('monthly')
+                setSelectedCategory('all')
+              }}
               className={`pb-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
-                activeTab === 'featured'
+                activeTab === 'monthly'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Featured
+              Monthly Buys
             </button>
             <button
-              onClick={() => setActiveTab('inprogress')}
+              onClick={() => {
+                setActiveTab('special')
+                setSelectedCategory('all')
+              }}
               className={`pb-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
-                activeTab === 'inprogress'
+                activeTab === 'special'
                   ? 'border-primary-600 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              In Progress
+              Special Buys
             </button>
           </div>
         </div>
@@ -254,11 +274,63 @@ export default function GroupPurchasingPage() {
         {/* Micro Copy */}
         <div className="mb-8 text-center">
           <p className="text-sm text-gray-600 max-w-2xl mx-auto">
-            {activeTab === 'featured' 
-              ? 'Featured Community Purchase opportunities are available for interest submission. Orders are not currently being processed, but you can express your interest for future consideration.'
-              : 'In Progress Community Purchase opportunities are currently ongoing. You can show your interest and our team will reach out to you shortly.'}
+            {activeTab === 'monthly' 
+              ? 'Monthly Buys are regular community purchase opportunities available for interest submission. These are ongoing offers you can join at any time.'
+              : 'Special Buys are limited-time community purchase opportunities with exclusive deals. Express your interest to join these special group purchases.'}
           </p>
         </div>
+
+        {/* Category Filter */}
+        {availableCategories.length > 0 && (
+          <div className="mb-6 flex justify-center">
+            <div className="relative inline-block">
+              <button
+                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+              >
+                <span>Sort by Category</span>
+                <Filter size={16} className="text-gray-500 hover:text-primary-600 transition-colors cursor-pointer" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {isCategoryDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsCategoryDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-20 min-w-[200px] max-h-[300px] overflow-y-auto">
+                    <button
+                      onClick={() => {
+                        setSelectedCategory('all')
+                        setIsCategoryDropdownOpen(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                        selectedCategory === 'all' ? 'bg-primary-50 text-primary-600 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      All Categories
+                    </button>
+                    {availableCategories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => {
+                          setSelectedCategory(category)
+                          setIsCategoryDropdownOpen(false)
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${
+                          selectedCategory === category ? 'bg-primary-50 text-primary-600 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (
@@ -274,8 +346,8 @@ export default function GroupPurchasingPage() {
               <div className="text-6xl mb-4">📦</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">No Orders Available</h3>
               <p className="text-gray-600">
-                {activeTab === 'featured' && 'No featured orders at the moment.'}
-                {activeTab === 'inprogress' && 'No orders in progress at the moment.'}
+                {activeTab === 'monthly' && 'No monthly buys available at the moment.'}
+                {activeTab === 'special' && 'No special buys available at the moment.'}
               </p>
             </div>
           </div>
@@ -292,15 +364,10 @@ export default function GroupPurchasingPage() {
               >
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[clamp(0.75rem,2vw,0.875rem)] font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors break-words" title={order.title}>
+                    <h3 className="text-[clamp(0.75rem,2vw,0.875rem)] font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors break-words" title={order.title}>
                       {order.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      {getCategoryIcon(order.category) && (
-                        <div className="text-primary-600">
-                          {getCategoryIcon(order.category)}
-                        </div>
-                      )}
+                    <div className="mb-3">
                       <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 font-medium truncate" title={order.category}>
                         {order.category}
                       </p>
@@ -308,20 +375,20 @@ export default function GroupPurchasingPage() {
                   </div>
                 </div>
 
-                <div className="mb-2 flex-1">
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown className="text-gray-700 text-[clamp(0.625rem,1.5vw,0.75rem)] line-clamp-3">
-                      {order.description}
-                    </ReactMarkdown>
-                  </div>
+                <div className="mb-3 space-y-2">
+                  {order.created_at && (
+                    <div className="flex items-center gap-1.5 text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-600">
+                      <Calendar size={14} />
+                      <span>Created: {formatDate(order.created_at)}</span>
+                    </div>
+                  )}
+                  {order.valid_until && (
+                    <div className="flex items-center gap-1.5 text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-600">
+                      <Calendar size={14} />
+                      <span>Valid Until: {formatDate(order.valid_until)}</span>
+                    </div>
+                  )}
                 </div>
-
-                {order.deadline && (
-                  <div className="mb-2 flex items-center gap-1.5 text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-600">
-                    <Calendar size={14} />
-                    <span>Deadline: {formatDate(order.deadline)}</span>
-                  </div>
-                )}
 
                 <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-2 border-t border-gray-200">
                   <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">

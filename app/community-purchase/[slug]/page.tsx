@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
-import { ArrowLeft, Calendar, Plus, Minus, CheckCircle2, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Calendar, Plus, Minus, CheckCircle2, MessageCircle, Mail, Phone } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { generateSlug } from '@/lib/utils'
 import NotificationModal from '@/components/NotificationModal'
@@ -13,11 +13,16 @@ interface CommunityPurchase {
   id: string
   title: string
   category: string
-  deadline?: string
-  status: 'featured' | 'inprogress'
+  valid_until?: string
+  status: 'monthly' | 'special'
   about: string
   offer_deals?: string
   stock_clearances?: string
+  market_price?: string
+  community_price?: string
+  dealer_email?: string
+  dealer_phone?: string
+  minimum_order_quantity?: string
   created_at: string
 }
 
@@ -255,13 +260,81 @@ export default function CommunityPurchaseDetailPage() {
                 <p className="text-lg text-gray-600 font-medium">{purchase.category}</p>
               )}
             </div>
-            {purchase.deadline && (
+            {purchase.valid_until && (
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar size={20} />
-                <span className="text-base font-medium">Deadline: {formatDate(purchase.deadline)}</span>
+                <span className="text-base font-medium">Valid Until: {formatDate(purchase.valid_until)}</span>
               </div>
             )}
           </div>
+          
+          {/* Contact Info and Price Display */}
+          {((purchase.dealer_email || purchase.dealer_phone) || purchase.minimum_order_quantity || (purchase.market_price || purchase.community_price)) && (
+            <div className="pt-6 border-t border-gray-200 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Side - Dealer Contact Information and Minimum Order */}
+                {((purchase.dealer_email || purchase.dealer_phone) || purchase.minimum_order_quantity) && (
+                  <div>
+                    {(purchase.dealer_email || purchase.dealer_phone) && (
+                      <>
+                        <p className="text-sm font-semibold text-gray-700 mb-3">Dealer Contact</p>
+                        <div className="space-y-2 mb-4">
+                          {purchase.dealer_email && (
+                            <div className="flex items-center gap-3">
+                              <Mail size={18} className="text-primary-600 flex-shrink-0" />
+                              <a href={`mailto:${purchase.dealer_email}`} className="text-gray-700 hover:text-primary-600 transition-colors text-base">
+                                {purchase.dealer_email}
+                              </a>
+                            </div>
+                          )}
+                          {purchase.dealer_phone && (
+                            <div className="flex items-center gap-3">
+                              <Phone size={18} className="text-primary-600 flex-shrink-0" />
+                              <a href={`tel:${purchase.dealer_phone}`} className="text-gray-700 hover:text-primary-600 transition-colors text-base">
+                                {purchase.dealer_phone}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {purchase.minimum_order_quantity && (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700 mb-1">Minimum Order Quantity</p>
+                        <p className="text-2xl md:text-3xl font-bold text-gray-900">
+                          {purchase.minimum_order_quantity} units
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Right Side - Prices */}
+                {(purchase.market_price || purchase.community_price) && (
+                  <div className="md:text-right">
+                    <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-4">
+                      {purchase.market_price && (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Market Price</p>
+                          <p className="text-3xl md:text-4xl font-bold text-gray-700 line-through">
+                            ₹{purchase.market_price}
+                          </p>
+                        </div>
+                      )}
+                      {purchase.community_price && (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Community Price</p>
+                          <p className="text-3xl md:text-4xl font-bold text-primary-600">
+                            ₹{purchase.community_price}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Two Column Layout */}
@@ -513,9 +586,6 @@ export default function CommunityPurchaseDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 Thank You!
               </h2>
-              <p className="text-gray-600 mb-2">
-                Your interest has been submitted successfully.
-              </p>
               <p className="text-gray-600 mb-6">
                 Open WhatsApp to continue with your order details.
               </p>

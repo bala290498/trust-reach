@@ -6,11 +6,16 @@ interface CommunityPurchase {
   id: string
   title: string
   category: string
-  deadline?: string
-  status: 'featured' | 'inprogress'
+  valid_until?: string
+  status: 'monthly' | 'special'
   about: string
   offer_deals?: string
   stock_clearances?: string
+  market_price?: string
+  community_price?: string
+  dealer_email?: string
+  dealer_phone?: string
+  minimum_order_quantity?: string
   created_at: string
 }
 
@@ -95,11 +100,16 @@ export async function GET(
       id: id,
       title: data.title || '',
       category: data.category || '',
-      deadline: data.deadline || undefined,
-      status: (data.status || 'featured') as 'featured' | 'inprogress',
+      valid_until: data.valid_until || data.deadline || undefined,
+      status: (data.status === 'special' || data.status === 'inprogress' ? 'special' : (data.status === 'monthly' || data.status === 'everyday' || data.status === 'featured' ? 'monthly' : 'monthly')) as 'monthly' | 'special',
       about: about,
       offer_deals: offer_deals || undefined,
       stock_clearances: stock_clearances || undefined,
+      market_price: data.market_price || undefined,
+      community_price: data.community_price || undefined,
+      dealer_email: data.dealer_email || undefined,
+      dealer_phone: data.dealer_phone || undefined,
+      minimum_order_quantity: data.minimum_order_quantity || undefined,
       created_at: data.created_at || new Date().toISOString(),
     }
 
