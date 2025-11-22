@@ -779,19 +779,19 @@ function HomeContent() {
       />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 w-full">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-[clamp(2.5rem,5vw,3rem)] w-full">
+        <div className="max-w-[min(1200px,95vw)] mx-auto px-[clamp(1rem,4vw,2rem)] text-center">
+          <h1 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)] leading-tight">
             Find Trusted Company Reviews
           </h1>
-          <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+          <p className="text-[clamp(0.875rem,2vw,1.125rem)] text-gray-600 mb-[clamp(1rem,3vw,1.5rem)] max-w-[min(42rem,90vw)] mx-auto">
             Discover authentic reviews from real customers. Make informed decisions with trusted insights. {isLoaded && !user && 'Sign in to add your own reviews.'}
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-xl mx-auto mb-6">
+          <div className="w-full max-w-[min(36rem,90vw)] mx-auto mb-[clamp(1rem,3vw,1.5rem)]">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-[clamp(0.75rem,2vw,1rem)] top-1/2 transform -translate-y-1/2 text-gray-400" size={18} style={{ width: 'clamp(1rem, 2.5vw, 1.125rem)', height: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
               <input
                 type="text"
                 placeholder="Search for companies or brands... (e.g., type any word from company name)"
@@ -811,12 +811,12 @@ function HomeContent() {
                   // Delay hiding dropdown to allow clicking on suggestions
                   setTimeout(() => setShowSearchDropdown(false), 200)
                 }}
-                className="w-full pl-12 pr-4 py-2.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm hover:shadow-md"
+                className="w-full pl-[clamp(2.75rem,8vw,3rem)] pr-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.625rem,1.5vw,0.75rem)] text-[clamp(0.875rem,2vw,1rem)] border border-gray-200 rounded-[clamp(0.5rem,1.5vw,0.75rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all shadow-sm hover:shadow-md"
               />
               
               {/* Search Suggestions Dropdown */}
               {showSearchDropdown && searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[clamp(0.75rem,2vw,1.25rem)] shadow-xl z-50 max-h-[min(24rem,60vh)] overflow-y-auto">
                   {searchSuggestions.map((suggestion, index) => {
                     // Calculate average rating for brand if it's a brand type
                     let averageRating = 0
@@ -848,12 +848,12 @@ function HomeContent() {
                           onClick={() => {
                             setShowSearchDropdown(false)
                           }}
-                          className="block w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          className="block w-full text-left px-[clamp(0.75rem,2vw,1.5rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{suggestion.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-[clamp(0.875rem,2vw,1rem)] text-gray-900 truncate">{suggestion.name}</p>
+                              <p className="text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-500 mt-1">
                                 {suggestion.data && (suggestion.data as BrandCard).category && (
                                   <span>{(suggestion.data as BrandCard).category}</span>
                                 )}
@@ -866,11 +866,11 @@ function HomeContent() {
                               {averageRating > 0 && (
                                 <>
                                   <StarRating rating={averageRating} onRatingChange={() => {}} readonly />
-                                  <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                                  <span className="text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-gray-900 whitespace-nowrap">{Math.round(averageRating * 10) / 10}</span>
                                 </>
                               )}
                               {averageRating === 0 && (
-                                <span className="text-xs text-gray-400">No reviews</span>
+                                <span className="text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-400 whitespace-nowrap">No reviews</span>
                               )}
                             </div>
                           </div>
@@ -889,17 +889,17 @@ function HomeContent() {
                           setSearchQuery(suggestion.name)
                         setShowSearchDropdown(false)
                       }}
-                      className="w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      className="w-full text-left px-[clamp(0.75rem,2vw,1.5rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                            <p className="font-semibold text-gray-900">{suggestion.name}</p>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-[clamp(0.875rem,2vw,1rem)] text-gray-900 truncate">{suggestion.name}</p>
                         </div>
                           <div className="flex-shrink-0 flex items-center gap-2">
                             {averageRating > 0 && (
                               <>
                                 <StarRating rating={averageRating} onRatingChange={() => {}} readonly />
-                                <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                                <span className="text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-gray-900 whitespace-nowrap">{Math.round(averageRating * 10) / 10}</span>
                               </>
                             )}
                         </div>
@@ -911,7 +911,7 @@ function HomeContent() {
               )}
             </div>
             {searchQuery.trim().length > 0 && (
-              <p className="text-sm text-gray-500 mt-2 text-center">
+              <p className="text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-500 mt-2 text-center">
                 {filteredReviews.length > 0 
                   ? `Found ${filteredReviews.length} matching ${filteredReviews.length === 1 ? 'company' : 'companies'}`
                   : 'No companies found matching your search'}
@@ -921,33 +921,33 @@ function HomeContent() {
 
           <button
             onClick={handleAddReviewClick}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+            className="inline-flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.25rem)] py-[clamp(0.625rem,1.5vw,0.75rem)] bg-primary-600 text-white font-semibold rounded-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl text-[clamp(0.875rem,2vw,1rem)]"
           >
-            <Plus size={18} />
+            <Plus size={18} style={{ width: 'clamp(1rem, 2.5vw, 1.125rem)', height: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
             <span>Add Your Review</span>
           </button>
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-[min(1200px,95vw)] mx-auto px-[clamp(1rem,4vw,2rem)] py-[clamp(2rem,5vw,4rem)]">
 
         {/* Company Details Modal with All Reviews */}
         {selectedCompany && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedCompany(null)}>
-            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedCompany.name}</h2>
-                  <div className="flex items-center gap-3 mb-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]" onClick={() => setSelectedCompany(null)}>
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(56rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold text-gray-900 mb-2 break-words">{selectedCompany.name}</h2>
+                  <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] mb-4 flex-wrap">
                     {(() => {
                       const avgRating = selectedCompany.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedCompany.reviews.length
                       return (
                         <>
                           <StarRating rating={Math.round(avgRating * 10) / 10} onRatingChange={() => {}} readonly />
-                          <span className="text-lg font-bold text-gray-900">
+                          <span className="text-[clamp(1rem,2.5vw,1.125rem)] font-bold text-gray-900">
                             {avgRating.toFixed(1)}
                           </span>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-[clamp(0.875rem,2vw,1rem)] text-gray-600">
                             ({selectedCompany.reviews.length} {selectedCompany.reviews.length === 1 ? 'review' : 'reviews'})
                           </span>
                         </>
@@ -957,22 +957,22 @@ function HomeContent() {
                 </div>
                 <button
                   onClick={() => setSelectedCompany(null)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                   aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[clamp(1.25rem,3vw,1.5rem)] h-[clamp(1.25rem,3vw,1.5rem)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
               {/* Sorting Options */}
-              <div className="mb-6 flex items-center gap-4 flex-wrap">
-                <label className="text-sm font-semibold text-gray-700">Sort by:</label>
+              <div className="mb-[clamp(1rem,3vw,1.5rem)] flex items-center gap-[clamp(0.5rem,2vw,1rem)] flex-wrap">
+                <label className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-700">Sort by:</label>
                 <select
                   value={companySortBy}
                   onChange={(e) => setCompanySortBy(e.target.value as 'date' | 'rating')}
-                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-[clamp(0.5rem,1.5vw,0.75rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] border-2 border-gray-200 rounded-[clamp(0.5rem,1.5vw,0.75rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   <option value="date">Date</option>
                   <option value="rating">Rating</option>
@@ -980,7 +980,7 @@ function HomeContent() {
                 <select
                   value={companySortOrder}
                   onChange={(e) => setCompanySortOrder(e.target.value as 'asc' | 'desc')}
-                  className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-[clamp(0.5rem,1.5vw,0.75rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] border-2 border-gray-200 rounded-[clamp(0.5rem,1.5vw,0.75rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   <option value="desc">Newest/Highest First</option>
                   <option value="asc">Oldest/Lowest First</option>
@@ -988,7 +988,7 @@ function HomeContent() {
               </div>
 
               {/* Reviews List */}
-              <div className="space-y-4">
+              <div className="space-y-[clamp(0.75rem,2vw,1rem)]">
                 {(() => {
                   const sortedReviews = [...selectedCompany.reviews].sort((a, b) => {
                     if (companySortBy === 'date') {
@@ -1001,37 +1001,37 @@ function HomeContent() {
                   })
 
                   return sortedReviews.map((review) => (
-                    <div key={review.id} className="border-2 border-gray-200 rounded-xl p-6 hover:border-primary-300 transition-all">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm">
+                    <div key={review.id} className="border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] p-[clamp(1rem,3vw,1.5rem)] hover:border-primary-300 transition-all">
+                      <div className="flex items-start justify-between mb-[clamp(0.5rem,1.5vw,0.75rem)] gap-4 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] mb-2">
+                            <div className="w-[clamp(2rem,5vw,2.5rem)] h-[clamp(2rem,5vw,2.5rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0">
                               {getEmailName(review.email)}
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(review.email)}</p>
+                            <div className="min-w-0">
+                              <p className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 truncate">{getEmailDisplayName(review.email)}</p>
                             </div>
                           </div>
                         </div>
                         {review.created_at && (
-                          <p className="text-sm text-gray-500 whitespace-nowrap ml-4">{formatDate(review.created_at)}</p>
+                          <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                         )}
                       </div>
-                      <div className="mb-3">
+                      <div className="mb-[clamp(0.5rem,1.5vw,0.75rem)]">
                         <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
                       </div>
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{review.review}</p>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[clamp(0.875rem,2vw,1rem)] break-words">{review.review}</p>
                       {/* Edit/Delete buttons - only show for user's own reviews */}
                       {isLoaded && user && review.user_id === user.id && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 flex gap-3">
+                        <div className="mt-[clamp(0.75rem,2vw,1rem)] pt-[clamp(0.75rem,2vw,1rem)] border-t border-gray-200 flex gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
                           <button
                             onClick={() => {
                               handleEditClick(review)
                               setSelectedCompany(null)
                             }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                            className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] text-[clamp(0.875rem,2vw,1rem)] font-medium text-blue-600 bg-blue-50 rounded-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-blue-100 transition-colors"
                           >
-                            <Edit size={16} />
+                            <Edit size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
                             <span>Edit</span>
                           </button>
                           <button
@@ -1039,9 +1039,9 @@ function HomeContent() {
                               handleDeleteClick(review)
                               setSelectedCompany(null)
                             }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                            className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] text-[clamp(0.875rem,2vw,1rem)] font-medium text-red-600 bg-red-50 rounded-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-red-100 transition-colors"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
                             <span>Delete</span>
                           </button>
                         </div>
@@ -1051,10 +1051,10 @@ function HomeContent() {
                 })()}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-[clamp(1rem,3vw,1.5rem)] pt-[clamp(1rem,3vw,1.5rem)] border-t border-gray-200">
                 <button
                   onClick={() => setSelectedCompany(null)}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                  className="w-full bg-gray-200 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-300 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   Close
                 </button>
@@ -1065,61 +1065,61 @@ function HomeContent() {
 
         {/* Review Details Modal */}
         {selectedReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedReview(null)}>
-            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedReview.company_name}</h2>
-                  <div className="flex items-center gap-3 flex-wrap">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]" onClick={() => setSelectedReview(null)}>
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(42rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold text-gray-900 mb-2 break-words">{selectedReview.company_name}</h2>
+                  <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
                     {selectedReview.created_at ? (
                       <React.Fragment>
                         <span className="text-gray-300">•</span>
-                        <p className="text-sm text-gray-500">{formatDate(selectedReview.created_at)}</p>
+                        <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-500">{formatDate(selectedReview.created_at)}</p>
                       </React.Fragment>
                     ) : null}
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedReview(null)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                   aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[clamp(1.25rem,3vw,1.5rem)] h-[clamp(1.25rem,3vw,1.5rem)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-[clamp(1rem,3vw,1.5rem)]">
                 <StarRating rating={selectedReview.rating} onRatingChange={() => {}} readonly />
               </div>
 
-              <div className="mb-6 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-lg flex-shrink-0">
+              <div className="mb-[clamp(1rem,3vw,1.5rem)] flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)]">
+                <div className="w-[clamp(2.5rem,6vw,3rem)] h-[clamp(2.5rem,6vw,3rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(1rem,2.5vw,1.125rem)] flex-shrink-0">
                   {getEmailName(selectedReview.email)}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(selectedReview.email)}</p>
+                <div className="min-w-0">
+                  <p className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 truncate">{getEmailDisplayName(selectedReview.email)}</p>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Review</h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedReview.review}</p>
+              <div className="mb-[clamp(1rem,3vw,1.5rem)]">
+                <h3 className="text-[clamp(1rem,2.5vw,1.125rem)] font-semibold text-gray-900 mb-[clamp(0.5rem,1.5vw,0.75rem)]">Review</h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[clamp(0.875rem,2vw,1rem)] break-words">{selectedReview.review}</p>
               </div>
 
-              <div className="pt-6 border-t border-gray-200 flex justify-between items-center">
+              <div className="pt-[clamp(1rem,3vw,1.5rem)] border-t border-gray-200 flex justify-between items-center gap-4 flex-wrap">
                 {/* Only show Edit/Delete buttons if this is the user's own review */}
                 {isLoaded && user && selectedReview.user_id === user.id ? (
-                  <div className="flex gap-3">
+                  <div className="flex gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
                     <button
                       onClick={() => {
                         handleEditClick(selectedReview)
                         setSelectedReview(null)
                       }}
-                      className="bg-blue-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+                      className="bg-blue-600 text-white py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.875rem,2vw,1rem)]"
                     >
-                      <Edit size={18} />
+                      <Edit size={18} style={{ width: 'clamp(1rem, 2.5vw, 1.125rem)', height: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
                       <span>Edit</span>
                     </button>
                     <button
@@ -1127,9 +1127,9 @@ function HomeContent() {
                         handleDeleteClick(selectedReview)
                         setSelectedReview(null)
                       }}
-                      className="bg-red-600 text-white py-2.5 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
+                      className="bg-red-600 text-white py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-red-700 transition-all duration-200 flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.875rem,2vw,1rem)]"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={18} style={{ width: 'clamp(1rem, 2.5vw, 1.125rem)', height: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
                       <span>Delete</span>
                     </button>
                   </div>
@@ -1138,7 +1138,7 @@ function HomeContent() {
                 )}
                 <button
                   onClick={() => setSelectedReview(null)}
-                  className="bg-gray-200 text-gray-700 py-2.5 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                  className="bg-gray-200 text-gray-700 py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-300 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   Close
                 </button>
@@ -1149,23 +1149,23 @@ function HomeContent() {
 
         {/* Sign In Modal for Add Review */}
         {showSignInModal && !user && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]" onClick={() => {
             setShowSignInModal(false)
             setPendingAddReview(false)
           }}>
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-              <p className="text-gray-600 mb-6">
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(28rem,95vw)] w-full p-[clamp(1rem,4vw,2rem)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)]">Sign In Required</h2>
+              <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-600 mb-[clamp(1rem,3vw,1.5rem)]">
                 Please sign in or create an account to add a review.
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-[clamp(0.5rem,1.5vw,0.75rem)]">
                 <SignInButton mode="modal">
-                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
+                  <button className="w-full bg-primary-600 text-white py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-primary-700 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]">
                     Sign In
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
+                  <button className="w-full bg-gray-100 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-200 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]">
                     Sign Up
                   </button>
                 </SignUpButton>
@@ -1174,7 +1174,7 @@ function HomeContent() {
                     setShowSignInModal(false)
                     setPendingAddReview(false)
                   }}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
+                  className="w-full bg-gray-200 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-300 transition-all duration-200 mt-2 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   Cancel
                 </button>
@@ -1185,20 +1185,20 @@ function HomeContent() {
 
         {/* Add Company Form Modal */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-6 text-gray-900">Add New Company Review</h2>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]">
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(42rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl">
+              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Add New Company Review</h2>
               
-              <form onSubmit={handleFormSubmit} className="space-y-4">
+              <form onSubmit={handleFormSubmit} className="space-y-[clamp(0.75rem,2vw,1rem)]">
                 {user && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                    <p className="text-sm text-gray-700">
+                  <div className="bg-blue-50 border border-blue-200 rounded-[clamp(0.75rem,2vw,1rem)] p-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.75rem,2vw,1rem)]">
+                    <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-700 break-words">
                       <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
                     </p>
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                     Company or Brand Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -1224,12 +1224,12 @@ function HomeContent() {
                         // Delay to allow clicking on suggestions
                         setTimeout(() => setShowCompanyNameDropdown(false), 200)
                       }}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)]"
                       placeholder="Type to search existing companies or enter new"
                     />
                     {/* Company Name Suggestions Dropdown */}
                     {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
                         {companyNameSuggestions.map((name, index) => (
                           <button
                             key={index}
@@ -1240,9 +1240,9 @@ function HomeContent() {
                               setFormData({ ...formData, company_name: name })
                               setShowCompanyNameDropdown(false)
                             }}
-                            className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            className="w-full text-left px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                           >
-                            <p className="font-semibold text-gray-900">{name}</p>
+                            <p className="font-semibold text-gray-900 text-[clamp(0.875rem,2vw,1rem)] truncate">{name}</p>
                           </button>
                         ))}
                       </div>
@@ -1250,7 +1250,7 @@ function HomeContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                     Rating <span className="text-red-500">*</span>
                   </label>
                   <StarRating
@@ -1259,7 +1259,7 @@ function HomeContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                     Review <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -1267,14 +1267,14 @@ function HomeContent() {
                     value={formData.review}
                     onChange={(e) => setFormData({ ...formData, review: e.target.value })}
                     rows={4}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                    className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)] resize-y"
                   />
                 </div>
-                <div className="flex space-x-4">
+                <div className="flex gap-[clamp(0.5rem,2vw,1rem)] flex-wrap">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                    className="flex-1 min-w-[min(8rem,40%)] bg-primary-600 text-white py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 text-[clamp(0.875rem,2vw,1rem)]"
                   >
                     {loading ? 'Submitting...' : 'Submit Review'}
                   </button>
@@ -1283,7 +1283,7 @@ function HomeContent() {
                     onClick={() => {
                       setShowAddForm(false)
                     }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
+                    className="flex-1 min-w-[min(8rem,40%)] bg-gray-100 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-200 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                   >
                     Cancel
                   </button>
@@ -1295,20 +1295,20 @@ function HomeContent() {
 
         {/* Edit Review Form Modal */}
         {showEditForm && editingReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Company Review</h2>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]">
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(42rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl">
+              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Edit Company Review</h2>
               
-              <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-[clamp(0.75rem,2vw,1rem)]">
                   {user && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                      <p className="text-sm text-gray-700">
+                    <div className="bg-blue-50 border border-blue-200 rounded-[clamp(0.75rem,2vw,1rem)] p-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.75rem,2vw,1rem)]">
+                      <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-700 break-words">
                         <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
                       </p>
                     </div>
                   )}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                       Company or Brand Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -1334,12 +1334,12 @@ function HomeContent() {
                           // Delay to allow clicking on suggestions
                           setTimeout(() => setShowCompanyNameDropdown(false), 200)
                         }}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)]"
                         placeholder="Type to search existing companies or enter new"
                       />
                       {/* Company Name Suggestions Dropdown */}
                       {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
                           {companyNameSuggestions.map((name, index) => (
                             <button
                               key={index}
@@ -1350,9 +1350,9 @@ function HomeContent() {
                                 setFormData({ ...formData, company_name: name })
                                 setShowCompanyNameDropdown(false)
                               }}
-                              className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                              className="w-full text-left px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                             >
-                              <p className="font-semibold text-gray-900">{name}</p>
+                              <p className="font-semibold text-gray-900 text-[clamp(0.875rem,2vw,1rem)] truncate">{name}</p>
                             </button>
                           ))}
                         </div>
@@ -1360,7 +1360,7 @@ function HomeContent() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                       Rating <span className="text-red-500">*</span>
                     </label>
                     <StarRating
@@ -1369,7 +1369,7 @@ function HomeContent() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
                       Review <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -1377,14 +1377,14 @@ function HomeContent() {
                       value={formData.review}
                       onChange={(e) => setFormData({ ...formData, review: e.target.value })}
                       rows={4}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)] resize-y"
                     />
                   </div>
-                  <div className="flex space-x-4">
+                  <div className="flex gap-[clamp(0.5rem,2vw,1rem)] flex-wrap">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                      className="flex-1 min-w-[min(8rem,40%)] bg-primary-600 text-white py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 text-[clamp(0.875rem,2vw,1rem)]"
                     >
                       {loading ? 'Updating...' : 'Update Review'}
                     </button>
@@ -1394,7 +1394,7 @@ function HomeContent() {
                         setShowEditForm(false)
                         setEditingReview(null)
                       }}
-                      className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
+                      className="flex-1 min-w-[min(8rem,40%)] bg-gray-100 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-200 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                     >
                       Cancel
                     </button>
@@ -1406,17 +1406,17 @@ function HomeContent() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && deletingReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9998] p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Delete Review</h2>
-              <p className="text-gray-600 mb-6">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9998] p-[clamp(0.5rem,2vw,1rem)]">
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(28rem,95vw)] w-full p-[clamp(1rem,4vw,2rem)] shadow-2xl">
+              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)]">Delete Review</h2>
+              <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-600 mb-[clamp(1rem,3vw,1.5rem)] break-words">
                 Are you sure you want to delete your review for <strong>{deletingReview.company_name}</strong>? This action cannot be undone.
               </p>
-              <div className="flex space-x-4">
+              <div className="flex gap-[clamp(0.5rem,2vw,1rem)] flex-wrap">
                 <button
                   onClick={handleDeleteConfirm}
                   disabled={loading}
-                  className="flex-1 bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50"
+                  className="flex-1 min-w-[min(8rem,40%)] bg-red-600 text-white py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   {loading ? 'Deleting...' : 'Delete'}
                 </button>
@@ -1425,7 +1425,7 @@ function HomeContent() {
                     setShowDeleteConfirm(false)
                     setDeletingReview(null)
                   }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
+                  className="flex-1 min-w-[min(8rem,40%)] bg-gray-100 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-200 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   Cancel
                 </button>
@@ -1436,9 +1436,9 @@ function HomeContent() {
 
         {/* Popular Categories */}
         {popularCategories.length > 0 && (
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Popular Categories</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <div className="mb-[clamp(2rem,5vw,2.5rem)]">
+            <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(1rem,3vw,1.5rem)] text-center">Popular Categories</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[clamp(0.75rem,2vw,1.5rem)]">
                 {popularCategories.map((category, index) => {
                   const iconMap: Record<string, any> = {
                     Laptop: Laptop,
@@ -1456,14 +1456,14 @@ function HomeContent() {
                         // Scroll to filter section
                         document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }}
-                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 h-[8.75rem] p-4 shadow-sm ${
+                      className={`flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vw,0.75rem)] rounded-[clamp(0.75rem,2vw,1rem)] border transition-all duration-200 h-[clamp(6rem,15vw,8.75rem)] p-[clamp(0.75rem,2vw,1rem)] shadow-sm ${
                         selectedCategory === category.name
                           ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
                       }`}
                     >
-                      <IconComponent size={40} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
-                      <p className="font-semibold text-sm leading-tight text-center">{category.name}</p>
+                      <IconComponent size={40} style={{ width: 'clamp(2rem, 5vw, 2.5rem)', height: 'clamp(2rem, 5vw, 2.5rem)' }} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
+                      <p className="font-semibold text-[clamp(0.75rem,2vw,0.875rem)] leading-tight text-center break-words">{category.name}</p>
                     </button>
                   )
                 })}
@@ -1472,16 +1472,16 @@ function HomeContent() {
         )}
 
         {/* Filter Bar */}
-        <div id="filter-section" className="mb-10">
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center justify-center gap-6 flex-wrap">
+        <div id="filter-section" className="mb-[clamp(2rem,5vw,2.5rem)]">
+          <div className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 p-[clamp(1rem,3vw,1.5rem)] shadow-sm">
+              <div className="flex items-center justify-center gap-[clamp(1rem,3vw,1.5rem)] flex-wrap">
                 {categories.length > 0 && (
-                  <div className="flex items-center gap-3">
-                    <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by Category:</label>
+                  <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
+                    <label className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-700">Filter by Category:</label>
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[11.25rem]"
+                      className="px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[min(11.25rem,80%)] text-[clamp(0.875rem,2vw,1rem)]"
                     >
                       <option value="">All Categories</option>
                       {categories.map((cat) => (
@@ -1497,19 +1497,19 @@ function HomeContent() {
         </div>
 
         {/* Promo Banner */}
-        <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-8 md:p-10 mb-12 border border-pink-100">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1">
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-[clamp(0.75rem,2vw,1.25rem)] p-[clamp(1.5rem,4vw,2.5rem)] mb-[clamp(2rem,5vw,3rem)] border border-pink-100">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-[clamp(1rem,3vw,1.5rem)]">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[clamp(1.25rem,3vw,2rem)] font-bold text-gray-900 mb-2 break-words">
                 Share Your Experience
               </h3>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-[clamp(1rem,2.5vw,1.125rem)] break-words">
                 Help others make better decisions by sharing your honest review
               </p>
             </div>
             <button
               onClick={handleAddReviewClick}
-              className="bg-gray-900 text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl whitespace-nowrap"
+              className="bg-gray-900 text-white px-[clamp(1.5rem,4vw,2rem)] py-[clamp(0.75rem,2vw,1rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl text-[clamp(0.875rem,2vw,1rem)] flex-shrink-0"
             >
               Write a Review
             </button>
@@ -1526,15 +1526,15 @@ function HomeContent() {
                 if (categoryBrands.length === 0) return null
 
                 return (
-                  <div key={category} className="mb-12">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900">{category}</h2>
+                  <div key={category} className="mb-[clamp(2rem,5vw,3rem)]">
+                    <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
+                      <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 break-words">{category}</h2>
                       <Link
                         href={`/category/${generateSlug(category)}`}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-sm rounded-full transition-colors"
+                        className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] rounded-full transition-colors flex-shrink-0"
                       >
                         See more
-                        <ChevronRight size={16} />
+                        <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
                       </Link>
                     </div>
                     <div className="relative group">
@@ -1550,7 +1550,7 @@ function HomeContent() {
                         className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
                         aria-label={`Scroll ${category} left`}
                       >
-                        <ChevronLeft size={24} className="text-gray-700" />
+                        <ChevronLeft size={24} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className="text-gray-700" />
                       </button>
 
                       {/* Carousel Container */}
@@ -1558,22 +1558,22 @@ function HomeContent() {
                         ref={(el) => {
                           if (el) carouselRefs.current[category] = el
                         }}
-                        className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+                        className="flex gap-[clamp(0.75rem,2vw,1.5rem)] overflow-x-auto scrollbar-hide scroll-smooth pb-[clamp(0.75rem,2vw,1rem)]"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                       >
                         {categoryBrands.map((brand) => (
                           <Link
                             key={brand.id}
                             href={`/brands/${brand.id}`}
-                            className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-[280px] sm:w-[300px] md:w-[320px] flex-shrink-0 shadow-sm"
+                            className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-[min(280px,85vw)] sm:w-[min(300px,40vw)] md:w-[min(320px,30vw)] flex-shrink-0 shadow-sm"
                           >
-                            <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start justify-between mb-2 gap-2">
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors" title={brand.brand_name}>
+                                <h3 className="text-[clamp(0.75rem,2vw,0.875rem)] font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors break-words" title={brand.brand_name}>
                                   {brand.brand_name}
                                 </h3>
                                 {brand.category && (
-                                  <p className="text-xs text-gray-500 font-medium truncate" title={brand.category}>
+                                  <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 font-medium truncate" title={brand.category}>
                                     {brand.category}
                                   </p>
                                 )}
@@ -1586,7 +1586,7 @@ function HomeContent() {
                                   className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <ExternalLink size={14} />
+                                  <ExternalLink size={14} style={{ width: 'clamp(0.75rem, 2vw, 0.875rem)', height: 'clamp(0.75rem, 2vw, 0.875rem)' }} />
                                 </a>
                               )}
                             </div>
@@ -1600,20 +1600,20 @@ function HomeContent() {
                                 : 0
                               
                               return (
-                                <div className="mt-3 flex-1 flex flex-col justify-end">
+                                <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] flex-1 flex flex-col justify-end">
                                   {reviewCount > 0 ? (
                                     <div className="flex items-center gap-2 mb-2">
                                       <StarRating rating={Math.round(averageRating * 10) / 10} onRatingChange={() => {}} readonly />
-                                      <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                                      <span className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
                                     </div>
                                   ) : (
                                     <div className="flex items-center gap-2 mb-2">
                                       <StarRating rating={0} onRatingChange={() => {}} readonly />
-                                      <span className="text-xs text-gray-400">No reviews</span>
+                                      <span className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-400">No reviews</span>
                                     </div>
                                   )}
                                   {reviewCount > 0 && (
-                                    <p className="text-xs text-gray-500 mb-2">
+                                    <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 mb-2">
                                       {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
                                     </p>
                                   )}
@@ -1621,8 +1621,8 @@ function HomeContent() {
                               )
                             })()}
                             
-                            <div className="mt-3 pt-2 border-t border-gray-200">
-                              <p className="text-xs font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">
+                            <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-2 border-t border-gray-200">
+                              <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">
                                 View Details →
                               </p>
                             </div>
@@ -1642,7 +1642,7 @@ function HomeContent() {
                         className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
                         aria-label={`Scroll ${category} right`}
                       >
-                        <ChevronRight size={24} className="text-gray-700" />
+                        <ChevronRight size={24} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className="text-gray-700" />
                       </button>
                     </div>
                   </div>
@@ -1653,21 +1653,21 @@ function HomeContent() {
 
         {/* Recent Reviews Section */}
         {reviews.length > 0 && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Recent Reviews</h2>
+          <div className="mb-[clamp(2rem,5vw,3rem)]">
+            <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
+              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900">Recent Reviews</h2>
               {reviews.length > 6 && (
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-sm rounded-full transition-colors"
+                  className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] rounded-full transition-colors flex-shrink-0"
                 >
                   See more
-                  <ChevronRight size={16} />
+                  <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
                 </Link>
               )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[clamp(0.75rem,2vw,1.5rem)]">
                 {reviews
                   .sort((a, b) => {
                     // Sort by created_at descending (most recent first)
@@ -1680,40 +1680,40 @@ function HomeContent() {
                     <div
                       key={review.id}
                       onClick={() => setSelectedReview(review)}
-                      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-300 transition-all duration-200 cursor-pointer shadow-sm"
+                      className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 cursor-pointer shadow-sm"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0 pr-2">
-                          <h3 className="text-lg font-bold text-gray-900 mb-1 truncate" title={review.company_name}>
+                      <div className="flex items-start justify-between mb-[clamp(0.5rem,1.5vw,0.75rem)] gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-[clamp(1rem,2.5vw,1.125rem)] font-bold text-gray-900 mb-1 truncate break-words" title={review.company_name}>
                             {review.company_name}
                           </h3>
                         </div>
                         {review.created_at && (
-                          <p className="text-xs text-gray-500 whitespace-nowrap ml-2">{formatDate(review.created_at)}</p>
+                          <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                         )}
                       </div>
                       
-                      <div className="mb-3">
+                      <div className="mb-[clamp(0.5rem,1.5vw,0.75rem)]">
                         <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
                       </div>
                       
-                      <div className="mb-3 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                      <div className="mb-[clamp(0.5rem,1.5vw,0.75rem)] flex items-center gap-2">
+                        <div className="w-[clamp(1.75rem,4.5vw,2rem)] h-[clamp(1.75rem,4.5vw,2rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0">
                           {getEmailName(review.email)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate" title={getEmailDisplayName(review.email)}>
+                          <p className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 truncate" title={getEmailDisplayName(review.email)}>
                             {getEmailDisplayName(review.email)}
                           </p>
                         </div>
                       </div>
                       
-                      <p className="text-gray-700 leading-relaxed text-sm line-clamp-3" title={review.review}>
+                      <p className="text-gray-700 leading-relaxed text-[clamp(0.875rem,2vw,1rem)] line-clamp-3 break-words" title={review.review}>
                         {review.review}
                       </p>
                       
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs font-medium text-primary-600 text-center hover:text-primary-700 transition-colors">
+                      <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-[clamp(0.5rem,1.5vw,0.75rem)] border-t border-gray-200">
+                        <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center hover:text-primary-700 transition-colors">
                           Read More →
                         </p>
                       </div>
