@@ -779,7 +779,7 @@ function HomeContent() {
       />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
+      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-0 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
             Find Trusted Company Reviews
@@ -929,7 +929,7 @@ function HomeContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-16">
 
         {/* Company Details Modal with All Reviews */}
         {selectedCompany && (
@@ -1436,7 +1436,7 @@ function HomeContent() {
 
         {/* Popular Categories */}
         {popularCategories.length > 0 && (
-          <div className="mb-10 px-6">
+          <div className="mb-10 px-0 sm:px-6">
             <div className="max-w-7xl mx-auto">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Popular Categories</h2>
               <div className="flex flex-wrap justify-center gap-4">
@@ -1474,7 +1474,7 @@ function HomeContent() {
         )}
 
         {/* Filter Bar */}
-        <div id="filter-section" className="mb-10 px-6">
+        <div id="filter-section" className="mb-10 px-0 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
               <div className="flex items-center justify-center gap-6 flex-wrap">
@@ -1522,7 +1522,7 @@ function HomeContent() {
 
         {/* Category-Based Brand Sections */}
         {brandCards.length > 0 && categories.length > 0 && (
-          <div className="mb-12 px-6">
+          <div className="mb-12 px-0 sm:px-6">
             <div className="max-w-7xl mx-auto">
               {categories
                 .filter((category) => !selectedCategory || category === selectedCategory)
@@ -1659,7 +1659,7 @@ function HomeContent() {
 
         {/* Recent Reviews Section */}
         {reviews.length > 0 && (
-          <div className="mb-12 px-6">
+          <div className="mb-12 px-0 sm:px-6">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Recent Reviews</h2>
