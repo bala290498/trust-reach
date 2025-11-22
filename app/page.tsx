@@ -1686,6 +1686,84 @@ function HomeContent() {
           </div>
         )}
 
+        {/* Recent Reviews Section */}
+        {reviews.length > 0 && (
+          <div className="mb-12 px-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Recent Reviews</h2>
+                {reviews.length > 6 && (
+                  <Link
+                    href="/"
+                    className="text-primary-600 hover:text-primary-700 font-semibold text-sm flex items-center gap-1 transition-colors"
+                  >
+                    View All
+                    <ChevronRight size={16} />
+                  </Link>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {reviews
+                  .sort((a, b) => {
+                    // Sort by created_at descending (most recent first)
+                    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+                    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+                    return dateB - dateA
+                  })
+                  .slice(0, 6)
+                  .map((review) => (
+                    <div
+                      key={review.id}
+                      onClick={() => setSelectedReview(review)}
+                      className="bg-white rounded-xl border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1 truncate" title={review.company_name}>
+                            {review.company_name}
+                          </h3>
+                        </div>
+                        {review.created_at && (
+                          <p className="text-xs text-gray-500 whitespace-nowrap ml-2">{formatDate(review.created_at)}</p>
+                        )}
+                      </div>
+                      
+                      <div className="mb-3">
+                        <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
+                      </div>
+                      
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                          {getEmailName(review.email)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate" title={getEmailDisplayName(review.email)}>
+                            {getEmailDisplayName(review.email)}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate" title={review.email}>
+                            {review.email}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-700 leading-relaxed text-sm line-clamp-3" title={review.review}>
+                        {review.review}
+                      </p>
+                      
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs font-medium text-primary-600 text-center hover:text-primary-700 transition-colors">
+                          Read More →
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )
