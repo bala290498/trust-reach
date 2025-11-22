@@ -7,7 +7,7 @@ import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Laptop, UtensilsCrossed, Heart, Plane } from 'lucide-react'
+import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Laptop, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Car, Building, GraduationCap } from 'lucide-react'
 import YourReviewsSlider from '@/components/YourReviewsSlider'
 import NotificationModal from '@/components/NotificationModal'
 
@@ -55,6 +55,8 @@ function HomeContent() {
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
   const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
+  const [showViewAllDropdown, setShowViewAllDropdown] = useState(false)
+  const viewAllDropdownRef = useRef<HTMLDivElement | null>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const searchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
@@ -148,6 +150,23 @@ function HomeContent() {
   useEffect(() => {
     filterReviews()
   }, [filterReviews, searchQuery, selectedRating])
+
+  // Close View All dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (viewAllDropdownRef.current && !viewAllDropdownRef.current.contains(event.target as Node)) {
+        setShowViewAllDropdown(false)
+      }
+    }
+
+    if (showViewAllDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showViewAllDropdown])
 
   // Normalize text for comparison (remove spaces, special chars, lowercase)
   const normalizeText = useCallback((text: string): string => {
@@ -1436,15 +1455,23 @@ function HomeContent() {
 
         {/* Popular Categories */}
         {popularCategories.length > 0 && (
-          <div className="mb-[clamp(2rem,5vw,2.5rem)]">
-            <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(1rem,3vw,1.5rem)] text-center">Popular Categories</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[clamp(0.75rem,2vw,1.5rem)]">
+          <div className="mb-[clamp(1.5rem,4vw,2rem)]">
+            <div className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(1rem,3vw,1.5rem)] shadow-sm">
+              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)] text-center">Popular Categories</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-[clamp(0.5rem,1.5vw,0.75rem)]">
                 {popularCategories.map((category, index) => {
                   const iconMap: Record<string, any> = {
                     Laptop: Laptop,
                     UtensilsCrossed: UtensilsCrossed,
                     Heart: Heart,
                     Plane: Plane,
+                    Building2: Building2,
+                    HomeIcon: HomeIcon,
+                    Music: Music,
+                    Sparkles: Sparkles,
+                    Car: Car,
+                    Building: Building,
+                    GraduationCap: GraduationCap,
                   }
                   const IconComponent = iconMap[category.icon] || Laptop
                   
@@ -1453,48 +1480,75 @@ function HomeContent() {
                       key={index}
                       onClick={() => {
                         setSelectedCategory(category.name)
-                        // Scroll to filter section
-                        document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }}
-                      className={`flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vw,0.75rem)] rounded-[clamp(0.75rem,2vw,1rem)] border transition-all duration-200 h-[clamp(6rem,15vw,8.75rem)] p-[clamp(0.75rem,2vw,1rem)] shadow-sm ${
+                      className={`flex flex-col items-center justify-center gap-[clamp(0.25rem,1vw,0.5rem)] rounded-[clamp(0.5rem,1.5vw,0.75rem)] border transition-all duration-200 h-[clamp(4rem,10vw,5rem)] p-[clamp(0.5rem,1.5vw,0.75rem)] shadow-sm ${
                         selectedCategory === category.name
                           ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
                       }`}
                     >
-                      <IconComponent size={40} style={{ width: 'clamp(2rem, 5vw, 2.5rem)', height: 'clamp(2rem, 5vw, 2.5rem)' }} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
-                      <p className="font-semibold text-[clamp(0.75rem,2vw,0.875rem)] leading-tight text-center break-words">{category.name}</p>
+                      <IconComponent size={40} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
+                      <p className="font-semibold text-[clamp(0.625rem,1.5vw,0.75rem)] leading-tight text-center break-words">{category.name}</p>
                     </button>
                   )
                 })}
+                
+                {/* View All Card */}
+                <div className="relative" ref={viewAllDropdownRef}>
+                  <button
+                    onClick={() => setShowViewAllDropdown(!showViewAllDropdown)}
+                    className="flex flex-col items-center justify-center gap-[clamp(0.25rem,1vw,0.5rem)] rounded-[clamp(0.5rem,1.5vw,0.75rem)] border border-gray-200 transition-all duration-200 h-[clamp(4rem,10vw,5rem)] p-[clamp(0.5rem,1.5vw,0.75rem)] shadow-sm bg-white text-gray-700 hover:border-primary-300 hover:bg-primary-50 w-full"
+                  >
+                    <ChevronRight size={40} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className={`text-gray-600 transition-transform ${showViewAllDropdown ? 'rotate-90' : ''}`} />
+                    <p className="font-semibold text-[clamp(0.625rem,1.5vw,0.75rem)] leading-tight text-center">View All</p>
+                  </button>
+                  
+                  {/* Dropdown */}
+                  {showViewAllDropdown && categories.length > 0 && (() => {
+                    // Get popular category names
+                    const popularCategoryNames = popularCategories.map(cat => cat.name)
+                    // Filter out popular categories from the dropdown
+                    const otherCategories = categories.filter(cat => !popularCategoryNames.includes(cat))
+                    
+                    return (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[clamp(0.5rem,1.5vw,0.75rem)] shadow-lg z-50 max-h-[min(20rem,50vh)] overflow-y-auto">
+                        {otherCategories.length > 0 ? (
+                          <>
+                            {otherCategories.map((cat) => (
+                              <Link
+                                key={cat}
+                                href={`/categories/${generateSlug(cat)}`}
+                                onClick={() => setShowViewAllDropdown(false)}
+                                className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0 text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-700 hover:text-primary-600"
+                              >
+                                {cat}
+                              </Link>
+                            ))}
+                            <Link
+                              href="/all-categories"
+                              onClick={() => setShowViewAllDropdown(false)}
+                              className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors border-t-2 border-gray-200 text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-primary-600"
+                            >
+                              View All Categories →
+                            </Link>
+                          </>
+                        ) : (
+                          <Link
+                            href="/all-categories"
+                            onClick={() => setShowViewAllDropdown(false)}
+                            className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-primary-600"
+                          >
+                            View All Categories →
+                          </Link>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
               </div>
+            </div>
           </div>
         )}
-
-        {/* Filter Bar */}
-        <div id="filter-section" className="mb-[clamp(2rem,5vw,2.5rem)]">
-          <div className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 p-[clamp(1rem,3vw,1.5rem)] shadow-sm">
-              <div className="flex items-center justify-center gap-[clamp(1rem,3vw,1.5rem)] flex-wrap">
-                {categories.length > 0 && (
-                  <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
-                    <label className="text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-700">Filter by Category:</label>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[min(11.25rem,80%)] text-[clamp(0.875rem,2vw,1rem)]"
-                    >
-                      <option value="">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-          </div>
-        </div>
 
         {/* Promo Banner */}
         <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-[clamp(0.75rem,2vw,1.25rem)] p-[clamp(1.5rem,4vw,2.5rem)] mb-[clamp(2rem,5vw,3rem)] border border-pink-100">
