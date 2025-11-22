@@ -8,8 +8,8 @@ export default function Footer() {
 
   const navItems = [
     { href: '/', label: 'Reviews' },
-    { href: '/community-offers', label: 'Community Offers' },
-    { href: '/community-purchase', label: 'Community Purchase' },
+    { href: '/promotions', label: 'Promotions' },
+    { href: '/wholesale', label: 'WholeSale' },
     { href: '/blogs', label: 'Blogs' },
   ]
 

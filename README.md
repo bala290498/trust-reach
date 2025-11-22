@@ -1,12 +1,12 @@
 # TrustReach.in
 
-A platform for trusted company reviews and community offers.
+A platform for trusted company reviews and promotions.
 
 ## Features
 
 - **Sticky Navigation Bar** with logo and menu items
 - **Homepage Review Section** - Add and view company reviews
-- **Community Offers/Stock Clearances** - Manually updated offers via markdown
+- **Promotions/Stock Clearances** - Manually updated offers via markdown
 - **Category-wise Carousels** with filtering options
 - **Supabase Integration** for reviews
 - **OTP Verification** - Email-based OTP verification using Brevo for adding/modifying/deleting reviews
@@ -56,7 +56,7 @@ The service role secret key is only needed for server-side operations that bypas
    - Run the SQL script from `supabase-schema.sql` file
    - This will create the necessary tables, indexes, and security policies
 
-4. For Community Offers, create markdown files in `content/offers/` directory:
+4. For Promotions, create markdown files in `content/offers/` directory:
 
 Example: `content/offers/example-offer.md`
 ```markdown
@@ -86,7 +86,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 - `app/` - Next.js app router pages
 - `components/` - Reusable React components
 - `lib/` - Utility functions and Supabase client
-- `content/offers/` - Markdown files for community offers
+- `content/offers/` - Markdown files for promotions
 
 ## Supabase Client Usage
 
