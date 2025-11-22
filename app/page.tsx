@@ -779,8 +779,8 @@ function HomeContent() {
       />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-0 sm:px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 w-full">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
             Find Trusted Company Reviews
           </h1>
@@ -929,7 +929,7 @@ function HomeContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
         {/* Company Details Modal with All Reviews */}
         {selectedCompany && (
@@ -1436,10 +1436,9 @@ function HomeContent() {
 
         {/* Popular Categories */}
         {popularCategories.length > 0 && (
-          <div className="mb-10 px-0 sm:px-6">
-            <div className="max-w-7xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Popular Categories</h2>
-              <div className="flex flex-wrap justify-center gap-4">
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Popular Categories</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 {popularCategories.map((category, index) => {
                   const iconMap: Record<string, any> = {
                     Laptop: Laptop,
@@ -1457,7 +1456,7 @@ function HomeContent() {
                         // Scroll to filter section
                         document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }}
-                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 transition-all duration-200 w-full max-w-[11.25rem] h-[8.75rem] p-4 ${
+                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 h-[8.75rem] p-4 shadow-sm ${
                         selectedCategory === category.name
                           ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
@@ -1469,14 +1468,12 @@ function HomeContent() {
                   )
                 })}
               </div>
-            </div>
           </div>
         )}
 
         {/* Filter Bar */}
-        <div id="filter-section" className="mb-10 px-0 sm:px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
+        <div id="filter-section" className="mb-10">
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
               <div className="flex items-center justify-center gap-6 flex-wrap">
                 {categories.length > 0 && (
                   <div className="flex items-center gap-3">
@@ -1496,7 +1493,6 @@ function HomeContent() {
                   </div>
                 )}
               </div>
-            </div>
           </div>
         </div>
 
@@ -1522,9 +1518,8 @@ function HomeContent() {
 
         {/* Category-Based Brand Sections */}
         {brandCards.length > 0 && categories.length > 0 && (
-          <div className="mb-12 px-0 sm:px-6">
-            <div className="max-w-7xl mx-auto">
-              {categories
+          <div className="mb-12">
+            {categories
                 .filter((category) => !selectedCategory || category === selectedCategory)
                 .map((category) => {
                 const categoryBrands = brandCards.filter((brand) => brand.category === category)
@@ -1536,9 +1531,9 @@ function HomeContent() {
                       <h2 className="text-2xl font-bold text-gray-900">{category}</h2>
                       <Link
                         href={`/category/${generateSlug(category)}`}
-                        className="text-primary-600 hover:text-primary-700 font-semibold text-sm flex items-center gap-1 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-sm rounded-full transition-colors"
                       >
-                        View All
+                        See more
                         <ChevronRight size={16} />
                       </Link>
                     </div>
@@ -1563,14 +1558,14 @@ function HomeContent() {
                         ref={(el) => {
                           if (el) carouselRefs.current[category] = el
                         }}
-                        className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+                        className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                       >
                         {categoryBrands.map((brand) => (
                           <Link
                             key={brand.id}
                             href={`/brands/${brand.id}`}
-                            className="bg-white rounded-lg border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer group w-full max-w-full sm:max-w-[13.75rem] lg:max-w-[15rem] flex-shrink-0"
+                            className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-[280px] sm:w-[300px] md:w-[320px] flex-shrink-0 shadow-sm"
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1 min-w-0">
@@ -1653,28 +1648,26 @@ function HomeContent() {
                   </div>
                 )
               })}
-            </div>
           </div>
         )}
 
         {/* Recent Reviews Section */}
         {reviews.length > 0 && (
-          <div className="mb-12 px-0 sm:px-6">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Recent Reviews</h2>
-                {reviews.length > 6 && (
-                  <Link
-                    href="/"
-                    className="text-primary-600 hover:text-primary-700 font-semibold text-sm flex items-center gap-1 transition-colors"
-                  >
-                    View All
-                    <ChevronRight size={16} />
-                  </Link>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Recent Reviews</h2>
+              {reviews.length > 6 && (
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-sm rounded-full transition-colors"
+                >
+                  See more
+                  <ChevronRight size={16} />
+                </Link>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {reviews
                   .sort((a, b) => {
                     // Sort by created_at descending (most recent first)
@@ -1687,7 +1680,7 @@ function HomeContent() {
                     <div
                       key={review.id}
                       onClick={() => setSelectedReview(review)}
-                      className="bg-white rounded-xl border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 cursor-pointer"
+                      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-primary-300 transition-all duration-200 cursor-pointer shadow-sm"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0 pr-2">
@@ -1727,8 +1720,6 @@ function HomeContent() {
                     </div>
                   ))}
               </div>
-              
-            </div>
           </div>
         )}
 
