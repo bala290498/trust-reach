@@ -1681,13 +1681,9 @@ function HomeContent() {
           <div className="mb-12">
               {categories
                 .filter((category) => {
-                  // Exclude these categories from home page
-                  const excludedCategories = ['Health & Medical', 'Hotels & Restaurants', 'Travel & Vacation']
-                  if (excludedCategories.includes(category)) return false
-                  // Only show categories that have brands
+                  // Only show categories that have at least one brand
                   const categoryBrands = brandCards.filter((brand) => brand.category === category)
-                  if (categoryBrands.length === 0) return false
-                  return !selectedCategory || category === selectedCategory
+                  return categoryBrands.length > 0
                 })
                 .map((category) => {
                 let categoryBrands = brandCards.filter((brand) => brand.category === category)
@@ -1705,14 +1701,12 @@ function HomeContent() {
                   return bRating - aRating // Sort by average rating descending
                 })
 
-                const bestBrand = getBestBrandInCategory(category)
-                
                 return (
                   <div key={category} className="mb-[clamp(2rem,5vw,3rem)]">
                     <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
                       <div className="flex-1 min-w-0">
                         <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 break-words">
-                          {bestBrand ? `Best in ${category}` : category}
+                          Best in {category}
                         </h2>
                       </div>
                       <Link
