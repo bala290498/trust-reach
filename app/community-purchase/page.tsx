@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar } from 'lucide-react'
+import { generateSlug } from '@/lib/utils'
 import NotificationModal from '@/components/NotificationModal'
+import Link from 'next/link'
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
@@ -283,46 +285,50 @@ export default function GroupPurchasingPage() {
         {!loading && filteredOrders.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredOrders.map((order) => (
-              <div
+              <Link
                 key={order.id}
-                className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col"
+                href={`/community-purchase/${order.id}`}
+                className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-full flex-shrink-0 shadow-sm"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 line-clamp-2">{order.title}</h3>
+                <div className="flex items-start justify-between mb-2 gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[clamp(0.75rem,2vw,0.875rem)] font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors break-words" title={order.title}>
+                      {order.title}
+                    </h3>
                     <div className="flex items-center gap-1.5 mb-2">
                       {getCategoryIcon(order.category) && (
                         <div className="text-primary-600">
                           {getCategoryIcon(order.category)}
                         </div>
                       )}
-                      <p className="text-xs sm:text-sm text-gray-500 font-medium">{order.category}</p>
+                      <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 font-medium truncate" title={order.category}>
+                        {order.category}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="mb-2 flex-1">
                   <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown className="text-gray-700 text-xs sm:text-sm line-clamp-3">
+                    <ReactMarkdown className="text-gray-700 text-[clamp(0.625rem,1.5vw,0.75rem)] line-clamp-3">
                       {order.description}
                     </ReactMarkdown>
                   </div>
                 </div>
 
                 {order.deadline && (
-                  <div className="mb-2 flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                  <div className="mb-2 flex items-center gap-1.5 text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-600">
                     <Calendar size={14} />
                     <span>Deadline: {formatDate(order.deadline)}</span>
                   </div>
                 )}
 
-                <button
-                  onClick={() => handleShowInterest(order)}
-                  className="w-full mt-auto bg-primary-600 text-white py-2 sm:py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Show Interest
-                </button>
-              </div>
+                <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-2 border-t border-gray-200">
+                  <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">
+                    View More →
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         )}
