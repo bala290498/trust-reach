@@ -83,7 +83,7 @@ export default function BulkOrdersPage() {
         setOrders(data)
       }
     } catch (error) {
-      console.error('Error fetching group purchasing opportunities:', error)
+      console.error('Error fetching community purchase opportunities:', error)
     } finally {
       setLoading(false)
     }
@@ -214,10 +214,10 @@ export default function BulkOrdersPage() {
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            Group Purchasing
+            Community Purchase
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Express your interest in group purchasing. Our team will reach out to you shortly.
+            Express your interest in community purchase. Our team will reach out to you shortly.
           </p>
         </div>
       </div>
@@ -253,15 +253,15 @@ export default function BulkOrdersPage() {
         <div className="mb-8 text-center">
           <p className="text-sm text-gray-600 max-w-2xl mx-auto">
             {activeTab === 'featured' 
-              ? 'Featured group purchasing opportunities are available for interest submission. Orders are not currently being processed, but you can express your interest for future consideration.'
-              : 'In Progress group purchasing opportunities are currently ongoing. You can show your interest and our team will reach out to you shortly.'}
+              ? 'Featured community purchase opportunities are available for interest submission. Orders are not currently being processed, but you can express your interest for future consideration.'
+              : 'In Progress community purchase opportunities are currently ongoing. You can show your interest and our team will reach out to you shortly.'}
           </p>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
-            <div className="text-gray-600">Loading group purchasing opportunities...</div>
+            <div className="text-gray-600">Loading community purchase opportunities...</div>
           </div>
         )}
 
@@ -336,7 +336,7 @@ export default function BulkOrdersPage() {
             <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
               <p className="text-gray-600 mb-6">
-                Please sign in or create an account to express interest in group purchasing.
+                Please sign in or create an account to express interest in community purchase.
               </p>
               <div className="flex flex-col gap-3">
                 <SignInButton mode="modal">

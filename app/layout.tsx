@@ -9,14 +9,14 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'TrustReach.in - Trusted Reviews and Offers',
-  description: 'Find trusted company reviews and best offers',
+  description: 'Find trusted company reviews and community offers',
   icons: {
     icon: '/images/favicon.png',
     apple: '/images/favicon.png',
   },
   openGraph: {
     title: 'TrustReach.in - Trusted Reviews and Offers',
-    description: 'Find trusted company reviews and best offers',
+    description: 'Find trusted company reviews and community offers',
     images: [
       {
         url: '/images/og-image.png',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'TrustReach.in - Trusted Reviews and Offers',
-    description: 'Find trusted company reviews and best offers',
+    description: 'Find trusted company reviews and community offers',
     images: ['/images/og-image.png'],
   },
 }

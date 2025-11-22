@@ -234,7 +234,7 @@ function BestOffersPageContent() {
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            Best Offers & Stock Clearances
+            Community Offers & Stock Clearances
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
             Exclusive deals and verified offers from trusted businesses

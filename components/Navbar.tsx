@@ -24,8 +24,8 @@ export default function Navbar() {
 
   const navItems = [
     { href: '/', label: 'Reviews' },
-    { href: '/group-purchasing', label: 'Group Purchasing' },
-    { href: '/best-offers', label: 'Best Offers' },
+    { href: '/community-purchase', label: 'Community Purchase' },
+    { href: '/community-offers', label: 'Community Offers' },
     { href: '/blogs', label: 'Blogs' },
   ]
 
