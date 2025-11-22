@@ -36,7 +36,7 @@ function HomeContent() {
   const [selectedRating, setSelectedRating] = useState(0)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showSearchDropdown, setShowSearchDropdown] = useState(false)
-  const [searchSuggestions, setSearchSuggestions] = useState<CompanyReview[]>([])
+  const [searchSuggestions, setSearchSuggestions] = useState<Array<{ type: 'brand' | 'review'; name: string; data?: CompanyReview | BrandCard }>>([])
   const [selectedReview, setSelectedReview] = useState<CompanyReview | null>(null)
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [formData, setFormData] = useState({
@@ -56,6 +56,7 @@ function HomeContent() {
   const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
   const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const searchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
   const [companySortBy, setCompanySortBy] = useState<'date' | 'rating'>('date')
   const [companySortOrder, setCompanySortOrder] = useState<'asc' | 'desc'>('desc')
@@ -146,23 +147,34 @@ function HomeContent() {
 
   useEffect(() => {
     filterReviews()
-  }, [filterReviews])
+  }, [filterReviews, searchQuery, selectedRating])
 
   // Normalize text for comparison (remove spaces, special chars, lowercase)
-  const normalizeText = (text: string): string => {
-    return text.toLowerCase().replace(/[^a-z0-9]/g, '')
-  }
+  const normalizeText = useCallback((text: string): string => {
+    return text.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '').replace(/\s+/g, '')
+  }, [])
 
-  // Get unique company names from reviews
-  const getUniqueCompanyNames = useCallback(() => {
+  // Get all available brand/company names from both brands and reviews
+  const getAllAvailableBrandNames = useCallback(() => {
     const uniqueNames = new Set<string>()
-    reviews.forEach((review) => {
-      if (review.company_name) {
-        uniqueNames.add(review.company_name)
+    
+    // Add brand names from brand cards
+    brandCards.forEach((brand) => {
+      if (brand.brand_name && brand.brand_name.trim()) {
+        uniqueNames.add(brand.brand_name.trim())
       }
     })
-    return Array.from(uniqueNames).sort()
-  }, [reviews])
+    
+    // Add company names from reviews
+    reviews.forEach((review) => {
+      if (review.company_name && review.company_name.trim()) {
+        uniqueNames.add(review.company_name.trim())
+      }
+    })
+    
+    // Sort alphabetically
+    return Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+  }, [brandCards, reviews])
 
   // Handle opening add review form after sign-in
   useEffect(() => {
@@ -191,15 +203,17 @@ function HomeContent() {
     }
   }, [searchParams, isLoaded, user])
 
-  // Generate company name suggestions with debouncing - match by first word
+  // Generate company name suggestions with debouncing - normalized keyword search
   useEffect(() => {
     // Clear any existing timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
 
-    if (!showAddForm) {
-      // Only clear when form is closed
+    // Show suggestions for both add and edit forms
+    const isFormOpen = showAddForm || showEditForm
+    if (!isFormOpen) {
+      // Only clear when both forms are closed
       setCompanyNameSuggestions([])
       setShowCompanyNameDropdown(false)
       return
@@ -214,22 +228,31 @@ function HomeContent() {
       return
     }
 
-    // Extract first word from user input (case-insensitive)
-    const firstWord = trimmedName.split(/\s+/)[0].toLowerCase()
+    // Normalize search query (remove spaces, special chars, lowercase)
+    const normalizedQuery = normalizeText(trimmedName)
     
-    // If first word is less than 2 characters, hide suggestions immediately
-    if (firstWord.length < 2) {
+    // If normalized query is less than 2 characters, hide suggestions immediately
+    if (normalizedQuery.length < 2) {
       setCompanyNameSuggestions([])
       setShowCompanyNameDropdown(false)
       return
     }
 
+    // Get all available brand/company names
+    const allBrandNames = getAllAvailableBrandNames()
+    
+    // Filter matches using normalized keyword search
+    // Match if normalized brand name contains normalized query or vice versa
+    const findMatches = (query: string, names: string[]) => {
+      return names.filter((name) => {
+        const normalizedName = normalizeText(name)
+        // Check if query appears in name (allows partial matches anywhere in the name)
+        return normalizedName.includes(query) || query.includes(normalizedName)
+      })
+    }
+
     // Immediately check for matches (synchronous check to hide if no matches)
-    const uniqueNames = getUniqueCompanyNames()
-    const immediateMatches = uniqueNames.filter((name) => {
-      const companyFirstWord = name.split(/\s+/)[0].toLowerCase()
-      return companyFirstWord.startsWith(firstWord) || firstWord.startsWith(companyFirstWord)
-    })
+    const immediateMatches = findMatches(normalizedQuery, allBrandNames)
 
     // If no matches, hide immediately (no debounce delay)
     if (immediateMatches.length === 0) {
@@ -240,21 +263,48 @@ function HomeContent() {
 
     // Debounce the search (200ms delay) for better performance
     debounceTimerRef.current = setTimeout(() => {
-      // Re-check matches after debounce (in case user continued typing)
-      const finalMatches = uniqueNames.filter((name) => {
-        const companyFirstWord = name.split(/\s+/)[0].toLowerCase()
-        return companyFirstWord.startsWith(firstWord) || firstWord.startsWith(companyFirstWord)
-      })
+      const currentInput = formData.company_name?.trim() || ''
+      const queryLower = currentInput.toLowerCase()
       
-      // Only show dropdown if there are matches
-      if (finalMatches.length > 0) {
-        setCompanyNameSuggestions(finalMatches.slice(0, 10)) // Limit to 10 suggestions
-        setShowCompanyNameDropdown(true)
-      } else {
-        // Hide dropdown when there are no matches
+      // Check if input exactly matches one of the available brand names (case-insensitive)
+      const exactMatch = allBrandNames.find(name => name.toLowerCase() === queryLower)
+      
+      // If there's an exact match, hide the dropdown (user already selected/typed the exact value)
+      if (exactMatch) {
         setCompanyNameSuggestions([])
         setShowCompanyNameDropdown(false)
+        return
       }
+      
+      // Re-check matches after debounce (in case user continued typing)
+      const finalMatches = findMatches(normalizeText(currentInput), allBrandNames)
+      
+      // Filter out exact matches from suggestions (since user already typed it)
+      const filteredMatches = finalMatches.filter(name => name.toLowerCase() !== queryLower)
+      
+      // If no other matches after filtering out exact match, hide dropdown
+      if (filteredMatches.length === 0) {
+        setCompanyNameSuggestions([])
+        setShowCompanyNameDropdown(false)
+        return
+      }
+      
+      // Sort matches by relevance: starts with query, then contains
+      const sortedMatches = filteredMatches.sort((a, b) => {
+        const aLower = a.toLowerCase()
+        const bLower = b.toLowerCase()
+        
+        // Starts with query gets highest priority
+        if (aLower.startsWith(queryLower) && !bLower.startsWith(queryLower)) return -1
+        if (bLower.startsWith(queryLower) && !aLower.startsWith(queryLower)) return 1
+        
+        // Alphabetical order for remaining matches
+        return aLower.localeCompare(bLower)
+      })
+      
+      // Show dropdown with other matches (excluding exact match)
+      setCompanyNameSuggestions(sortedMatches.slice(0, 15)) // Show up to 15 suggestions
+      setShowCompanyNameDropdown(true)
     }, 200) // 200ms debounce delay
 
     // Cleanup function
@@ -264,25 +314,112 @@ function HomeContent() {
         debounceTimerRef.current = null
       }
     }
-  }, [formData.company_name, showAddForm, getUniqueCompanyNames])
+  }, [formData.company_name, showAddForm, showEditForm, getAllAvailableBrandNames, normalizeText])
 
-  // Generate search suggestions for dropdown
+  // Generate search suggestions for dropdown - includes both brands and reviews
   useEffect(() => {
-    if (searchQuery.trim().length > 0) {
-      const query = searchQuery.toLowerCase().trim()
-      const suggestions = reviews
-        .filter((review) => {
-          const companyName = review.company_name.toLowerCase()
-          return companyName.includes(query)
-        })
-        .slice(0, 5) // Show top 5 matches
-      setSearchSuggestions(suggestions)
-      setShowSearchDropdown(suggestions.length > 0)
-    } else {
+    // Clear any existing timer
+    if (searchDebounceTimerRef.current) {
+      clearTimeout(searchDebounceTimerRef.current)
+    }
+
+    if (searchQuery.trim().length < 2) {
       setSearchSuggestions([])
       setShowSearchDropdown(false)
+      return
     }
-  }, [searchQuery, reviews])
+
+    const query = searchQuery.toLowerCase().trim()
+    const normalizedQuery = normalizeText(searchQuery)
+    
+    // Debounce the search (150ms delay) for better performance
+    searchDebounceTimerRef.current = setTimeout(() => {
+      const suggestions: Array<{ type: 'brand' | 'review'; name: string; data?: CompanyReview | BrandCard }> = []
+
+      // Search through brand cards
+      if (brandCards && brandCards.length > 0) {
+        brandCards.forEach((brand) => {
+          if (brand.brand_name) {
+            const brandNameLower = brand.brand_name.toLowerCase()
+            const normalizedBrandName = normalizeText(brand.brand_name)
+            
+            // Check if query matches (case-insensitive, normalized)
+            if (brandNameLower.includes(query) || normalizedBrandName.includes(normalizedQuery)) {
+              suggestions.push({
+                type: 'brand',
+                name: brand.brand_name,
+                data: brand
+              })
+            }
+          }
+        })
+      }
+
+      // Search through reviews
+      if (reviews && reviews.length > 0) {
+        reviews.forEach((review) => {
+          if (review.company_name) {
+            const companyNameLower = review.company_name.toLowerCase()
+            const normalizedCompanyName = normalizeText(review.company_name)
+            
+            // Check if query matches (case-insensitive, normalized)
+            if (companyNameLower.includes(query) || normalizedCompanyName.includes(normalizedQuery)) {
+              // Avoid duplicates - if a brand with same name already exists, skip
+              const isDuplicate = suggestions.some(
+                s => s.type === 'brand' && s.name.toLowerCase() === review.company_name.toLowerCase()
+              )
+              if (!isDuplicate) {
+                suggestions.push({
+                  type: 'review',
+                  name: review.company_name,
+                  data: review
+                })
+              }
+            }
+          }
+        })
+      }
+
+      // Remove duplicates by name (case-insensitive)
+      const uniqueSuggestions = Array.from(
+        new Map(suggestions.map(s => [s.name.toLowerCase(), s])).values()
+      )
+
+      // Sort by relevance: exact matches first, then starts with, then contains
+      const sortedSuggestions = uniqueSuggestions.sort((a, b) => {
+        const aLower = a.name.toLowerCase()
+        const bLower = b.name.toLowerCase()
+        
+        // Exact match gets highest priority
+        if (aLower === query) return -1
+        if (bLower === query) return 1
+        
+        // Starts with query gets second priority
+        if (aLower.startsWith(query) && !bLower.startsWith(query)) return -1
+        if (bLower.startsWith(query) && !aLower.startsWith(query)) return 1
+        
+        // Brands get priority over reviews for same match level
+        if (a.type === 'brand' && b.type === 'review') return -1
+        if (a.type === 'review' && b.type === 'brand') return 1
+        
+        // Alphabetical order for remaining matches
+        return aLower.localeCompare(bLower)
+      })
+
+      // Limit to top 10 suggestions
+      const finalSuggestions = sortedSuggestions.slice(0, 10)
+      setSearchSuggestions(finalSuggestions)
+      setShowSearchDropdown(finalSuggestions.length > 0)
+    }, 150) // 150ms debounce delay
+
+    // Cleanup function
+    return () => {
+      if (searchDebounceTimerRef.current) {
+        clearTimeout(searchDebounceTimerRef.current)
+        searchDebounceTimerRef.current = null
+      }
+    }
+  }, [searchQuery, reviews, brandCards, normalizeText])
 
   const normalizeUrl = (url: string): string => {
     if (!url) return url
@@ -669,15 +806,17 @@ function HomeContent() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Search for companies... (e.g., type any word from company name)"
+                placeholder="Search for companies or brands... (e.g., type any word from company name)"
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setShowSearchDropdown(true)
+                  const value = e.target.value
+                  setSearchQuery(value)
+                  // Dropdown will be shown/hidden by useEffect based on suggestions
                 }}
                 onFocus={() => {
-                  if (searchQuery.trim().length > 0 && searchSuggestions.length > 0) {
-                    setShowSearchDropdown(true)
+                  // Show dropdown if there are suggestions
+                  if (searchQuery.trim().length >= 2) {
+                    // The useEffect will handle showing/hiding based on suggestions
                   }
                 }}
                 onBlur={() => {
@@ -690,26 +829,66 @@ function HomeContent() {
               {/* Search Suggestions Dropdown */}
               {showSearchDropdown && searchSuggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto">
-                  {searchSuggestions.map((review) => (
-                    <button
-                      key={review.id}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(review.company_name)
-                        setShowSearchDropdown(false)
-                      }}
-                      className="w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{review.company_name}</p>
+                  {searchSuggestions.map((suggestion, index) => {
+                    // Calculate average rating for brand if it's a brand type
+                    let averageRating = 0
+                    let reviewCount = 0
+                    
+                    if (suggestion.type === 'brand') {
+                      const brandReviews = reviews.filter(
+                        (r) => r.company_name.toLowerCase() === suggestion.name.toLowerCase()
+                      )
+                      reviewCount = brandReviews.length
+                      averageRating = reviewCount > 0
+                        ? brandReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+                        : 0
+                    } else if (suggestion.type === 'review' && suggestion.data) {
+                      const review = suggestion.data as CompanyReview
+                      averageRating = review.rating
+                      reviewCount = 1
+                    }
+                    
+                    return (
+                      <button
+                        key={`${suggestion.type}-${suggestion.name}-${index}`}
+                        type="button"
+                        onMouseDown={(e) => {
+                          // Use onMouseDown to prevent blur event
+                          e.preventDefault()
+                          setSearchQuery(suggestion.name)
+                          setShowSearchDropdown(false)
+                        }}
+                        className="w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{suggestion.name}</p>
+                            {suggestion.type === 'brand' && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {suggestion.data && (suggestion.data as BrandCard).category && (
+                                  <span>{(suggestion.data as BrandCard).category}</span>
+                                )}
+                                {reviewCount > 0 && (
+                                  <span className="ml-2">{reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}</span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0 flex items-center gap-2">
+                            {averageRating > 0 && (
+                              <>
+                                <StarRating rating={averageRating} onRatingChange={() => {}} readonly />
+                                <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
+                              </>
+                            )}
+                            {suggestion.type === 'brand' && averageRating === 0 && (
+                              <span className="text-xs text-gray-400">No reviews</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-shrink-0">
-                          <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1014,6 +1193,17 @@ function HomeContent() {
                       onChange={(e) => {
                         setFormData({ ...formData, company_name: e.target.value })
                       }}
+                      onFocus={() => {
+                        const currentInput = formData.company_name?.trim() || ''
+                        if (currentInput.length >= 2 && companyNameSuggestions.length > 0) {
+                          // Check if input exactly matches a suggestion - if so, don't show dropdown
+                          const queryLower = currentInput.toLowerCase()
+                          const exactMatch = companyNameSuggestions.find(name => name.toLowerCase() === queryLower)
+                          if (!exactMatch) {
+                            setShowCompanyNameDropdown(true)
+                          }
+                        }
+                      }}
                       onBlur={() => {
                         // Delay to allow clicking on suggestions
                         setTimeout(() => setShowCompanyNameDropdown(false), 200)
@@ -1028,7 +1218,9 @@ function HomeContent() {
                           <button
                             key={index}
                             type="button"
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              // Use onMouseDown instead of onClick to prevent blur event
+                              e.preventDefault()
                               setFormData({ ...formData, company_name: name })
                               setShowCompanyNameDropdown(false)
                             }}
@@ -1103,13 +1295,53 @@ function HomeContent() {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Company or Brand Name <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={formData.company_name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, company_name: e.target.value })
+                        }}
+                        onFocus={() => {
+                          const currentInput = formData.company_name?.trim() || ''
+                          if (currentInput.length >= 2 && companyNameSuggestions.length > 0) {
+                            // Check if input exactly matches a suggestion - if so, don't show dropdown
+                            const queryLower = currentInput.toLowerCase()
+                            const exactMatch = companyNameSuggestions.find(name => name.toLowerCase() === queryLower)
+                            if (!exactMatch) {
+                              setShowCompanyNameDropdown(true)
+                            }
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay to allow clicking on suggestions
+                          setTimeout(() => setShowCompanyNameDropdown(false), 200)
+                        }}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                        placeholder="Type to search existing companies or enter new"
+                      />
+                      {/* Company Name Suggestions Dropdown */}
+                      {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                          {companyNameSuggestions.map((name, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onMouseDown={(e) => {
+                                // Use onMouseDown instead of onClick to prevent blur event
+                                e.preventDefault()
+                                setFormData({ ...formData, company_name: name })
+                                setShowCompanyNameDropdown(false)
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              <p className="font-semibold text-gray-900">{name}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">

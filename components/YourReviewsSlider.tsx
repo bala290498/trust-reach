@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from './StarRating'
-import { X, Edit, Trash2, ExternalLink } from 'lucide-react'
+import { X, Edit, Trash2 } from 'lucide-react'
 
 interface YourReviewsSliderProps {
   isOpen: boolean
@@ -70,7 +70,7 @@ export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }:
   }
 
   return (
-    <>
+    <React.Fragment>
       {/* Backdrop */}
       {isOpen && (
         <div
@@ -126,28 +126,11 @@ export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }:
                           {review.company_name}
                         </h3>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={review.category}>
-                            {review.category}
-                          </p>
                           {review.created_at && (
-                            <>
-                              <span className="text-gray-300">•</span>
-                              <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                            </>
+                            <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                           )}
                         </div>
                       </div>
-                      {review.website_url && (
-                        <a
-                          href={review.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <ExternalLink size={18} />
-                        </a>
-                      )}
                     </div>
 
                     <div className="mb-3">
@@ -197,6 +180,6 @@ export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }:
           </div>
         </div>
       </div>
-    </>
+    </React.Fragment>
   )
 }

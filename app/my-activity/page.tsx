@@ -288,27 +288,11 @@ export default function MyActivityPage() {
                       {review.company_name}
                     </h3>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-xs sm:text-sm text-gray-500 font-medium truncate max-w-[8.75rem]" title={review.category}>
-                        {review.category}
-                      </p>
                       {review.created_at && (
-                        <>
-                          <span className="text-gray-300">•</span>
-                          <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                        </>
+                        <p className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                       )}
                     </div>
                   </div>
-                  {review.website_url && (
-                    <a
-                      href={review.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
                 </div>
                 <div className="mb-2 flex-shrink-0">
                   <StarRating rating={review.rating} onRatingChange={() => {}} readonly />

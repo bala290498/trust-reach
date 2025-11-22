@@ -267,27 +267,11 @@ export default function MyReviewsPage() {
                       {review.company_name}
                     </h3>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm text-gray-500 font-medium truncate max-w-[140px]" title={review.category}>
-                        {review.category}
-                      </p>
                       {review.created_at && (
-                        <>
-                          <span className="text-gray-300">•</span>
-                          <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                        </>
+                        <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
                       )}
                     </div>
                   </div>
-                  {review.website_url && (
-                    <a
-                      href={review.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
-                    >
-                      <ExternalLink size={18} />
-                    </a>
-                  )}
                 </div>
                 <div className="mb-3 flex-shrink-0">
                   <StarRating rating={review.rating} onRatingChange={() => {}} readonly />
@@ -346,19 +330,6 @@ export default function MyReviewsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={user?.primaryPhoneNumber?.phoneNumber || formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Company Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -368,42 +339,6 @@ export default function MyReviewsPage() {
                     onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Website URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.website_url}
-                    onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                    placeholder="https://example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  >
-                    <option value="">Select a category</option>
-                    <option value="Hotels & Restaurants">Hotels & Restaurants</option>
-                    <option value="Health & Medical">Health & Medical</option>
-                    <option value="Travel & Vacation">Travel & Vacation</option>
-                    <option value="Construction & Manufacturing">Construction & Manufacturing</option>
-                    <option value="Home Services">Home Services</option>
-                    <option value="Events & Entertainment">Events & Entertainment</option>
-                    <option value="Beauty & Well-being">Beauty & Well-being</option>
-                    <option value="Electronics & Technology">Electronics & Technology</option>
-                    <option value="Vehicles & Transportation">Vehicles & Transportation</option>
-                    <option value="Local Services">Local Services</option>
-                    <option value="Education & Training">Education & Training</option>
-                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">

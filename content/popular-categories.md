@@ -2,13 +2,16 @@
 title: Popular Categories
 ---
 
-## Electronics & Technology
-icon: Laptop
-description: Tech solutions and electronics
 
 ## Hotels & Restaurants
 icon: UtensilsCrossed
 description: Dining and hospitality
+
+## Electronics & Technology
+icon: Laptop
+description: Tech solutions and electronics
+
+
 
 ## Health & Medical
 icon: Heart
