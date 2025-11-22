@@ -236,18 +236,6 @@ export default function CommunityPurchaseDetailPage() {
                 WholeSale
               </Link>
             </li>
-            {purchase.category && (
-              <>
-                <li className="text-gray-400">/</li>
-                <li>
-                  <span className="text-gray-900 font-medium">{purchase.category}</span>
-                </li>
-              </>
-            )}
-            <li className="text-gray-400">/</li>
-            <li>
-              <span className="text-gray-900 font-medium">{purchase.title}</span>
-            </li>
           </ol>
         </nav>
 
