@@ -36,8 +36,12 @@ export default function Navbar() {
           <div className="flex justify-between items-center min-h-[5rem]">
             {/* Left side - Logo */}
             <div className="flex items-center flex-shrink-0">
-              <Link href="/" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent">
-                TrustReach.in
+              <Link href="/" className="flex items-center">
+                <img 
+                  src="/images/logo.png" 
+                  alt="TrustReach.in" 
+                  className="h-6 sm:h-8 md:h-10 w-auto object-contain"
+                />
               </Link>
             </div>
 

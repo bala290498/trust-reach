@@ -26,8 +26,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent mb-4 inline-block">
-              TrustReach.in
+            <Link href="/" className="mb-4 inline-block">
+              <img 
+                src="/images/logo.png" 
+                alt="TrustReach.in" 
+                className="h-6 sm:h-8 md:h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-gray-400 mb-4 max-w-md">
               Discover authentic reviews from real customers. Make informed decisions with trusted insights about companies and brands.
