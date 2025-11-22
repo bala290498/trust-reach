@@ -89,8 +89,8 @@ export default function MyActivityPage() {
 
   const getEmailDisplayName = (email: string) => {
     if (!email) return 'User'
-    const namePart = email.split('@')[0]
-    return namePart.charAt(0).toUpperCase() + namePart.slice(1)
+    // Show only first 5 characters of email
+    return email.substring(0, 5)
   }
 
   const normalizeUrl = (url: string): string => {
@@ -209,8 +209,8 @@ export default function MyActivityPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Activity</h1>
-            <p className="text-gray-600 mb-6">Please sign in to view your activity.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Reviews</h1>
+            <p className="text-gray-600 mb-6">Please sign in to view your reviews.</p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
@@ -244,7 +244,7 @@ export default function MyActivityPage() {
             <ArrowLeft size={20} />
             <span>Back to Home</span>
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Activity</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Reviews</h1>
           <p className="text-gray-600">Manage and edit your reviews</p>
         </div>
 
@@ -301,7 +301,7 @@ export default function MyActivityPage() {
                   <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-xs sm:text-sm flex-shrink-0">
                     {getEmailName(review.email)}
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate" title={review.email}>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">
                     {getEmailDisplayName(review.email)}
                   </p>
                 </div>

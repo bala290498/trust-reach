@@ -7,7 +7,7 @@ import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Menu, Laptop, UtensilsCrossed, Heart, Plane } from 'lucide-react'
+import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Laptop, UtensilsCrossed, Heart, Plane } from 'lucide-react'
 import YourReviewsSlider from '@/components/YourReviewsSlider'
 import NotificationModal from '@/components/NotificationModal'
 
@@ -724,9 +724,8 @@ function HomeContent() {
 
   const getEmailDisplayName = (email: string) => {
     if (!email) return 'User'
-    const namePart = email.split('@')[0]
-    // Capitalize first letter and return
-    return namePart.charAt(0).toUpperCase() + namePart.slice(1)
+    // Show only first 5 characters of email
+    return email.substring(0, 5)
   }
 
   const renderCompanyCard = (company: CompanyData) => {
@@ -778,17 +777,6 @@ function HomeContent() {
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
       />
-
-      {/* Floating Button to Open Slider */}
-      {isLoaded && user && (
-        <button
-          onClick={() => setShowSlider(true)}
-          className="fixed right-6 bottom-6 z-30 bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 transition-all duration-200 hover:scale-110 flex items-center justify-center"
-          aria-label="Open your reviews menu"
-        >
-          <Menu size={24} />
-        </button>
-      )}
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
@@ -1022,7 +1010,6 @@ function HomeContent() {
                             </div>
                             <div>
                               <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(review.email)}</p>
-                              <p className="text-xs text-gray-500">{review.email}</p>
                             </div>
                           </div>
                         </div>
@@ -1113,7 +1100,6 @@ function HomeContent() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{getEmailDisplayName(selectedReview.email)}</p>
-                  <p className="text-xs text-gray-500">{selectedReview.email}</p>
                 </div>
               </div>
 
@@ -1740,9 +1726,6 @@ function HomeContent() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate" title={getEmailDisplayName(review.email)}>
                             {getEmailDisplayName(review.email)}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate" title={review.email}>
-                            {review.email}
                           </p>
                         </div>
                       </div>

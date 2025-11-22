@@ -146,9 +146,8 @@ export default function CompanyPage() {
 
   const getEmailDisplayName = (email: string) => {
     if (!email) return 'Anonymous'
-    const namePart = email.split('@')[0]
-    // Capitalize first letter of each word
-    return namePart
+    // Show only first 5 characters of email
+    return email.substring(0, 5)
       .split(/[._-]/)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')

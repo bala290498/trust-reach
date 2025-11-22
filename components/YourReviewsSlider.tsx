@@ -61,8 +61,8 @@ export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }:
 
   const getEmailDisplayName = (email: string) => {
     if (!email) return 'User'
-    const namePart = email.split('@')[0]
-    return namePart.charAt(0).toUpperCase() + namePart.slice(1)
+    // Show only first 5 characters of email
+    return email.substring(0, 5)
   }
 
   if (!isLoaded || !user) {
@@ -141,7 +141,7 @@ export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }:
                       <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
                         {getEmailName(review.email)}
                       </div>
-                      <p className="text-sm text-gray-600 font-medium truncate" title={review.email}>
+                      <p className="text-sm text-gray-600 font-medium truncate">
                         {getEmailDisplayName(review.email)}
                       </p>
                     </div>

@@ -111,11 +111,8 @@ export default function BrandPage() {
 
   const getPartialEmail = (email: string) => {
     if (!email) return ''
-    // Show only first 6 characters of the email
-    if (email.length <= 6) {
-      return email
-    }
-    return email.substring(0, 6)
+    // Show only first 5 characters of the email
+    return email.substring(0, 5)
   }
 
   // Handle opening add review form after sign-in

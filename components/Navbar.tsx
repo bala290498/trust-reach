@@ -76,14 +76,14 @@ export default function Navbar() {
                 </SignedOut>
                 <SignedIn>
                   <Link
-                    href="/my-activity"
+                    href="/my-reviews"
                     className={`text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      pathname === '/my-activity'
+                      pathname === '/my-reviews'
                         ? 'text-primary-600 font-semibold'
                         : 'text-gray-600 hover:text-primary-600'
                     }`}
                   >
-                    Your Activity
+                    Your Reviews
                   </Link>
                   <UserButton afterSignOutUrl="/" />
                 </SignedIn>
