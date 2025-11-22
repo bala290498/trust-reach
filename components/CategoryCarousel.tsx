@@ -71,7 +71,7 @@ export default function CategoryCarousel<T extends Card = Card>({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {cards.map((card, index) => (
-            <div key={card.id || index} className="flex-shrink-0 w-full max-w-[23.75rem] sm:w-[23.75rem]">
+            <div key={card.id || index} className="flex-shrink-0 w-full max-w-full sm:max-w-[23.75rem] lg:max-w-[25rem]">
               {renderCard(card)}
             </div>
           ))}

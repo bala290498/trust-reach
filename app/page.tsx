@@ -880,21 +880,21 @@ function HomeContent() {
                     
                     // For review type suggestions, keep as button to set search query
                     return (
-                      <button
+                    <button
                         key={`${suggestion.type}-${suggestion.name}-${index}`}
-                        type="button"
+                      type="button"
                         onMouseDown={(e) => {
                           // Use onMouseDown to prevent blur event
                           e.preventDefault()
                           setSearchQuery(suggestion.name)
-                          setShowSearchDropdown(false)
-                        }}
-                        className="w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
+                        setShowSearchDropdown(false)
+                      }}
+                      className="w-full text-left px-6 py-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
                             <p className="font-semibold text-gray-900">{suggestion.name}</p>
-                          </div>
+                        </div>
                           <div className="flex-shrink-0 flex items-center gap-2">
                             {averageRating > 0 && (
                               <>
@@ -902,9 +902,9 @@ function HomeContent() {
                                 <span className="text-xs font-semibold text-gray-900">{Math.round(averageRating * 10) / 10}</span>
                               </>
                             )}
-                          </div>
                         </div>
-                      </button>
+                      </div>
+                    </button>
                     )
                   })}
                 </div>
@@ -1312,10 +1312,10 @@ function HomeContent() {
                       Company or Brand Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        value={formData.company_name}
+                    <input
+                      type="text"
+                      required
+                      value={formData.company_name}
                         onChange={(e) => {
                           setFormData({ ...formData, company_name: e.target.value })
                         }}
@@ -1334,7 +1334,7 @@ function HomeContent() {
                           // Delay to allow clicking on suggestions
                           setTimeout(() => setShowCompanyNameDropdown(false), 200)
                         }}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                         placeholder="Type to search existing companies or enter new"
                       />
                       {/* Company Name Suggestions Dropdown */}
@@ -1457,7 +1457,7 @@ function HomeContent() {
                         // Scroll to filter section
                         document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }}
-                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 transition-all duration-200 w-[180px] h-[140px] p-4 ${
+                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 transition-all duration-200 w-full max-w-[11.25rem] h-[8.75rem] p-4 ${
                         selectedCategory === category.name
                           ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
@@ -1484,7 +1484,7 @@ function HomeContent() {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[180px]"
+                      className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[11.25rem]"
                     >
                       <option value="">All Categories</option>
                       {categories.map((cat) => (
@@ -1500,7 +1500,7 @@ function HomeContent() {
                   <select
                     value={selectedRating}
                     onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[150px]"
+                    className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[9.375rem]"
                   >
                     <option value="0">All Ratings</option>
                     <option value="5">5 Stars</option>
@@ -1585,7 +1585,7 @@ function HomeContent() {
                           <Link
                             key={brand.id}
                             href={`/brands/${brand.id}`}
-                            className="bg-white rounded-lg border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer group min-w-[200px] sm:min-w-[220px] md:min-w-[240px] flex-shrink-0"
+                            className="bg-white rounded-lg border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer group w-full max-w-full sm:max-w-[13.75rem] lg:max-w-[15rem] flex-shrink-0"
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1 min-w-0">

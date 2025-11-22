@@ -90,6 +90,24 @@
     min-width: 0;
   }
 
+  /* Prevent overflow in grid containers */
+  .grid,
+  [class*="grid"] {
+    max-width: 100%;
+  }
+
+  /* Ensure main content containers don't overflow */
+  main,
+  section,
+  article,
+  aside,
+  header,
+  footer,
+  nav {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   /* Ensure carousels don't overflow */
   [class*="carousel"],
   [class*="overflow-x"] {
@@ -219,6 +237,50 @@
 
   .slide-in-right {
     animation: slideInFromRight 0.3s ease-in-out;
+  }
+
+  /* Responsive utility classes */
+  /* Ensure all images and media are responsive */
+  img,
+  picture,
+  video,
+  embed,
+  iframe,
+  object,
+  svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Prevent text overflow */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span,
+  a,
+  li {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Responsive tables */
+  table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: auto;
+  }
+
+  /* Ensure buttons and inputs don't overflow */
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
   }
 }
 

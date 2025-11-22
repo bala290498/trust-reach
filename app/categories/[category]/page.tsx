@@ -160,7 +160,7 @@ export default function CategoryPage() {
     const companySlug = generateSlug(company.name)
     
     return (
-      <div className="relative flex-shrink-0 pt-4" style={{ width: '140px', marginRight: '54px' }}>
+      <div className="relative flex-shrink-0 pt-4 w-[8.75rem] mr-[3.375rem] max-w-full">
         {/* Semi-Transparent Numeral Behind Card - Scaled smaller, beneath card, fully visible */}
         <div 
           className="absolute -left-6 sm:-left-8 top-4 bottom-0 flex items-center justify-center pointer-events-none"
@@ -170,11 +170,12 @@ export default function CategoryPage() {
           }}
         >
           <span 
-            className="text-[70px] sm:text-[85px] font-black leading-none text-gray-900"
+            className="font-black leading-none text-gray-900"
             style={{ 
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontWeight: 900,
-              lineHeight: 1
+              lineHeight: 1,
+              fontSize: 'clamp(3.5rem, 3.5rem + 0.5vw, 5.3125rem)'
             }}
           >
             {rank}
@@ -184,14 +185,10 @@ export default function CategoryPage() {
         {/* Compact Card - Fixed width, only name, score, and review count */}
         <Link
           href={`/companies/${companySlug}`}
-          className="relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer block overflow-hidden justify-center"
+          className="relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer block overflow-hidden justify-center w-[8.75rem] h-[7.5rem] min-h-[7.5rem] max-h-[7.5rem] max-w-full"
           style={{ 
             boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)',
-            zIndex: 10,
-            width: '140px',
-            height: '120px',
-            minHeight: '120px',
-            maxHeight: '120px'
+            zIndex: 10
           }}
         >
           {/* Line 1: Company Name (bold) */}
