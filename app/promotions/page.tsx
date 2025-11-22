@@ -167,12 +167,14 @@ export default function PromotionsPage() {
               >
                 {slidingHeros.map((hero) => (
                   <div key={hero.id} className="min-w-full relative">
-                    <div className="relative h-[400px] md:h-[500px]">
+                    <div className="relative h-[400px] md:h-[500px] w-full">
                       <Image
                         src={hero.image}
                         alt={hero.title}
                         fill
+                        sizes="100vw"
                         className="object-cover"
+                        priority
                       />
                       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent flex items-center">
                         <div className="max-w-3xl px-8 md:px-12">
@@ -254,7 +256,7 @@ export default function PromotionsPage() {
         </div>
 
         {/* Bento Grid Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[minmax(280px,auto)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {heroSections.map((hero, index) => {
             // Create varying sizes for bento grid effect
             // Pattern: Large (2x2), Tall (1x2), Medium (1x1), Medium (1x1), Large (2x1), Medium (1x1)
@@ -268,12 +270,12 @@ export default function PromotionsPage() {
             ]
             
             const heightClasses = [
-              'h-[400px] md:h-full',          // First: Full height
-              'h-[400px] md:h-full',          // Second: Full height
-              'h-[320px]',                    // Third: Medium
-              'h-[320px]',                    // Fourth: Medium
-              'h-[280px]',                    // Fifth: Wide but shorter
-              'h-[320px]'                     // Sixth: Medium
+              'h-[400px] md:h-[500px] lg:h-[600px]',  // First: Large square
+              'h-[400px] md:h-[500px] lg:h-[600px]',  // Second: Tall
+              'h-[320px] md:h-[350px]',               // Third: Medium
+              'h-[320px] md:h-[350px]',               // Fourth: Medium
+              'h-[280px] md:h-[320px]',               // Fifth: Wide but shorter
+              'h-[320px] md:h-[350px]'                // Sixth: Medium
             ]
             
             const textSizes = {
@@ -305,26 +307,28 @@ export default function PromotionsPage() {
             
             const showFullDetails = index === 0 || index === 1 || index === 4
 
-          return (
+            return (
               <div
                 key={hero.id}
                 className={`bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:shadow-xl hover:border-primary-300 transition-all duration-300 group relative ${gridClasses[index] || ''}`}
               >
-                <div className={`relative ${heightClasses[index] || 'h-64'}`}>
+                <div className={`relative w-full ${heightClasses[index] || 'h-64'} min-h-[280px]`}>
                   <Image
                     src={hero.image}
                     alt={hero.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    priority={index < 2}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30 flex flex-col justify-end">
                     {hero.verified && (
                       <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-green-500 px-3 py-1.5 rounded-full shadow-lg z-10">
                         <CheckCircle2 size={16} className="text-white" />
                         <span className="text-sm font-semibold text-white">Verified</span>
-                  </div>
+                      </div>
                     )}
-                    <div className="p-4 md:p-6">
+                    <div className="p-4 md:p-6 w-full">
                       <h3 className={`font-bold text-white mb-2 ${textSizes.title[index]}`}>
                         {hero.title}
                       </h3>
@@ -343,7 +347,7 @@ export default function PromotionsPage() {
                             )}
                           </>
                         )}
-                </div>
+                      </div>
                       {hero.link && (
                         <a
                           href={hero.link}
@@ -354,11 +358,11 @@ export default function PromotionsPage() {
                       )}
                     </div>
                   </div>
+                </div>
               </div>
-            </div>
-          )
-        })}
-          </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

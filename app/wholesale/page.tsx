@@ -3,28 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
-import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar, ChevronDown, Filter } from 'lucide-react'
+import { Plus, Minus, ExternalLink, Calendar, ChevronDown, Filter } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
 import NotificationModal from '@/components/NotificationModal'
 import Link from 'next/link'
-
-const getCategoryIcon = (category: string) => {
-  const iconMap: Record<string, any> = {
-    'Hotels & Restaurants': UtensilsCrossed,
-    'Health & Medical': Heart,
-    'Travel & Vacation': Plane,
-    'Construction & Manufacturing': Building2,
-    'Home Services': HomeIcon,
-    'Events & Entertainment': Music,
-    'Beauty & Well-being': Sparkles,
-    'Electronics & Technology': Laptop,
-    'Vehicles & Transportation': Car,
-    'Local Services': Building,
-    'Education & Training': GraduationCap,
-  }
-  const IconComponent = iconMap[category]
-  return IconComponent ? <IconComponent size={24} /> : null
-}
 
 const categories = [
   'Hotels & Restaurants',
@@ -100,8 +82,8 @@ export default function GroupPurchasingPage() {
   // Get unique categories dynamically from orders filtered by active tab
   const tabFilteredOrders = orders.filter((order) => {
     return activeTab === 'monthly'
-      ? (order.status === 'monthly' || order.status === 'everyday' || order.status === 'featured')
-      : (order.status === 'special' || order.status === 'inprogress')
+      ? order.status === 'monthly'
+      : order.status === 'special'
   })
   
   const availableCategories = Array.from(new Set(tabFilteredOrders.map(order => order.category).filter(Boolean))).sort()

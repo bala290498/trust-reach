@@ -100,8 +100,8 @@ export default function GroupPurchasingPage() {
   // Get unique categories dynamically from orders filtered by active tab
   const tabFilteredOrders = orders.filter((order) => {
     return activeTab === 'monthly'
-      ? (order.status === 'monthly' || order.status === 'everyday' || order.status === 'featured')
-      : (order.status === 'special' || order.status === 'inprogress')
+      ? order.status === 'monthly'
+      : order.status === 'special'
   })
   
   const availableCategories = Array.from(new Set(tabFilteredOrders.map(order => order.category).filter(Boolean))).sort()
