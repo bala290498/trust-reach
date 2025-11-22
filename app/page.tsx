@@ -749,6 +749,57 @@ function HomeContent() {
     return email.substring(0, 6)
   }
 
+  const getEmailColor = (email: string): string => {
+    if (!email) return '#2563eb' // Default primary-600 color
+    
+    // Simple hash function to convert email to a number
+    let hash = 0
+    for (let i = 0; i < email.length; i++) {
+      hash = email.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    
+    // Generate HSL color with good saturation and lightness
+    // Hue: 0-360 (full color spectrum)
+    // Saturation: 50-70% (vibrant but not too intense)
+    // Lightness: 40-50% (readable on white text)
+    const hue = Math.abs(hash) % 360
+    const saturation = 50 + (Math.abs(hash) % 21) // 50-70%
+    const lightness = 40 + (Math.abs(hash) % 11) // 40-50%
+    
+    // Convert HSL to RGB
+    const h = hue / 360
+    const s = saturation / 100
+    const l = lightness / 100
+    
+    const c = (1 - Math.abs(2 * l - 1)) * s
+    const x = c * (1 - Math.abs((h * 6) % 2 - 1))
+    const m = l - c / 2
+    
+    let r = 0, g = 0, b = 0
+    
+    if (h < 1/6) {
+      r = c; g = x; b = 0
+    } else if (h < 2/6) {
+      r = x; g = c; b = 0
+    } else if (h < 3/6) {
+      r = 0; g = c; b = x
+    } else if (h < 4/6) {
+      r = 0; g = x; b = c
+    } else if (h < 5/6) {
+      r = x; g = 0; b = c
+    } else {
+      r = c; g = 0; b = x
+    }
+    
+    // Convert to hex
+    const toHex = (n: number) => {
+      const hex = Math.round((n + m) * 255).toString(16)
+      return hex.length === 1 ? '0' + hex : hex
+    }
+    
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+  }
+
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, any> = {
       'Hotels & Restaurants': UtensilsCrossed,
@@ -1083,7 +1134,7 @@ function HomeContent() {
                       <div className="flex items-start justify-between mb-[clamp(0.5rem,1.5vw,0.75rem)] gap-4 flex-wrap">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)] mb-2">
-                            <div className="w-[clamp(2rem,5vw,2.5rem)] h-[clamp(2rem,5vw,2.5rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0">
+                            <div className="w-[clamp(2rem,5vw,2.5rem)] h-[clamp(2rem,5vw,2.5rem)] rounded-full text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0" style={{ backgroundColor: getEmailColor(review.email) }}>
                               {getEmailName(review.email)}
                             </div>
                             <div className="min-w-0">
@@ -1173,7 +1224,7 @@ function HomeContent() {
               </div>
 
               <div className="mb-[clamp(1rem,3vw,1.5rem)] flex items-center gap-[clamp(0.5rem,1.5vw,0.75rem)]">
-                <div className="w-[clamp(2.5rem,6vw,3rem)] h-[clamp(2.5rem,6vw,3rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(1rem,2.5vw,1.125rem)] flex-shrink-0">
+                <div className="w-[clamp(2.5rem,6vw,3rem)] h-[clamp(2.5rem,6vw,3rem)] rounded-full text-white flex items-center justify-center font-semibold text-[clamp(1rem,2.5vw,1.125rem)] flex-shrink-0" style={{ backgroundColor: getEmailColor(selectedReview.email) }}>
                   {getEmailName(selectedReview.email)}
                 </div>
                 <div className="min-w-0">
@@ -1836,7 +1887,7 @@ function HomeContent() {
                       </div>
                       
                       <div className="mb-[clamp(0.5rem,1.5vw,0.75rem)] flex items-center gap-2">
-                        <div className="w-[clamp(1.75rem,4.5vw,2rem)] h-[clamp(1.75rem,4.5vw,2rem)] rounded-full bg-primary-600 text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0">
+                        <div className="w-[clamp(1.75rem,4.5vw,2rem)] h-[clamp(1.75rem,4.5vw,2rem)] rounded-full text-white flex items-center justify-center font-semibold text-[clamp(0.75rem,2vw,0.875rem)] flex-shrink-0" style={{ backgroundColor: getEmailColor(review.email) }}>
                           {getEmailName(review.email)}
                         </div>
                         <div className="flex-1 min-w-0">
