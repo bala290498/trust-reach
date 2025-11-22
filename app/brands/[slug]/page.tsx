@@ -7,6 +7,7 @@ import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { ArrowLeft, ExternalLink, Mail, Phone, MapPin, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { supabase, CompanyReview } from '@/lib/supabase'
+import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
 import NotificationModal from '@/components/NotificationModal'
 
@@ -210,15 +211,37 @@ export default function BrandPage() {
 
   if (!brand) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Brand Not Found</h1>
-          <Link
-            href="/"
-            className="text-primary-600 hover:text-primary-700 font-semibold"
-          >
-            ← Back to Home
-          </Link>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
+          {/* Breadcrumb */}
+          <nav className="mb-6" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-base">
+              <li>
+                <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li className="text-gray-400">/</li>
+              <li>
+                <Link href="/all-categories" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  All Categories
+                </Link>
+              </li>
+              <li className="text-gray-400">/</li>
+              <li>
+                <span className="text-gray-900 font-medium">Brand Not Found</span>
+              </li>
+            </ol>
+          </nav>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Brand Not Found</h1>
+            <Link
+              href="/"
+              className="text-primary-600 hover:text-primary-700 font-semibold"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -235,14 +258,36 @@ export default function BrandPage() {
       />
 
       <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Back to Home</span>
-        </Link>
+        {/* Breadcrumb */}
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-base">
+            <li>
+              <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
+                Home
+              </Link>
+            </li>
+            <li className="text-gray-400">/</li>
+            <li>
+              <Link href="/all-categories" className="text-gray-600 hover:text-primary-600 transition-colors">
+                All Categories
+              </Link>
+            </li>
+            {brand.category && (
+              <>
+                <li className="text-gray-400">/</li>
+                <li>
+                  <Link href={`/category/${generateSlug(brand.category)}`} className="text-gray-600 hover:text-primary-600 transition-colors">
+                    {brand.category}
+                  </Link>
+                </li>
+              </>
+            )}
+            <li className="text-gray-400">/</li>
+            <li>
+              <span className="text-gray-900 font-medium">{brand.brand_name}</span>
+            </li>
+          </ol>
+        </nav>
 
         {/* Brand Banner */}
         <div className="bg-gradient-to-r from-primary-50 via-white to-secondary-50 rounded-2xl p-6 md:p-8 mb-8 border-2 border-gray-200">

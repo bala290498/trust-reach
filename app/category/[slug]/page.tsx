@@ -29,6 +29,21 @@ export default function CategoryPage() {
   const [sortBy, setSortBy] = useState<'rating' | 'date'>('rating')
   const [order, setOrder] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('highest')
 
+  // All available categories
+  const allCategories = [
+    'Hotels & Restaurants',
+    'Health & Medical',
+    'Travel & Vacation',
+    'Construction & Manufacturing',
+    'Home Services',
+    'Events & Entertainment',
+    'Beauty & Well-being',
+    'Electronics & Technology',
+    'Vehicles & Transportation',
+    'Local Services',
+    'Education & Training',
+  ]
+
   const fetchBrands = useCallback(async () => {
     try {
       const response = await fetch('/api/brands')
@@ -36,9 +51,8 @@ export default function CategoryPage() {
         const data = await response.json()
         setBrandCards(data || [])
         
-        // Find the category name from the slug
+        // Find the category name from the slug using all categories
         const slug = params.slug as string
-        const allCategories = Array.from(new Set(data.map((brand: BrandCard) => brand.category).filter(Boolean))) as string[]
         const matchedCategory = allCategories.find((cat) => generateSlug(cat) === slug)
         
         if (matchedCategory) {
@@ -131,13 +145,26 @@ export default function CategoryPage() {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back to Home</span>
-          </Link>
+          {/* Breadcrumb */}
+          <nav className="mb-6" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-base">
+              <li>
+                <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li className="text-gray-400">/</li>
+              <li>
+                <Link href="/all-categories" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  All Categories
+                </Link>
+              </li>
+              <li className="text-gray-400">/</li>
+              <li>
+                <span className="text-gray-900 font-medium">Category Not Found</span>
+              </li>
+            </ol>
+          </nav>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Category Not Found</h1>
           <p className="text-gray-600">The category you&apos;re looking for doesn&apos;t exist or has no brands.</p>
         </div>
@@ -146,16 +173,28 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Back to Home</span>
-        </Link>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+        {/* Breadcrumb */}
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-base">
+            <li>
+              <Link href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
+                Home
+              </Link>
+            </li>
+            <li className="text-gray-400">/</li>
+            <li>
+              <Link href="/all-categories" className="text-gray-600 hover:text-primary-600 transition-colors">
+                All Categories
+              </Link>
+            </li>
+            <li className="text-gray-400">/</li>
+            <li>
+              <span className="text-gray-900 font-medium">{category}</span>
+            </li>
+          </ol>
+        </nav>
 
         {/* Category Header */}
         <div className="mb-8">

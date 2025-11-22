@@ -23,6 +23,21 @@ interface BrandCard {
   created_at: string
 }
 
+// All available categories
+const allCategories = [
+  'Hotels & Restaurants',
+  'Health & Medical',
+  'Travel & Vacation',
+  'Construction & Manufacturing',
+  'Home Services',
+  'Events & Entertainment',
+  'Beauty & Well-being',
+  'Electronics & Technology',
+  'Vehicles & Transportation',
+  'Local Services',
+  'Education & Training',
+]
+
 function HomeContent() {
   const { user, isLoaded } = useUser()
   const searchParams = useSearchParams()
@@ -30,7 +45,6 @@ function HomeContent() {
   const [filteredReviews, setFilteredReviews] = useState<CompanyReview[]>([])
   const [brandCards, setBrandCards] = useState<BrandCard[]>([])
   const [categories, setCategories] = useState<string[]>([])
-  const [popularCategories, setPopularCategories] = useState<Array<{ name: string; icon: string; description: string }>>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedRating, setSelectedRating] = useState(0)
@@ -38,6 +52,7 @@ function HomeContent() {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false)
   const [searchSuggestions, setSearchSuggestions] = useState<Array<{ type: 'brand' | 'review'; name: string; data?: CompanyReview | BrandCard }>>([])
   const [selectedReview, setSelectedReview] = useState<CompanyReview | null>(null)
+  const [isReviewFromYourReviews, setIsReviewFromYourReviews] = useState(false)
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [formData, setFormData] = useState({
     email: '',
@@ -85,18 +100,6 @@ function HomeContent() {
     }
   }, [])
 
-  const fetchPopularCategories = useCallback(async () => {
-    try {
-      const response = await fetch('/api/popular-categories')
-      if (response.ok) {
-        const data = await response.json()
-        setPopularCategories(data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching popular categories:', error)
-      setPopularCategories([])
-    }
-  }, [])
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -140,8 +143,7 @@ function HomeContent() {
 
   useEffect(() => {
     fetchBrandCards()
-    fetchPopularCategories()
-  }, [fetchBrandCards, fetchPopularCategories])
+  }, [fetchBrandCards])
 
   useEffect(() => {
     fetchReviews()
@@ -743,8 +745,65 @@ function HomeContent() {
 
   const getEmailDisplayName = (email: string) => {
     if (!email) return 'User'
-    // Show only first 5 characters of email
-    return email.substring(0, 5)
+    // Show only first 6 characters of email
+    return email.substring(0, 6)
+  }
+
+  const getCategoryIcon = (category: string) => {
+    const iconMap: Record<string, any> = {
+      'Hotels & Restaurants': UtensilsCrossed,
+      'Health & Medical': Heart,
+      'Travel & Vacation': Plane,
+      'Construction & Manufacturing': Building2,
+      'Home Services': HomeIcon,
+      'Events & Entertainment': Music,
+      'Beauty & Well-being': Sparkles,
+      'Electronics & Technology': Laptop,
+      'Vehicles & Transportation': Car,
+      'Local Services': Building,
+      'Education & Training': GraduationCap,
+    }
+    const IconComponent = iconMap[category]
+    return IconComponent || Laptop
+  }
+
+  const getCategoryCount = (category: string) => {
+    return brandCards.filter((brand) => brand.category === category).length
+  }
+
+  const getBestBrandInCategory = (category: string): { name: string; rating: number; reviewCount: number } | null => {
+    const categoryBrands = brandCards.filter((brand) => brand.category === category)
+    if (categoryBrands.length === 0) return null
+
+    // For all categories, find brand with highest average rating
+    let bestBrand: { name: string; rating: number; reviewCount: number } | null = null
+    let highestRating = 0
+
+    categoryBrands.forEach((brand) => {
+      const brandReviews = reviews.filter((review) => review.company_name === brand.brand_name)
+      if (brandReviews.length > 0) {
+        const averageRating = brandReviews.reduce((sum, review) => sum + review.rating, 0) / brandReviews.length
+        if (averageRating > highestRating || (averageRating === highestRating && brandReviews.length > (bestBrand?.reviewCount || 0))) {
+          highestRating = averageRating
+          bestBrand = { 
+            name: brand.brand_name, 
+            rating: averageRating,
+            reviewCount: brandReviews.length
+          }
+        }
+      }
+    })
+
+    // If no brands have reviews, return the first brand
+    if (!bestBrand && categoryBrands.length > 0) {
+      return {
+        name: categoryBrands[0].brand_name,
+        rating: 0,
+        reviewCount: 0
+      }
+    }
+
+    return bestBrand
   }
 
   const renderCompanyCard = (company: CompanyData) => {
@@ -1127,14 +1186,15 @@ function HomeContent() {
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[clamp(0.875rem,2vw,1rem)] break-words">{selectedReview.review}</p>
               </div>
 
-              <div className="pt-[clamp(1rem,3vw,1.5rem)] border-t border-gray-200 flex justify-between items-center gap-4 flex-wrap">
-                {/* Only show Edit/Delete buttons if this is the user's own review */}
-                {isLoaded && user && selectedReview.user_id === user.id ? (
+              <div className="pt-[clamp(1rem,3vw,1.5rem)] border-t border-gray-200 flex justify-end items-center gap-4 flex-wrap">
+                {/* Only show Edit/Delete buttons if opened from Your Reviews section */}
+                {isReviewFromYourReviews && isLoaded && user && selectedReview.user_id === user.id ? (
                   <div className="flex gap-[clamp(0.5rem,1.5vw,0.75rem)] flex-wrap">
                     <button
                       onClick={() => {
                         handleEditClick(selectedReview)
                         setSelectedReview(null)
+                        setIsReviewFromYourReviews(false)
                       }}
                       className="bg-blue-600 text-white py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.875rem,2vw,1rem)]"
                     >
@@ -1145,6 +1205,7 @@ function HomeContent() {
                       onClick={() => {
                         handleDeleteClick(selectedReview)
                         setSelectedReview(null)
+                        setIsReviewFromYourReviews(false)
                       }}
                       className="bg-red-600 text-white py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-red-700 transition-all duration-200 flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.875rem,2vw,1rem)]"
                     >
@@ -1152,11 +1213,12 @@ function HomeContent() {
                       <span>Delete</span>
                     </button>
                   </div>
-                ) : (
-                  <div></div>
-                )}
+                ) : null}
                 <button
-                  onClick={() => setSelectedReview(null)}
+                  onClick={() => {
+                    setSelectedReview(null)
+                    setIsReviewFromYourReviews(false)
+                  }}
                   className="bg-gray-200 text-gray-700 py-[clamp(0.625rem,1.5vw,0.75rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-300 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]"
                 >
                   Close
@@ -1454,99 +1516,92 @@ function HomeContent() {
         )}
 
         {/* Popular Categories */}
-        {popularCategories.length > 0 && (
-          <div className="mb-[clamp(1.5rem,4vw,2rem)]">
-            <div className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(1rem,3vw,1.5rem)] shadow-sm">
-              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)] text-center">Popular Categories</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-[clamp(0.5rem,1.5vw,0.75rem)]">
-                {popularCategories.map((category, index) => {
-                  const iconMap: Record<string, any> = {
-                    Laptop: Laptop,
-                    UtensilsCrossed: UtensilsCrossed,
-                    Heart: Heart,
-                    Plane: Plane,
-                    Building2: Building2,
-                    HomeIcon: HomeIcon,
-                    Music: Music,
-                    Sparkles: Sparkles,
-                    Car: Car,
-                    Building: Building,
-                    GraduationCap: GraduationCap,
-                  }
-                  const IconComponent = iconMap[category.icon] || Laptop
-                  
-                  return (
+        {allCategories.filter((category) => getCategoryCount(category) > 0).length > 0 && (
+          <div className="mb-[clamp(2rem,5vw,3rem)]">
+            <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
+              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 break-words">Popular Categories</h2>
+              <Link
+                href="/all-categories"
+                className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-primary-600 hover:text-primary-700 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] transition-colors flex-shrink-0 underline-offset-4 hover:underline"
+              >
+                View All
+                <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
+              </Link>
+            </div>
+            <div className="relative group">
+                {/* Left Arrow Button - Desktop Only */}
                     <button
-                      key={index}
                       onClick={() => {
-                        setSelectedCategory(category.name)
-                      }}
-                      className={`flex flex-col items-center justify-center gap-[clamp(0.25rem,1vw,0.5rem)] rounded-[clamp(0.5rem,1.5vw,0.75rem)] border transition-all duration-200 h-[clamp(4rem,10vw,5rem)] p-[clamp(0.5rem,1.5vw,0.75rem)] shadow-sm ${
-                        selectedCategory === category.name
-                          ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-md'
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50'
-                      }`}
-                    >
-                      <IconComponent size={40} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className={selectedCategory === category.name ? 'text-primary-600' : 'text-gray-600'} />
-                      <p className="font-semibold text-[clamp(0.625rem,1.5vw,0.75rem)] leading-tight text-center break-words">{category.name}</p>
+                    const carousel = carouselRefs.current['popular-categories']
+                    if (carousel) {
+                      const scrollAmount = carousel.offsetWidth * 0.8
+                      carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+                    }
+                  }}
+                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll categories left"
+                >
+                  <ChevronLeft size={24} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className="text-gray-700" />
                     </button>
-                  )
-                })}
-                
-                {/* View All Card */}
-                <div className="relative" ref={viewAllDropdownRef}>
-                  <button
-                    onClick={() => setShowViewAllDropdown(!showViewAllDropdown)}
-                    className="flex flex-col items-center justify-center gap-[clamp(0.25rem,1vw,0.5rem)] rounded-[clamp(0.5rem,1.5vw,0.75rem)] border border-gray-200 transition-all duration-200 h-[clamp(4rem,10vw,5rem)] p-[clamp(0.5rem,1.5vw,0.75rem)] shadow-sm bg-white text-gray-700 hover:border-primary-300 hover:bg-primary-50 w-full"
-                  >
-                    <ChevronRight size={40} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className={`text-gray-600 transition-transform ${showViewAllDropdown ? 'rotate-90' : ''}`} />
-                    <p className="font-semibold text-[clamp(0.625rem,1.5vw,0.75rem)] leading-tight text-center">View All</p>
-                  </button>
-                  
-                  {/* Dropdown */}
-                  {showViewAllDropdown && categories.length > 0 && (() => {
-                    // Get popular category names
-                    const popularCategoryNames = popularCategories.map(cat => cat.name)
-                    // Filter out popular categories from the dropdown
-                    const otherCategories = categories.filter(cat => !popularCategoryNames.includes(cat))
+
+                {/* Carousel Container */}
+                <div
+                  ref={(el) => {
+                    if (el) carouselRefs.current['popular-categories'] = el
+                  }}
+                  className="flex gap-[clamp(0.75rem,2vw,1.5rem)] overflow-x-auto scrollbar-hide scroll-smooth pb-[clamp(0.75rem,2vw,1rem)]"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {allCategories
+                    .filter((category) => getCategoryCount(category) > 0)
+                    .map((category) => {
+                    const categoryCount = getCategoryCount(category)
+                    const IconComponent = getCategoryIcon(category)
                     
                     return (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[clamp(0.5rem,1.5vw,0.75rem)] shadow-lg z-50 max-h-[min(20rem,50vh)] overflow-y-auto">
-                        {otherCategories.length > 0 ? (
-                          <>
-                            {otherCategories.map((cat) => (
-                              <Link
-                                key={cat}
-                                href={`/categories/${generateSlug(cat)}`}
-                                onClick={() => setShowViewAllDropdown(false)}
-                                className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0 text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-700 hover:text-primary-600"
-                              >
-                                {cat}
-                              </Link>
-                            ))}
-                            <Link
-                              href="/all-categories"
-                              onClick={() => setShowViewAllDropdown(false)}
-                              className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors border-t-2 border-gray-200 text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-primary-600"
-                            >
-                              View All Categories →
-                            </Link>
-                          </>
-                        ) : (
-                          <Link
-                            href="/all-categories"
-                            onClick={() => setShowViewAllDropdown(false)}
-                            className="block px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.75rem)] hover:bg-primary-50 transition-colors text-[clamp(0.75rem,1.5vw,0.875rem)] font-semibold text-primary-600"
-                          >
-                            View All Categories →
-                          </Link>
-                        )}
-                      </div>
+                      <Link
+                        key={category}
+                        href={`/category/${generateSlug(category)}`}
+                        className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(1rem,3vw,1.5rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col items-center text-center cursor-pointer group w-[min(280px,85vw)] sm:w-[min(300px,40vw)] md:w-[min(320px,30vw)] flex-shrink-0 shadow-sm"
+                      >
+                        <div className="mb-[clamp(0.75rem,2vw,1rem)]">
+                          <div className="text-gray-600 group-hover:text-primary-600 transition-colors flex justify-center">
+                            <IconComponent size={24} style={{ width: 'clamp(1.5rem, 4vw, 2rem)', height: 'clamp(1.5rem, 4vw, 2rem)' }} />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0 w-full">
+                          <h3 className="text-[clamp(1rem,2.5vw,1.125rem)] font-bold text-gray-900 mb-1 break-words group-hover:text-primary-600 transition-colors">
+                            {category}
+                          </h3>
+                          <p className="text-[clamp(0.75rem,1.5vw,0.875rem)] text-gray-500">
+                            {categoryCount} {categoryCount === 1 ? 'business' : 'businesses'}
+                          </p>
+                        </div>
+                        <div className="mt-auto pt-[clamp(0.5rem,1.5vw,0.75rem)] border-t border-gray-200 w-full">
+                          <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center group-hover:text-primary-700 transition-colors">
+                            View Category →
+                          </p>
+                        </div>
+                      </Link>
                     )
-                  })()}
+                  })}
                 </div>
+
+                {/* Right Arrow Button - Desktop Only */}
+                <button
+                  onClick={() => {
+                    const carousel = carouselRefs.current['popular-categories']
+                    if (carousel) {
+                      const scrollAmount = carousel.offsetWidth * 0.8
+                      carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+                    }
+                  }}
+                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border-2 border-gray-300 rounded-full p-2 shadow-lg hover:bg-primary-50 hover:border-primary-500 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll categories right"
+                >
+                  <ChevronRight size={24} style={{ width: 'clamp(1.25rem, 3vw, 1.5rem)', height: 'clamp(1.25rem, 3vw, 1.5rem)' }} className="text-gray-700" />
+                </button>
               </div>
-            </div>
           </div>
         )}
 
@@ -1573,21 +1628,47 @@ function HomeContent() {
         {/* Category-Based Brand Sections */}
         {brandCards.length > 0 && categories.length > 0 && (
           <div className="mb-12">
-            {categories
-                .filter((category) => !selectedCategory || category === selectedCategory)
+              {categories
+                .filter((category) => {
+                  // Exclude these categories from home page
+                  const excludedCategories = ['Health & Medical', 'Hotels & Restaurants', 'Travel & Vacation']
+                  if (excludedCategories.includes(category)) return false
+                  // Only show categories that have brands
+                  const categoryBrands = brandCards.filter((brand) => brand.category === category)
+                  if (categoryBrands.length === 0) return false
+                  return !selectedCategory || category === selectedCategory
+                })
                 .map((category) => {
-                const categoryBrands = brandCards.filter((brand) => brand.category === category)
-                if (categoryBrands.length === 0) return null
+                let categoryBrands = brandCards.filter((brand) => brand.category === category)
 
+                // Sort by average rating for all categories
+                categoryBrands = [...categoryBrands].sort((a, b) => {
+                  const aReviews = reviews.filter((review) => review.company_name === a.brand_name)
+                  const bReviews = reviews.filter((review) => review.company_name === b.brand_name)
+                  const aRating = aReviews.length > 0
+                    ? aReviews.reduce((sum, review) => sum + review.rating, 0) / aReviews.length
+                    : 0
+                  const bRating = bReviews.length > 0
+                    ? bReviews.reduce((sum, review) => sum + review.rating, 0) / bReviews.length
+                    : 0
+                  return bRating - aRating // Sort by average rating descending
+                })
+
+                const bestBrand = getBestBrandInCategory(category)
+                
                 return (
                   <div key={category} className="mb-[clamp(2rem,5vw,3rem)]">
                     <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
-                      <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 break-words">{category}</h2>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 break-words">
+                          {bestBrand ? `Best in ${category}` : category}
+                        </h2>
+                      </div>
                       <Link
                         href={`/category/${generateSlug(category)}`}
-                        className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] rounded-full transition-colors flex-shrink-0"
+                        className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-primary-600 hover:text-primary-700 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] transition-colors flex-shrink-0 underline-offset-4 hover:underline"
                       >
-                        See more
+                        View All
                         <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
                       </Link>
                     </div>
@@ -1710,17 +1791,17 @@ function HomeContent() {
           <div className="mb-[clamp(2rem,5vw,3rem)]">
             <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
               <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900">Recent Reviews</h2>
-              {reviews.length > 6 && (
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.5rem,1.5vw,0.625rem)] bg-primary-50 text-primary-600 hover:bg-primary-100 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] rounded-full transition-colors flex-shrink-0"
-                >
-                  See more
-                  <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
-                </Link>
-              )}
-            </div>
-            
+                {reviews.length > 6 && (
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-primary-600 hover:text-primary-700 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] transition-colors flex-shrink-0 underline-offset-4 hover:underline"
+                  >
+                    View All
+                    <ChevronRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
+                  </Link>
+                )}
+              </div>
+              
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[clamp(0.75rem,2vw,1.5rem)]">
                 {reviews
                   .sort((a, b) => {
@@ -1733,7 +1814,10 @@ function HomeContent() {
                   .map((review) => (
                     <div
                       key={review.id}
-                      onClick={() => setSelectedReview(review)}
+                      onClick={() => {
+                        setSelectedReview(review)
+                        setIsReviewFromYourReviews(false)
+                      }}
                       className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 cursor-pointer shadow-sm"
                     >
                       <div className="flex items-start justify-between mb-[clamp(0.5rem,1.5vw,0.75rem)] gap-2 flex-wrap">
@@ -1773,7 +1857,7 @@ function HomeContent() {
                       </div>
                     </div>
                   ))}
-              </div>
+            </div>
           </div>
         )}
 
