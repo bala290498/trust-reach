@@ -1495,21 +1495,6 @@ function HomeContent() {
                     </select>
                   </div>
                 )}
-                <div className="flex items-center gap-3">
-                  <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by Rating:</label>
-                  <select
-                    value={selectedRating}
-                    onChange={(e) => setSelectedRating(Number(e.target.value))}
-                    className="px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white min-w-[9.375rem]"
-                  >
-                    <option value="0">All Ratings</option>
-                    <option value="5">5 Stars</option>
-                    <option value="4">4+ Stars</option>
-                    <option value="3">3+ Stars</option>
-                    <option value="2">2+ Stars</option>
-                    <option value="1">1+ Stars</option>
-                  </select>
-                </div>
               </div>
             </div>
           </div>
