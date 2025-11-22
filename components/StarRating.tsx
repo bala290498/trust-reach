@@ -33,7 +33,7 @@ export default function StarRating({ rating, onRatingChange, readonly = false }:
   const displayRating = hoverRating || rating
 
   return (
-    <div className="flex items-center space-x-1">
+    <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
@@ -42,16 +42,20 @@ export default function StarRating({ rating, onRatingChange, readonly = false }:
           onMouseEnter={() => handleMouseEnter(star)}
           onMouseLeave={handleMouseLeave}
           disabled={readonly}
-          className={`transition-colors ${
+          className={`w-6 h-6 flex items-center justify-center transition-all rounded-sm ${
             readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
+          } ${
+            star <= displayRating
+              ? 'bg-primary-600'
+              : 'bg-gray-300'
           }`}
         >
           <Star
-            size={24}
+            size={16}
             className={
               star <= displayRating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'fill-gray-300 text-gray-300'
+                ? 'fill-white text-white'
+                : 'fill-white text-white'
             }
           />
         </button>
