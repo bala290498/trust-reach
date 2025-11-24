@@ -2,14 +2,32 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useUser } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 
 export default function AllReviewsPage() {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<CompanyReview | null>(null)
@@ -20,7 +38,7 @@ export default function AllReviewsPage() {
         .from('company_reviews')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(30)
 
       if (error) throw error
       setReviews(data || [])
@@ -92,7 +110,7 @@ export default function AllReviewsPage() {
             All Reviews
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl">
-            Browse through the latest 50 reviews from our community.
+            Browse through the latest 30 reviews from our community.
           </p>
         </div>
       </div>

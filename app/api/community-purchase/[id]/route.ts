@@ -30,7 +30,7 @@ export async function GET(
     // Check if directory exists
     if (!fs.existsSync(ordersDirectory)) {
       return NextResponse.json(
-        { error: 'Wholesale not found' },
+        { error: 'Community Purchase not found' },
         { status: 404 }
       )
     }
@@ -40,7 +40,7 @@ export async function GET(
     
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
-        { error: 'Wholesale not found' },
+        { error: 'Community Purchase not found' },
         { status: 404 }
       )
     }
@@ -115,7 +115,7 @@ export async function GET(
 
     return NextResponse.json(purchase)
   } catch (error) {
-    console.error('Error reading wholesale:', error)
+    console.error('Error reading community purchase:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

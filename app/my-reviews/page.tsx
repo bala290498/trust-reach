@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
 import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
@@ -9,7 +10,24 @@ import Link from 'next/link'
 import NotificationModal from '@/components/NotificationModal'
 
 export default function MyReviewsPage() {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
@@ -389,7 +407,7 @@ export default function MyReviewsPage() {
                   <input
                     type="email"
                     required
-                    value={user?.primaryEmailAddress?.emailAddress || formData.email}
+                    value={user?.email || formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                     disabled

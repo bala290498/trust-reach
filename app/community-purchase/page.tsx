@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import SignInModal from '@/components/SignInModal'
 import ReactMarkdown from 'react-markdown'
 import { Plus, Minus, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap, Calendar, ChevronDown, Filter } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
@@ -53,7 +55,24 @@ interface BulkOrder {
 type TabType = 'monthly' | 'special'
 
 export default function GroupPurchasingPage() {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [orders, setOrders] = useState<BulkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('monthly')
@@ -81,13 +100,13 @@ export default function GroupPurchasingPage() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await fetch('/api/wholesale')
+      const response = await fetch('/api/community-purchase')
       if (response.ok) {
         const data = await response.json()
         setOrders(data)
       }
     } catch (error) {
-      console.error('Error fetching WholeSale opportunities:', error)
+      console.error('Error fetching Community Purchase opportunities:', error)
     } finally {
       setLoading(false)
     }
@@ -164,11 +183,11 @@ export default function GroupPurchasingPage() {
 
     setSubmitting(true)
     try {
-      const response = await fetch('/api/wholesale/submit', {
+      const response = await fetch('/api/community-purchase/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user.primaryEmailAddress?.emailAddress || '',
+          email: user.email || '',
           phone: formData.phone,
         }),
       })
@@ -185,7 +204,7 @@ export default function GroupPurchasingPage() {
         setSubmittedData(savedData)
         
         // Create WhatsApp template message with exact format
-        const whatsappMessage = `Order: ${selectedOrder.title}\n\nEmail: ${user.primaryEmailAddress?.emailAddress || 'N/A'}\n\nPhone Number *\n${savedData.phone}\n\nQuantity Needed *\n${savedData.quantity}\n\nMessage (Optional)\n${savedData.message || ''}`
+        const whatsappMessage = `Order: ${selectedOrder.title}\n\nEmail: ${user.email || 'N/A'}\n\nPhone Number *\n${savedData.phone}\n\nQuantity Needed *\n${savedData.quantity}\n\nMessage (Optional)\n${savedData.message || ''}`
         const encodedMessage = encodeURIComponent(whatsappMessage)
         const whatsappUrl = `https://wa.me/7010584543?text=${encodedMessage}`
         
@@ -230,10 +249,10 @@ export default function GroupPurchasingPage() {
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-10 md:py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            WholeSale
+            Community Purchase
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            Express your interest in WholeSale. Our team will reach out to you shortly.
+            Express your interest in Community Purchase. Our team will reach out to you shortly.
           </p>
         </div>
       </div>
@@ -275,8 +294,8 @@ export default function GroupPurchasingPage() {
         <div className="mb-8 text-center">
           <p className="text-sm text-gray-600 max-w-2xl mx-auto">
             {activeTab === 'monthly' 
-              ? 'Monthly Buys are regular wholesale opportunities available for interest submission. These are ongoing offers you can join at any time.'
-              : 'Special Buys are limited-time wholesale opportunities with exclusive deals. Express your interest to join these special group purchases.'}
+              ? 'Monthly Buys are regular community purchase opportunities available for interest submission. These are ongoing offers you can join at any time.'
+              : 'Special Buys are limited-time community purchase opportunities with exclusive deals. Express your interest to join these special group purchases.'}
           </p>
         </div>
 
@@ -335,7 +354,7 @@ export default function GroupPurchasingPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
-            <div className="text-gray-600">Loading WholeSale opportunities...</div>
+            <div className="text-gray-600">Loading Community Purchase opportunities...</div>
           </div>
         )}
 
@@ -359,7 +378,7 @@ export default function GroupPurchasingPage() {
             {filteredOrders.map((order) => (
               <Link
                 key={order.id}
-                href={`/wholesale/${order.id}`}
+                href={`/community-purchase/${order.id}`}
                 className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-full flex-shrink-0 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-2 gap-2">
@@ -401,40 +420,15 @@ export default function GroupPurchasingPage() {
         )}
 
         {/* Sign In Modal */}
-        {showSignInModal && !user && selectedOrder && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
+        <SignInModal
+          isOpen={showSignInModal && !user && !!selectedOrder}
+          onClose={() => {
             setShowSignInModal(false)
             setSelectedOrder(null)
-          }}>
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-              <p className="text-gray-600 mb-6">
-                Please sign in or create an account to express interest in WholeSale.
-              </p>
-              <div className="flex flex-col gap-3">
-                <SignInButton mode="modal">
-                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-                <button
-                  onClick={() => {
-                    setShowSignInModal(false)
-                    setSelectedOrder(null)
-                  }}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          }}
+          title="Sign In Required"
+          message="Please sign in or create an account to express interest in Community Purchase."
+        />
 
         {/* Interest Form Modal */}
         {showInterestForm && selectedOrder && user && (
@@ -456,7 +450,7 @@ export default function GroupPurchasingPage() {
                       <strong>Order:</strong> {selectedOrder.title}
                     </p>
                     <p className="text-xs text-gray-700 mt-1">
-                      <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress || 'N/A'}
+                      <strong>Email:</strong> {user.email || 'N/A'}
                     </p>
                   </div>
 

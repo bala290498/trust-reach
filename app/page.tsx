@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import SignInModal from '@/components/SignInModal'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
@@ -39,7 +41,8 @@ const allCategories = [
 ]
 
 function HomeContent() {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
   const searchParams = useSearchParams()
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [filteredReviews, setFilteredReviews] = useState<CompanyReview[]>([])
@@ -83,6 +86,23 @@ function HomeContent() {
     type: 'success',
     message: '',
   })
+
+  // Get user session
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const fetchBrandCards = useCallback(async () => {
     try {
@@ -431,7 +451,7 @@ function HomeContent() {
     try {
       const normalizedFormData = {
         user_id: user.id,
-        email: user.primaryEmailAddress?.emailAddress || formData.email,
+        email: user.email || formData.email,
         company_name: formData.company_name,
         rating: formData.rating,
         review: formData.review,
@@ -1208,40 +1228,15 @@ function HomeContent() {
         )}
 
         {/* Sign In Modal for Add Review */}
-        {showSignInModal && !user && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]" onClick={() => {
+        <SignInModal
+          isOpen={showSignInModal && !user}
+          onClose={() => {
             setShowSignInModal(false)
             setPendingAddReview(false)
-          }}>
-            <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(28rem,95vw)] w-full p-[clamp(1rem,4vw,2rem)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)]">Sign In Required</h2>
-              <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-600 mb-[clamp(1rem,3vw,1.5rem)]">
-                Please sign in or create an account to add a review.
-              </p>
-              <div className="flex flex-col gap-[clamp(0.5rem,1.5vw,0.75rem)]">
-                <SignInButton mode="modal">
-                  <button className="w-full bg-primary-600 text-white py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-primary-700 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="w-full bg-gray-100 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-200 transition-all duration-200 text-[clamp(0.875rem,2vw,1rem)]">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-                <button
-                  onClick={() => {
-                    setShowSignInModal(false)
-                    setPendingAddReview(false)
-                  }}
-                  className="w-full bg-gray-200 text-gray-700 py-[clamp(0.75rem,2vw,1rem)] px-[clamp(1rem,3vw,1.5rem)] rounded-[clamp(0.75rem,2vw,1rem)] font-semibold hover:bg-gray-300 transition-all duration-200 mt-2 text-[clamp(0.875rem,2vw,1rem)]"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          }}
+          title="Sign In Required"
+          message="Please sign in or create an account to add a review."
+        />
 
         {/* Add Company Form Modal */}
         {showAddForm && (
@@ -1253,7 +1248,7 @@ function HomeContent() {
                 {user && (
                   <div className="bg-blue-50 border border-blue-200 rounded-[clamp(0.75rem,2vw,1rem)] p-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.75rem,2vw,1rem)]">
                     <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-700 break-words">
-                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                      <strong>Reviewing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                     </p>
                   </div>
                 )}
@@ -1374,7 +1369,7 @@ function HomeContent() {
                   {user && (
                     <div className="bg-blue-50 border border-blue-200 rounded-[clamp(0.75rem,2vw,1rem)] p-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.75rem,2vw,1rem)]">
                       <p className="text-[clamp(0.875rem,2vw,1rem)] text-gray-700 break-words">
-                        <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                        <strong>Reviewing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                       </p>
                     </div>
                   )}

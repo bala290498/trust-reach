@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import SignInModal from '@/components/SignInModal'
 import { ArrowLeft, ExternalLink, Mail, Phone, MapPin, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { supabase, CompanyReview } from '@/lib/supabase'
@@ -26,7 +28,24 @@ interface BrandCard {
 export default function BrandPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [brand, setBrand] = useState<BrandCard | null>(null)
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [loading, setLoading] = useState(true)
@@ -224,7 +243,7 @@ export default function BrandPage() {
     try {
       const normalizedFormData = {
         user_id: user.id,
-        email: user.primaryEmailAddress?.emailAddress || formData.email,
+        email: user.email || formData.email,
         company_name: formData.company_name,
         rating: formData.rating,
         review: formData.review,
@@ -504,37 +523,15 @@ export default function BrandPage() {
         </div>
 
         {/* Sign In Modal */}
-        {showSignInModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-              <p className="text-gray-600 mb-6">
-                Please sign in to add a review for {brand.brand_name}.
-              </p>
-              <div className="space-y-3">
-                <SignInButton mode="modal">
-                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-                <button
-                  onClick={() => {
-                    setShowSignInModal(false)
-                    setPendingAddReview(false)
-                  }}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <SignInModal
+          isOpen={showSignInModal && !user}
+          onClose={() => {
+            setShowSignInModal(false)
+            setPendingAddReview(false)
+          }}
+          title="Sign In Required"
+          message={`Please sign in to add a review for ${brand?.brand_name || 'this brand'}.`}
+        />
 
         {/* Add Review Form Modal */}
         {showAddForm && (
@@ -546,7 +543,7 @@ export default function BrandPage() {
                 {user && (
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                     <p className="text-sm text-gray-700">
-                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                      <strong>Reviewing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                     </p>
                   </div>
                 )}

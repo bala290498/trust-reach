@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import SignInModal from '@/components/SignInModal'
 import { ArrowLeft, Calendar, Plus, Minus, CheckCircle2, MessageCircle, Mail, Phone } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { generateSlug } from '@/lib/utils'
@@ -29,7 +31,24 @@ interface CommunityPurchase {
 export default function CommunityPurchaseDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [purchase, setPurchase] = useState<CommunityPurchase | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSignInModal, setShowSignInModal] = useState(false)
@@ -50,15 +69,15 @@ export default function CommunityPurchaseDetailPage() {
   useEffect(() => {
     const fetchPurchase = async () => {
       try {
-        const response = await fetch(`/api/wholesale/${params.slug}`)
+        const response = await fetch(`/api/community-purchase/${params.slug}`)
         if (response.ok) {
           const data = await response.json()
           setPurchase(data)
         } else {
-          console.error('Failed to fetch wholesale')
+          console.error('Failed to fetch community purchase')
         }
       } catch (error) {
-        console.error('Error fetching wholesale:', error)
+        console.error('Error fetching community purchase:', error)
       } finally {
         setLoading(false)
       }
@@ -112,11 +131,11 @@ export default function CommunityPurchaseDetailPage() {
 
     setSubmitting(true)
     try {
-      const response = await fetch('/api/wholesale/submit', {
+      const response = await fetch('/api/community-purchase/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user.primaryEmailAddress?.emailAddress || '',
+          email: user.email || '',
           phone: formData.phone,
         }),
       })
@@ -125,7 +144,7 @@ export default function CommunityPurchaseDetailPage() {
 
       if (response.ok && data.success) {
         // Create WhatsApp template message
-        const whatsappMessage = `Order: ${purchase.title}\n\nEmail: ${user.primaryEmailAddress?.emailAddress || 'N/A'}\n\nPhone Number *\n${formData.phone}\n\nQuantity Needed *\n${formData.quantity}\n\nMessage (Optional)\n${formData.message || ''}`
+        const whatsappMessage = `Order: ${purchase.title}\n\nEmail: ${user.email || 'N/A'}\n\nPhone Number *\n${formData.phone}\n\nQuantity Needed *\n${formData.quantity}\n\nMessage (Optional)\n${formData.message || ''}`
         const encodedMessage = encodeURIComponent(whatsappMessage)
         const waUrl = `https://wa.me/7010584543?text=${encodedMessage}`
         
@@ -187,8 +206,8 @@ export default function CommunityPurchaseDetailPage() {
               </li>
               <li className="text-gray-400">/</li>
               <li>
-                <Link href="/wholesale" className="text-gray-600 hover:text-primary-600 transition-colors">
-                  WholeSale
+                <Link href="/community-purchase" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  Community Purchase
                 </Link>
               </li>
               <li className="text-gray-400">/</li>
@@ -198,12 +217,12 @@ export default function CommunityPurchaseDetailPage() {
             </ol>
           </nav>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">WholeSale Not Found</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Community Purchase Not Found</h1>
             <Link
-              href="/wholesale"
+              href="/community-purchase"
               className="text-primary-600 hover:text-primary-700 font-semibold"
             >
-              ← Back to WholeSale
+              ← Back to Community Purchase
             </Link>
           </div>
         </div>
@@ -232,8 +251,8 @@ export default function CommunityPurchaseDetailPage() {
               </li>
               <li className="text-gray-400">/</li>
               <li>
-                <Link href="/wholesale" className="text-gray-600 hover:text-primary-600 transition-colors">
-                  WholeSale
+                <Link href="/community-purchase" className="text-gray-600 hover:text-primary-600 transition-colors">
+                  Community Purchase
                 </Link>
               </li>
             </ol>
@@ -434,13 +453,14 @@ export default function CommunityPurchaseDetailPage() {
               {!user && (
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 mb-4">
-                    Please sign in to express your interest in this wholesale.
+                    Please sign in to express your interest in this community purchase.
                   </p>
-                  <SignInButton mode="modal">
-                    <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 mb-2">
-                      Sign In
-                    </button>
-                  </SignInButton>
+                  <button
+                    onClick={() => setShowSignInModal(true)}
+                    className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 mb-2"
+                  >
+                    Sign In
+                  </button>
                 </div>
               )}
 
@@ -448,7 +468,7 @@ export default function CommunityPurchaseDetailPage() {
                 <form onSubmit={handleSubmitInterest} className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                     <p className="text-xs text-gray-700">
-                      <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress || 'N/A'}
+                      <strong>Email:</strong> {user.email || 'N/A'}
                     </p>
                   </div>
 
@@ -528,36 +548,12 @@ export default function CommunityPurchaseDetailPage() {
         </div>
 
         {/* Sign In Modal */}
-        {showSignInModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-              <p className="text-gray-600 mb-6">
-                Please sign in to express interest in this wholesale.
-              </p>
-              <div className="space-y-3">
-                <SignInButton mode="modal">
-                  <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-                <button
-                  onClick={() => {
-                    setShowSignInModal(false)
-                  }}
-                  className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <SignInModal
+          isOpen={showSignInModal}
+          onClose={() => setShowSignInModal(false)}
+          title="Sign In Required"
+          message="Please sign in to express interest in this community purchase."
+        />
 
         {/* Success Modal with WhatsApp Button */}
         {showSuccessModal && (

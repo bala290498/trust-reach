@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from './StarRating'
 import { X, Edit, Trash2 } from 'lucide-react'
@@ -14,9 +15,27 @@ interface YourReviewsSliderProps {
 }
 
 export default function YourReviewsSlider({ isOpen, onClose, onEdit, onDelete }: YourReviewsSliderProps) {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [userReviews, setUserReviews] = useState<CompanyReview[]>([])
   const [loading, setLoading] = useState(false)
+
+  // Get user session
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const fetchUserReviews = useCallback(async () => {
     if (!user?.id || !isLoaded) {

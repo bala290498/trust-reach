@@ -3,12 +3,33 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import AuthButton from '@/components/AuthButton'
 import { Menu, X } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Get user session
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -24,8 +45,7 @@ export default function Navbar() {
 
   const navItems = [
     { href: '/', label: 'Reviews' },
-    { href: '/wholesale', label: 'WholeSale' },
-    { href: '/promotions', label: 'Promotions' },
+    { href: '/all-categories', label: 'Categories' },
     { href: '/blogs', label: 'Blogs' },
   ]
 
@@ -66,19 +86,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Desktop Auth - Hidden on mobile */}
               <div className="hidden sm:flex items-center gap-2 sm:gap-4">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-all duration-200 whitespace-nowrap">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="text-sm font-medium bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all duration-200 whitespace-nowrap">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </SignedOut>
-                <SignedIn>
+                {!loading && user && (
                   <Link
                     href="/my-reviews"
                     className={`text-sm font-medium transition-all duration-200 whitespace-nowrap ${
@@ -89,8 +97,8 @@ export default function Navbar() {
                   >
                     Your Reviews
                   </Link>
-                  <UserButton afterSignOutUrl="/" />
-                </SignedIn>
+                )}
+                <AuthButton />
               </div>
 
               {/* Mobile menu button */}
@@ -160,27 +168,7 @@ export default function Navbar() {
 
             {/* Mobile Auth Section */}
             <div className="pt-4 border-t border-gray-200 space-y-3">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50 transition-all duration-200"
-                    type="button"
-                  >
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-left px-4 py-3 rounded-lg text-base font-medium bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200"
-                    type="button"
-                  >
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
+              {!loading && user && (
                 <Link
                   href="/my-activity"
                   onClick={() => setMobileMenuOpen(false)}
@@ -192,10 +180,10 @@ export default function Navbar() {
                 >
                   Your Activity
                 </Link>
-                <div className="px-4 py-3">
-                  <UserButton afterSignOutUrl="/" />
-                </div>
-              </SignedIn>
+              )}
+              <div className="px-4">
+                <AuthButton />
+              </div>
             </div>
           </div>
         </div>

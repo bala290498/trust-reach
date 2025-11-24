@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useUser, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
+import SignInModal from '@/components/SignInModal'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
@@ -33,7 +35,24 @@ const categories = [
 export default function CompanyPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [company, setCompany] = useState<CompanyData | null>(null)
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'date' | 'rating'>('date')
@@ -262,7 +281,7 @@ export default function CompanyPage() {
 
     try {
       const normalizedFormData = {
-        email: user.primaryEmailAddress?.emailAddress || '',
+        email: user.email || '',
         company_name: company.name,
         rating: formData.rating,
         review: formData.review,
@@ -542,27 +561,15 @@ export default function CompanyPage() {
             <p className="text-gray-600 mb-6">
               Please sign in or create an account to add a review.
             </p>
-            <div className="flex flex-col gap-3">
-              <SignInButton mode="modal">
-                <button className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
-                  Sign Up
-                </button>
-              </SignUpButton>
-              <button
-                onClick={() => {
-                  setShowSignInModal(false)
-                  setPendingAddReview(false)
-                }}
-                className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 mt-2"
-              >
-                Cancel
-              </button>
-            </div>
+            <SignInModal
+              isOpen={showSignInModal && !user}
+              onClose={() => {
+                setShowSignInModal(false)
+                setPendingAddReview(false)
+              }}
+              title="Sign In Required"
+              message="Please sign in or create an account to add a review."
+            />
           </div>
         </div>
       )}
@@ -577,7 +584,7 @@ export default function CompanyPage() {
               {user && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                   <p className="text-sm text-gray-700">
-                    <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    <strong>Reviewing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                   </p>
                 </div>
               )}
@@ -667,7 +674,7 @@ export default function CompanyPage() {
               {user && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                   <p className="text-sm text-gray-700">
-                    <strong>Editing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                    <strong>Editing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                   </p>
                 </div>
               )}

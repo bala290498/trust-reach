@@ -1,15 +1,14 @@
 # TrustReach.in
 
-A platform for trusted company reviews and promotions.
+A platform for trusted company reviews.
 
 ## Features
 
 - **Sticky Navigation Bar** with logo and menu items
 - **Homepage Review Section** - Add and view company reviews
-- **Promotions/Stock Clearances** - Manually updated offers via markdown
 - **Category-wise Carousels** with filtering options
-- **Supabase Integration** for reviews
-- **Clerk Authentication** - User authentication for adding/modifying/deleting reviews
+- **Supabase Integration** for reviews and authentication
+- **Supabase Auth with Google OAuth** - User authentication for adding/modifying/deleting reviews
 
 ## Setup
 
@@ -28,20 +27,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Get from: Supabase Dashboard > Project Settings > API > Secret Keys
 # SUPABASE_SERVICE_ROLE_SECRET=your_service_role_secret_key
 
-# Clerk Authentication Configuration
-# Get your keys from: https://dashboard.clerk.com/
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
 ```
 
 **Note:** Supabase has changed from `SUPABASE_SERVICE_ROLE_KEY` to `SUPABASE_SERVICE_ROLE_SECRET`. 
 The service role secret key is only needed for server-side operations that bypass RLS policies.
 
-3. Set up Clerk Authentication:
-   - Sign up for a free account at [Clerk](https://clerk.com/)
-   - Create a new application
-   - Copy your Publishable Key and Secret Key from the dashboard
-   - Add them to your `.env.local` file
+3. Set up Supabase Authentication with Google OAuth:
+   - Go to your Supabase Dashboard: https://supabase.com/dashboard/project/vmwvlrymgkcgahdgoqfo/auth/providers
+   - Enable the Google provider
+   - Add your Google OAuth Client ID and Secret
+   - Add redirect URLs:
+     - For development: `http://localhost:3000/auth/callback`
+     - For production: `https://yourdomain.com/auth/callback`
+   - Add site URL: `http://localhost:3000` (for development) and your production URL
 
 4. Set up Supabase tables:
    - Go to your Supabase project dashboard
@@ -49,25 +47,7 @@ The service role secret key is only needed for server-side operations that bypas
    - Run the SQL script from `supabase-schema.sql` file
    - This will create the necessary tables, indexes, and security policies
 
-4. For Promotions, create markdown files in `content/offers/` directory:
-
-Example: `content/offers/example-offer.md`
-```markdown
----
-business_name: Example Business
-url: https://example.com
-category: Electronics & Technology
-services: "Premium electronics and gadgets"
-offer_deals: "50% off on all products"
-quantity_left: "100 products"
-verified: true
-created_at: 2024-01-01T00:00:00Z
----
-
-Additional details about the offer can be written here in markdown format.
-```
-
-5. Run the development server:
+4. Run the development server:
 ```bash
 npm run dev
 ```
@@ -79,7 +59,6 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 - `app/` - Next.js app router pages
 - `components/` - Reusable React components
 - `lib/` - Utility functions and Supabase client
-- `content/offers/` - Markdown files for promotions
 
 ## Supabase Client Usage
 
@@ -108,6 +87,7 @@ import { supabaseServer } from '@/lib/supabase-server'
 - React 18
 - TypeScript
 - Tailwind CSS
-- Supabase
+- Supabase (Database & Authentication)
+- Supabase Auth with Google OAuth
 - React Markdown
 

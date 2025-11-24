@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { supabaseAuth } from '@/lib/supabase-auth'
+import type { User } from '@supabase/supabase-js'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
 import { ExternalLink, Edit, Trash2, ArrowLeft } from 'lucide-react'
@@ -23,7 +24,24 @@ const categories = [
 ]
 
 export default function MyActivityPage() {
-  const { user, isLoaded } = useUser()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    supabaseAuth.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    const {
+      data: { subscription },
+    } = supabaseAuth.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoaded(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   
@@ -399,7 +417,7 @@ export default function MyActivityPage() {
                 {user && (
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                     <p className="text-sm text-gray-700">
-                      <strong>Reviewing as:</strong> {user.primaryEmailAddress?.emailAddress || user.firstName || 'User'}
+                      <strong>Reviewing as:</strong> {user.email || user.user_metadata?.full_name || 'User'}
                     </p>
                   </div>
                 )}
