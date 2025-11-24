@@ -68,11 +68,12 @@ function HomeContent() {
   const [showSlider, setShowSlider] = useState(false)
   const [pendingAddReview, setPendingAddReview] = useState(false)
   const [showSignInModal, setShowSignInModal] = useState(false)
-  const [companyNameSuggestions, setCompanyNameSuggestions] = useState<string[]>([])
-  const [showCompanyNameDropdown, setShowCompanyNameDropdown] = useState(false)
+  const [availableBrandNames, setAvailableBrandNames] = useState<string[]>([])
+  const [brandSearchQuery, setBrandSearchQuery] = useState('')
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false)
+  const [brandSearchError, setBrandSearchError] = useState('')
   const [showViewAllDropdown, setShowViewAllDropdown] = useState(false)
   const viewAllDropdownRef = useRef<HTMLDivElement | null>(null)
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const searchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; reviews: CompanyReview[] } | null>(null)
   const [companySortBy, setCompanySortBy] = useState<'date' | 'rating'>('date')
@@ -93,10 +94,18 @@ function HomeContent() {
         // Extract unique categories from brand cards
         const uniqueCategories = Array.from(new Set(data.map((brand: BrandCard) => brand.category).filter(Boolean))) as string[]
         setCategories(uniqueCategories.sort())
+        
+        // Extract brand names from markdown files only (sorted alphabetically)
+        const brandNames = data
+          .map((brand: BrandCard) => brand.brand_name)
+          .filter((name: string) => name && name.trim())
+          .sort((a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+        setAvailableBrandNames(brandNames)
       }
     } catch (error) {
       console.error('Error fetching brand cards:', error)
       setBrandCards([])
+      setAvailableBrandNames([])
     }
   }, [])
 
@@ -175,27 +184,41 @@ function HomeContent() {
     return text.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '').replace(/\s+/g, '')
   }, [])
 
-  // Get all available brand/company names from both brands and reviews
-  const getAllAvailableBrandNames = useCallback(() => {
-    const uniqueNames = new Set<string>()
-    
-    // Add brand names from brand cards
-    brandCards.forEach((brand) => {
-      if (brand.brand_name && brand.brand_name.trim()) {
-        uniqueNames.add(brand.brand_name.trim())
-      }
-    })
-    
-    // Add company names from reviews
-    reviews.forEach((review) => {
-      if (review.company_name && review.company_name.trim()) {
-        uniqueNames.add(review.company_name.trim())
-      }
-    })
-    
-    // Sort alphabetically
-    return Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-  }, [brandCards, reviews])
+  // Filter brands based on search query
+  const getFilteredBrands = useCallback(() => {
+    if (!brandSearchQuery.trim()) {
+      return availableBrandNames
+    }
+    const query = brandSearchQuery.toLowerCase().trim()
+    return availableBrandNames.filter((name) =>
+      name.toLowerCase().includes(query)
+    )
+  }, [brandSearchQuery, availableBrandNames])
+
+  // Validate if the current company_name exists in available brands
+  const validateBrandName = useCallback(() => {
+    if (!formData.company_name.trim()) {
+      setBrandSearchError('')
+      return true
+    }
+    const exists = availableBrandNames.some(
+      (name) => name.toLowerCase() === formData.company_name.toLowerCase()
+    )
+    if (!exists) {
+      setBrandSearchError('Company or Brand name not registered. Please select from the list.')
+      return false
+    }
+    setBrandSearchError('')
+    return true
+  }, [formData.company_name, availableBrandNames])
+
+  // Update brand search query when formData.company_name changes
+  useEffect(() => {
+    setBrandSearchQuery(formData.company_name)
+    if (formData.company_name) {
+      validateBrandName()
+    }
+  }, [formData.company_name, validateBrandName])
 
   // Handle opening add review form after sign-in
   useEffect(() => {
@@ -224,118 +247,6 @@ function HomeContent() {
     }
   }, [searchParams, isLoaded, user])
 
-  // Generate company name suggestions with debouncing - normalized keyword search
-  useEffect(() => {
-    // Clear any existing timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
-    }
-
-    // Show suggestions for both add and edit forms
-    const isFormOpen = showAddForm || showEditForm
-    if (!isFormOpen) {
-      // Only clear when both forms are closed
-      setCompanyNameSuggestions([])
-      setShowCompanyNameDropdown(false)
-      return
-    }
-
-    const trimmedName = formData.company_name?.trim() || ''
-    
-    // If input is empty, hide suggestions immediately
-    if (trimmedName.length === 0) {
-      setCompanyNameSuggestions([])
-      setShowCompanyNameDropdown(false)
-      return
-    }
-
-    // Normalize search query (remove spaces, special chars, lowercase)
-    const normalizedQuery = normalizeText(trimmedName)
-    
-    // If normalized query is less than 2 characters, hide suggestions immediately
-    if (normalizedQuery.length < 2) {
-      setCompanyNameSuggestions([])
-      setShowCompanyNameDropdown(false)
-      return
-    }
-
-    // Get all available brand/company names
-    const allBrandNames = getAllAvailableBrandNames()
-    
-    // Filter matches using normalized keyword search
-    // Match if normalized brand name contains normalized query or vice versa
-    const findMatches = (query: string, names: string[]) => {
-      return names.filter((name) => {
-        const normalizedName = normalizeText(name)
-        // Check if query appears in name (allows partial matches anywhere in the name)
-        return normalizedName.includes(query) || query.includes(normalizedName)
-      })
-    }
-
-    // Immediately check for matches (synchronous check to hide if no matches)
-    const immediateMatches = findMatches(normalizedQuery, allBrandNames)
-
-    // If no matches, hide immediately (no debounce delay)
-    if (immediateMatches.length === 0) {
-      setCompanyNameSuggestions([])
-      setShowCompanyNameDropdown(false)
-      return
-    }
-
-    // Debounce the search (200ms delay) for better performance
-    debounceTimerRef.current = setTimeout(() => {
-      const currentInput = formData.company_name?.trim() || ''
-      const queryLower = currentInput.toLowerCase()
-      
-      // Check if input exactly matches one of the available brand names (case-insensitive)
-      const exactMatch = allBrandNames.find(name => name.toLowerCase() === queryLower)
-      
-      // If there's an exact match, hide the dropdown (user already selected/typed the exact value)
-      if (exactMatch) {
-        setCompanyNameSuggestions([])
-        setShowCompanyNameDropdown(false)
-        return
-      }
-      
-      // Re-check matches after debounce (in case user continued typing)
-      const finalMatches = findMatches(normalizeText(currentInput), allBrandNames)
-      
-      // Filter out exact matches from suggestions (since user already typed it)
-      const filteredMatches = finalMatches.filter(name => name.toLowerCase() !== queryLower)
-      
-      // If no other matches after filtering out exact match, hide dropdown
-      if (filteredMatches.length === 0) {
-        setCompanyNameSuggestions([])
-        setShowCompanyNameDropdown(false)
-        return
-      }
-      
-      // Sort matches by relevance: starts with query, then contains
-      const sortedMatches = filteredMatches.sort((a, b) => {
-        const aLower = a.toLowerCase()
-        const bLower = b.toLowerCase()
-        
-        // Starts with query gets highest priority
-        if (aLower.startsWith(queryLower) && !bLower.startsWith(queryLower)) return -1
-        if (bLower.startsWith(queryLower) && !aLower.startsWith(queryLower)) return 1
-        
-        // Alphabetical order for remaining matches
-        return aLower.localeCompare(bLower)
-      })
-      
-      // Show dropdown with other matches (excluding exact match)
-      setCompanyNameSuggestions(sortedMatches.slice(0, 15)) // Show up to 15 suggestions
-      setShowCompanyNameDropdown(true)
-    }, 200) // 200ms debounce delay
-
-    // Cleanup function
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-        debounceTimerRef.current = null
-      }
-    }
-  }, [formData.company_name, showAddForm, showEditForm, getAllAvailableBrandNames, normalizeText])
 
   // Generate search suggestions for dropdown - includes both brands and reviews
   useEffect(() => {
@@ -494,6 +405,12 @@ function HomeContent() {
       return
     }
 
+    // Validate brand name exists
+    if (!validateBrandName()) {
+      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered brand name from the list.' })
+      return
+    }
+
     if (!user) {
       setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to submit a review.' })
       return
@@ -569,6 +486,17 @@ function HomeContent() {
   const handleEditSubmit = async () => {
     if (!editingReview || !user) {
       setNotification({ isOpen: true, type: 'warning', message: 'Please sign in to edit reviews.' })
+      return
+    }
+
+    if (!formData.company_name || !formData.review || formData.rating === 0) {
+      setNotification({ isOpen: true, type: 'warning', message: 'Please fill in all required fields.' })
+      return
+    }
+
+    // Validate brand name exists
+    if (!validateBrandName()) {
+      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered brand name from the list.' })
       return
     }
 
@@ -1337,40 +1265,45 @@ function HomeContent() {
                     <input
                       type="text"
                       required
-                      value={formData.company_name}
+                      value={brandSearchQuery}
                       onChange={(e) => {
+                        setBrandSearchQuery(e.target.value)
                         setFormData({ ...formData, company_name: e.target.value })
+                        setBrandSearchError('')
+                        setShowBrandDropdown(true)
                       }}
                       onFocus={() => {
-                        const currentInput = formData.company_name?.trim() || ''
-                        if (currentInput.length >= 2 && companyNameSuggestions.length > 0) {
-                          // Check if input exactly matches a suggestion - if so, don't show dropdown
-                          const queryLower = currentInput.toLowerCase()
-                          const exactMatch = companyNameSuggestions.find(name => name.toLowerCase() === queryLower)
-                          if (!exactMatch) {
-                            setShowCompanyNameDropdown(true)
-                          }
+                        if (brandSearchQuery.trim() && getFilteredBrands().length > 0) {
+                          setShowBrandDropdown(true)
                         }
                       }}
                       onBlur={() => {
-                        // Delay to allow clicking on suggestions
-                        setTimeout(() => setShowCompanyNameDropdown(false), 200)
+                        // Delay to allow clicking on dropdown items
+                        setTimeout(() => {
+                          setShowBrandDropdown(false)
+                          validateBrandName()
+                        }, 200)
                       }}
-                      className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)]"
-                      placeholder="Type to search existing companies or enter new"
+                      className={`w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 transition-all text-[clamp(0.875rem,2vw,1rem)] ${
+                        brandSearchError
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-200 focus:ring-primary-500 focus:border-primary-500'
+                      }`}
+                      placeholder="Type to search existing brands..."
                     />
-                    {/* Company Name Suggestions Dropdown */}
-                    {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
-                        {companyNameSuggestions.map((name, index) => (
+                    {/* Brand Suggestions Dropdown */}
+                    {showBrandDropdown && getFilteredBrands().length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
+                        {getFilteredBrands().map((name) => (
                           <button
-                            key={index}
+                            key={name}
                             type="button"
                             onMouseDown={(e) => {
-                              // Use onMouseDown instead of onClick to prevent blur event
                               e.preventDefault()
                               setFormData({ ...formData, company_name: name })
-                              setShowCompanyNameDropdown(false)
+                              setBrandSearchQuery(name)
+                              setShowBrandDropdown(false)
+                              setBrandSearchError('')
                             }}
                             className="w-full text-left px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                           >
@@ -1380,6 +1313,12 @@ function HomeContent() {
                       </div>
                     )}
                   </div>
+                  {brandSearchError && (
+                    <p className="text-sm text-red-600 mt-1">{brandSearchError}</p>
+                  )}
+                  {availableBrandNames.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-1">No brands available. Please add brands via markdown files.</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
@@ -1444,43 +1383,47 @@ function HomeContent() {
                       Company or Brand Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      value={formData.company_name}
+                      <input
+                        type="text"
+                        required
+                        value={brandSearchQuery}
                         onChange={(e) => {
+                          setBrandSearchQuery(e.target.value)
                           setFormData({ ...formData, company_name: e.target.value })
+                          setBrandSearchError('')
+                          setShowBrandDropdown(true)
                         }}
                         onFocus={() => {
-                          const currentInput = formData.company_name?.trim() || ''
-                          if (currentInput.length >= 2 && companyNameSuggestions.length > 0) {
-                            // Check if input exactly matches a suggestion - if so, don't show dropdown
-                            const queryLower = currentInput.toLowerCase()
-                            const exactMatch = companyNameSuggestions.find(name => name.toLowerCase() === queryLower)
-                            if (!exactMatch) {
-                              setShowCompanyNameDropdown(true)
-                            }
+                          if (brandSearchQuery.trim() && getFilteredBrands().length > 0) {
+                            setShowBrandDropdown(true)
                           }
                         }}
                         onBlur={() => {
-                          // Delay to allow clicking on suggestions
-                          setTimeout(() => setShowCompanyNameDropdown(false), 200)
+                          setTimeout(() => {
+                            setShowBrandDropdown(false)
+                            validateBrandName()
+                          }, 200)
                         }}
-                      className="w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-[clamp(0.875rem,2vw,1rem)]"
-                        placeholder="Type to search existing companies or enter new"
+                        className={`w-full px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] border-2 rounded-[clamp(0.75rem,2vw,1rem)] focus:outline-none focus:ring-2 transition-all text-[clamp(0.875rem,2vw,1rem)] ${
+                          brandSearchError
+                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                            : 'border-gray-200 focus:ring-primary-500 focus:border-primary-500'
+                        }`}
+                        placeholder="Type to search existing brands..."
                       />
-                      {/* Company Name Suggestions Dropdown */}
-                      {showCompanyNameDropdown && companyNameSuggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
-                          {companyNameSuggestions.map((name, index) => (
+                      {/* Brand Suggestions Dropdown */}
+                      {showBrandDropdown && getFilteredBrands().length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-[clamp(0.75rem,2vw,1rem)] shadow-xl z-50 max-h-[min(15rem,40vh)] overflow-y-auto">
+                          {getFilteredBrands().map((name) => (
                             <button
-                              key={index}
+                              key={name}
                               type="button"
                               onMouseDown={(e) => {
-                                // Use onMouseDown instead of onClick to prevent blur event
                                 e.preventDefault()
                                 setFormData({ ...formData, company_name: name })
-                                setShowCompanyNameDropdown(false)
+                                setBrandSearchQuery(name)
+                                setShowBrandDropdown(false)
+                                setBrandSearchError('')
                               }}
                               className="w-full text-left px-[clamp(0.75rem,2vw,1rem)] py-[clamp(0.75rem,2vw,1rem)] hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
                             >
@@ -1490,6 +1433,12 @@ function HomeContent() {
                         </div>
                       )}
                     </div>
+                    {brandSearchError && (
+                      <p className="text-sm text-red-600 mt-1">{brandSearchError}</p>
+                    )}
+                    {availableBrandNames.length === 0 && (
+                      <p className="text-sm text-gray-500 mt-1">No brands available. Please add brands via markdown files.</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">

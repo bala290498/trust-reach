@@ -38,6 +38,10 @@ export default function MyActivityPage() {
     rating: 0,
     review: '',
   })
+  const [availableBrandNames, setAvailableBrandNames] = useState<string[]>([])
+  const [brandSearchQuery, setBrandSearchQuery] = useState('')
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false)
+  const [brandSearchError, setBrandSearchError] = useState('')
   
   const [submitting, setSubmitting] = useState(false)
   const [notification, setNotification] = useState<{ isOpen: boolean; type: 'success' | 'error' | 'warning'; message: string }>({
@@ -75,6 +79,62 @@ export default function MyActivityPage() {
       fetchMyReviews()
     }
   }, [isLoaded, fetchMyReviews])
+
+  // Fetch available brand names from markdown files
+  useEffect(() => {
+    const fetchBrandNames = async () => {
+      try {
+        const response = await fetch('/api/brands')
+        if (response.ok) {
+          const data = await response.json()
+          const brandNames = data
+            .map((brand: { brand_name: string }) => brand.brand_name)
+            .filter((name: string) => name && name.trim())
+            .sort((a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+          setAvailableBrandNames(brandNames)
+        }
+      } catch (error) {
+        console.error('Error fetching brand names:', error)
+      }
+    }
+    fetchBrandNames()
+  }, [])
+
+  // Filter brands based on search query
+  const getFilteredBrands = useCallback(() => {
+    if (!brandSearchQuery.trim()) {
+      return availableBrandNames
+    }
+    const query = brandSearchQuery.toLowerCase().trim()
+    return availableBrandNames.filter((name) =>
+      name.toLowerCase().includes(query)
+    )
+  }, [brandSearchQuery, availableBrandNames])
+
+  // Validate if the current company_name exists in available brands
+  const validateBrandName = useCallback(() => {
+    if (!reviewFormData.company_name.trim()) {
+      setBrandSearchError('')
+      return true
+    }
+    const exists = availableBrandNames.some(
+      (name) => name.toLowerCase() === reviewFormData.company_name.toLowerCase()
+    )
+    if (!exists) {
+      setBrandSearchError('Brand name not registered. Please select from the list.')
+      return false
+    }
+    setBrandSearchError('')
+    return true
+  }, [reviewFormData.company_name, availableBrandNames])
+
+  // Update brand search query when reviewFormData.company_name changes
+  useEffect(() => {
+    setBrandSearchQuery(reviewFormData.company_name)
+    if (reviewFormData.company_name) {
+      validateBrandName()
+    }
+  }, [reviewFormData.company_name, validateBrandName])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -347,13 +407,63 @@ export default function MyActivityPage() {
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Company or Brand Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={reviewFormData.company_name}
-                    onChange={(e) => setReviewFormData({ ...reviewFormData, company_name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={brandSearchQuery}
+                      onChange={(e) => {
+                        setBrandSearchQuery(e.target.value)
+                        setReviewFormData({ ...reviewFormData, company_name: e.target.value })
+                        setBrandSearchError('')
+                        setShowBrandDropdown(true)
+                      }}
+                      onFocus={() => {
+                        if (brandSearchQuery.trim() && getFilteredBrands().length > 0) {
+                          setShowBrandDropdown(true)
+                        }
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setShowBrandDropdown(false)
+                          validateBrandName()
+                        }, 200)
+                      }}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                        brandSearchError
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-200 focus:ring-primary-500 focus:border-primary-500'
+                      }`}
+                      placeholder="Type to search existing brands..."
+                    />
+                    {/* Brand Suggestions Dropdown */}
+                    {showBrandDropdown && getFilteredBrands().length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-[15rem] overflow-y-auto">
+                        {getFilteredBrands().map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              setReviewFormData({ ...reviewFormData, company_name: name })
+                              setBrandSearchQuery(name)
+                              setShowBrandDropdown(false)
+                              setBrandSearchError('')
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <p className="font-semibold text-gray-900 truncate">{name}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {brandSearchError && (
+                    <p className="text-sm text-red-600 mt-1">{brandSearchError}</p>
+                  )}
+                  {availableBrandNames.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-1">No brands available. Please add brands via markdown files.</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
