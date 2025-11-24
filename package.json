@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.2",
-    "@getbrevo/brevo": "^3.0.1",
     "@supabase/supabase-js": "^2.39.0",
     "lucide-react": "^0.303.0",
     "next": "^14.0.4",

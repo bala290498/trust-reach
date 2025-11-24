@@ -9,7 +9,7 @@ A platform for trusted company reviews and promotions.
 - **Promotions/Stock Clearances** - Manually updated offers via markdown
 - **Category-wise Carousels** with filtering options
 - **Supabase Integration** for reviews
-- **OTP Verification** - Email-based OTP verification using Brevo for adding/modifying/deleting reviews
+- **Clerk Authentication** - User authentication for adding/modifying/deleting reviews
 
 ## Setup
 
@@ -28,29 +28,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Get from: Supabase Dashboard > Project Settings > API > Secret Keys
 # SUPABASE_SERVICE_ROLE_SECRET=your_service_role_secret_key
 
-# Brevo (formerly Sendinblue) Configuration for OTP Verification
-# Get your API key from: https://app.brevo.com/settings/keys/api
-BREVO_API_KEY=your_brevo_api_key_here
-
-# Brevo Sender Configuration (Optional)
-# The email address that will send OTP emails
-# Must be verified in your Brevo account
-BREVO_SENDER_EMAIL=noreply@trustreach.in
-BREVO_SENDER_NAME=TrustReach
+# Clerk Authentication Configuration
+# Get your keys from: https://dashboard.clerk.com/
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
 ```
 
 **Note:** Supabase has changed from `SUPABASE_SERVICE_ROLE_KEY` to `SUPABASE_SERVICE_ROLE_SECRET`. 
 The service role secret key is only needed for server-side operations that bypass RLS policies.
 
-5. Set up Brevo for OTP Verification:
-   - Sign up for a free account at [Brevo](https://www.brevo.com/) (formerly Sendinblue)
-   - Go to Settings > API Keys and create a new API key
-   - Add the API key to your `.env.local` file as `BREVO_API_KEY`
-   - Verify your sender email address in Brevo (Settings > Senders)
-   - Update `BREVO_SENDER_EMAIL` and `BREVO_SENDER_NAME` in `.env.local` if needed
-   - **Note:** In development mode, OTPs will be logged to console. In production, OTPs are sent via email only.
+3. Set up Clerk Authentication:
+   - Sign up for a free account at [Clerk](https://clerk.com/)
+   - Create a new application
+   - Copy your Publishable Key and Secret Key from the dashboard
+   - Add them to your `.env.local` file
 
-3. Set up Supabase tables:
+4. Set up Supabase tables:
    - Go to your Supabase project dashboard
    - Navigate to SQL Editor
    - Run the SQL script from `supabase-schema.sql` file
