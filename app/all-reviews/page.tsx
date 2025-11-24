@@ -34,14 +34,19 @@ export default function AllReviewsPage() {
 
   const fetchReviews = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('company_reviews')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30)
-
-      if (error) throw error
-      setReviews(data || [])
+      // Use cached API route instead of direct Supabase call
+      // The API route handles caching with headers
+      const response = await fetch('/api/reviews', {
+        cache: 'force-cache', // Use browser cache
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Limit to 30 reviews on client side
+        setReviews(data.slice(0, 30) || [])
+      } else {
+        throw new Error('Failed to fetch reviews')
+      }
     } catch (error) {
       console.error('Error fetching reviews:', error)
       setReviews([])

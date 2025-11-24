@@ -132,14 +132,18 @@ function HomeContent() {
 
   const fetchReviews = useCallback(async () => {
     try {
-      // Fetch all reviews (not just user's own) - anyone can see all reviews
-      const { data, error } = await supabase
-        .from('company_reviews')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setReviews(data || [])
+      // Use cached API route instead of direct Supabase call
+      // The API route handles caching with headers
+      const response = await fetch('/api/reviews', {
+        cache: 'force-cache', // Use browser cache
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setReviews(data || [])
+      } else {
+        throw new Error('Failed to fetch reviews')
+      }
     } catch (error) {
       console.error('Error fetching reviews:', error)
       setReviews([])

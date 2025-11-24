@@ -87,11 +87,19 @@ export async function GET() {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
 
-    return NextResponse.json(brands)
+    // Add caching headers - cache for 5 minutes, revalidate in background
+    return NextResponse.json(brands, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    })
   } catch (error) {
     console.error('Error reading brands:', error)
     return NextResponse.json([], { status: 500 })
   }
 }
+
+// Enable ISR (Incremental Static Regeneration)
+export const revalidate = 300 // Revalidate every 5 minutes
 
 

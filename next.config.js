@@ -11,6 +11,11 @@ const nextConfig = {
       },
     ],
   },
+  // Enable experimental features for better caching
+  experimental: {
+    // Optimize package imports
+    optimizePackageImports: ['lucide-react'],
+  },
 }
 
 module.exports = nextConfig

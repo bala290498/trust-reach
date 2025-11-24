@@ -83,17 +83,21 @@ export default function CompanyPage() {
 
     try {
       setLoading(true)
-      // Fetch all reviews
-      const { data: reviews, error } = await supabase
-        .from('company_reviews')
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Use cached API route instead of direct Supabase call
+      // The API route handles caching with headers
+      const response = await fetch('/api/reviews', {
+        cache: 'force-cache', // Use browser cache
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews')
+      }
 
-      if (error) throw error
+      const reviews = await response.json()
 
       // Find company by matching slug
       const companyMap = new Map<string, CompanyReview[]>()
-      reviews?.forEach((review) => {
+      reviews?.forEach((review: CompanyReview) => {
         const companyName = review.company_name
         if (!companyMap.has(companyName)) {
           companyMap.set(companyName, [])

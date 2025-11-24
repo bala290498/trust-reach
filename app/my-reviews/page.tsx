@@ -59,6 +59,8 @@ export default function MyReviewsPage() {
     }
 
     try {
+      // For user-specific data, we still need direct Supabase call
+      // but we can add client-side caching
       const { data, error } = await supabase
         .from('company_reviews')
         .select('*')
