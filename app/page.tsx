@@ -1785,7 +1785,7 @@ function HomeContent() {
           <div className="mb-[clamp(2rem,5vw,3rem)]">
             <div className="flex items-center justify-between mb-[clamp(1rem,3vw,1.5rem)] gap-4 flex-wrap">
               <h2 className="text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-gray-900">Recent Reviews</h2>
-                {reviews.length > 10 && (
+                {reviews.length > 6 && (
                   <Link
                     href="/all-reviews"
                     className="inline-flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-primary-600 hover:text-primary-700 font-semibold text-[clamp(0.75rem,2vw,0.875rem)] transition-colors flex-shrink-0 underline-offset-4 hover:underline"
@@ -1804,7 +1804,7 @@ function HomeContent() {
                     const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
                     return dateB - dateA
                   })
-                  .slice(0, 10)
+                  .slice(0, 6)
                   .map((review) => (
                     <div
                       key={review.id}
