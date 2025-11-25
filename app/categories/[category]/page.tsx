@@ -7,7 +7,6 @@ import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
 import { ArrowLeft, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap } from 'lucide-react'
-import { useCallback } from 'react'
 
 const categories = [
   'Hotels & Restaurants',
