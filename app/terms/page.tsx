@@ -25,7 +25,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              By accessing and using TrustReach.in ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+              By accessing and using TrustReach.in (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
             </p>
           </section>
 
@@ -83,7 +83,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">6. Disclaimer</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              The materials on TrustReach.in are provided on an 'as is' basis. TrustReach.in makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+              The materials on TrustReach.in are provided on an &apos;as is&apos; basis. TrustReach.in makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               Further, TrustReach.in does not warrant or make any representations concerning the accuracy, likely results, or reliability of the use of the materials on its website or otherwise relating to such materials or on any sites linked to this site.

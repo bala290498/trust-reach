@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">1. Introduction</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Welcome to TrustReach.in ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+              Welcome to TrustReach.in (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access the site.
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">8. Children's Privacy</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">8. Children&apos;s Privacy</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
               Our Service is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.
             </p>
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">10. Changes to This Privacy Policy</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
+              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
