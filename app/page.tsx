@@ -676,12 +676,19 @@ function HomeContent() {
   const getCompaniesData = useCallback(() => {
     const companyMap = new Map<string, CompanyReview[]>()
     
+    // Only group reviews for brands that have markdown files (admin-added)
     filteredReviews.forEach((review) => {
       const companyName = review.company_name
-      if (!companyMap.has(companyName)) {
-        companyMap.set(companyName, [])
+      // Only include brands that exist in brandCards (have markdown files)
+      const brandExists = brandCards.some(
+        (brand) => brand.brand_name.trim().toLowerCase() === companyName.trim().toLowerCase()
+      )
+      if (brandExists) {
+        if (!companyMap.has(companyName)) {
+          companyMap.set(companyName, [])
+        }
+        companyMap.get(companyName)!.push(review)
       }
-      companyMap.get(companyName)!.push(review)
     })
 
     const companies: CompanyData[] = []
@@ -699,7 +706,7 @@ function HomeContent() {
     })
 
     return companies
-  }, [filteredReviews])
+  }, [filteredReviews, brandCards])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''

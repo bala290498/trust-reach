@@ -125,16 +125,22 @@ export default function CategoryPage() {
     return brand ? brand.id : generateSlug(brandName)
   }, [brandCards])
 
-  // Group reviews by brand name
+  // Group reviews by brand name - only for brands that have markdown files (admin-added)
   useEffect(() => {
     const companyMap = new Map<string, CompanyReview[]>()
 
     reviews.forEach((review) => {
       const companyName = review.company_name
-      if (!companyMap.has(companyName)) {
-        companyMap.set(companyName, [])
+      // Only include brands that exist in brandCards (have markdown files)
+      const brandExists = brandCards.some(
+        (brand) => brand.brand_name.trim().toLowerCase() === companyName.trim().toLowerCase()
+      )
+      if (brandExists) {
+        if (!companyMap.has(companyName)) {
+          companyMap.set(companyName, [])
+        }
+        companyMap.get(companyName)!.push(review)
       }
-      companyMap.get(companyName)!.push(review)
     })
 
     const companiesData: CompanyData[] = []
@@ -159,7 +165,7 @@ export default function CategoryPage() {
     })
 
     setCompanies(companiesData)
-  }, [reviews])
+  }, [reviews, brandCards])
 
   // Get top 5 companies by average rating
   const getTop5Companies = useCallback(() => {

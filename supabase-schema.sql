@@ -1,4 +1,4 @@
--- TrustReach.in Database Schema - Reviews Only
+-- TrustReach.in Database Schema
 -- Run this SQL in your Supabase SQL Editor
 -- WARNING: This will drop existing tables and all data. Make sure to backup if needed.
 
