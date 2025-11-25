@@ -111,7 +111,48 @@ export default function BrandPage() {
             fetchReviews(data.brand_name, true)
           }
         } else {
-          console.error('Failed to fetch brand')
+          // If brand markdown not found, try to find reviews by slug (for reviews-only brands)
+          // This handles brands that have reviews but no markdown file
+          const reviewsResponse = await fetch(`/api/reviews?t=${Date.now()}`, {
+            cache: 'no-store',
+          })
+          if (reviewsResponse.ok) {
+            const allReviews = await reviewsResponse.json()
+            // Find brand name that matches the slug
+            const brandMap = new Map<string, typeof allReviews>()
+            allReviews.forEach((review: CompanyReview) => {
+              const brandName = review.company_name
+              if (!brandMap.has(brandName)) {
+                brandMap.set(brandName, [])
+              }
+              brandMap.get(brandName)!.push(review)
+            })
+            
+            // Find brand by matching slug
+            let foundBrandName: string | null = null
+            brandMap.forEach((reviews, brandName) => {
+              const brandSlug = generateSlug(brandName)
+              if (brandSlug === params.slug) {
+                foundBrandName = brandName
+              }
+            })
+            
+            if (foundBrandName) {
+              // Create a minimal brand object for reviews-only brands
+              setBrand({
+                id: params.slug as string,
+                brand_name: foundBrandName,
+                category: '',
+                about: '',
+                created_at: new Date().toISOString(),
+              })
+              fetchReviews(foundBrandName, true)
+            } else {
+              console.error('Brand not found')
+            }
+          } else {
+            console.error('Failed to fetch brand')
+          }
         }
       } catch (error) {
         console.error('Error fetching brand:', error)
