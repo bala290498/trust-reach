@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ExternalLink, ArrowRight } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import StarRating from '@/components/StarRating'
@@ -20,6 +20,21 @@ interface BrandCard {
   created_at: string
 }
 
+// All available categories
+const allCategories = [
+  'Hotels & Restaurants',
+  'Health & Medical',
+  'Travel & Vacation',
+  'Construction & Manufacturing',
+  'Home Services',
+  'Events & Entertainment',
+  'Beauty & Well-being',
+  'Electronics & Technology',
+  'Vehicles & Transportation',
+  'Local Services',
+  'Education & Training',
+]
+
 export default function CategoryPage() {
   const params = useParams()
   const [brandCards, setBrandCards] = useState<BrandCard[]>([])
@@ -28,21 +43,6 @@ export default function CategoryPage() {
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [sortBy, setSortBy] = useState<'rating' | 'date'>('rating')
   const [order, setOrder] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('highest')
-
-  // All available categories
-  const allCategories = [
-    'Hotels & Restaurants',
-    'Health & Medical',
-    'Travel & Vacation',
-    'Construction & Manufacturing',
-    'Home Services',
-    'Events & Entertainment',
-    'Beauty & Well-being',
-    'Electronics & Technology',
-    'Vehicles & Transportation',
-    'Local Services',
-    'Education & Training',
-  ]
 
   const fetchBrands = useCallback(async () => {
     try {
@@ -285,17 +285,13 @@ export default function CategoryPage() {
                     </p>
                   )}
                 </div>
-                {brand.url && (
-                  <a
-                    href={brand.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                )}
+                <Link
+                  href={`/brands/${brand.id}`}
+                  className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ArrowRight size={14} />
+                </Link>
               </div>
               
               {/* Star Rating and Review Count */}

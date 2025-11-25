@@ -70,13 +70,19 @@ export default function BrandPage() {
   const [showBrandDropdown, setShowBrandDropdown] = useState(false)
   const [brandSearchError, setBrandSearchError] = useState('')
 
-  const fetchReviews = useCallback(async (brandName: string) => {
+  const fetchReviews = useCallback(async (brandName: string, bypassCache = false) => {
     try {
       // Use cached API route instead of direct Supabase call
       // The API route handles caching with headers
+      // After creating a review, bypass cache to get fresh data
       const encodedBrandName = encodeURIComponent(brandName)
-      const response = await fetch(`/api/reviews/${encodedBrandName}`, {
-        cache: 'force-cache', // Use browser cache
+      const cacheOption = bypassCache ? 'no-store' : 'force-cache'
+      const url = bypassCache 
+        ? `/api/reviews/${encodedBrandName}?t=${Date.now()}`
+        : `/api/reviews/${encodedBrandName}`
+      
+      const response = await fetch(url, {
+        cache: cacheOption,
       })
       
       if (response.ok) {
@@ -100,9 +106,9 @@ export default function BrandPage() {
         if (response.ok) {
           const data = await response.json()
           setBrand(data)
-          // Fetch reviews for this brand
+          // Fetch reviews for this brand - always bypass cache on initial load to get fresh data
           if (data.brand_name) {
-            fetchReviews(data.brand_name)
+            fetchReviews(data.brand_name, true)
           }
         } else {
           console.error('Failed to fetch brand')
@@ -118,6 +124,19 @@ export default function BrandPage() {
       fetchBrand()
     }
   }, [params.slug, fetchReviews])
+
+  // Refresh reviews when page becomes visible (user might have added review in another tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && brand?.brand_name) {
+        // Refresh reviews when page becomes visible
+        fetchReviews(brand.brand_name, true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [brand?.brand_name, fetchReviews])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
@@ -209,7 +228,7 @@ export default function BrandPage() {
     }
   }, [formData.company_name, validateBrandName])
 
-  // Pre-fill company name when brand loads
+  // Pre-fill brand name when brand loads
   useEffect(() => {
     if (brand && brand.brand_name) {
       setFormData(prev => ({ ...prev, company_name: brand.brand_name }))
@@ -246,15 +265,19 @@ export default function BrandPage() {
     setSubmitting(true)
 
     try {
+      // Normalize company_name to match brand_name exactly (trim and use brand_name if available)
+      const companyName = brand?.brand_name ? brand.brand_name.trim() : formData.company_name.trim()
+      
       const normalizedFormData = {
         user_id: user.id,
         email: user.email || formData.email,
-        company_name: formData.company_name,
+        company_name: companyName,
         rating: formData.rating,
         review: formData.review,
       }
       
       console.log('Submitting review:', normalizedFormData)
+      console.log('Brand name:', brand?.brand_name)
       
       const { data, error } = await supabase.from('company_reviews').insert([normalizedFormData]).select()
 
@@ -264,6 +287,7 @@ export default function BrandPage() {
       }
 
       console.log('Review submitted successfully:', data)
+      console.log('Stored company_name:', data?.[0]?.company_name)
 
       setFormData({
         email: '',
@@ -272,7 +296,13 @@ export default function BrandPage() {
         review: '',
       })
       setShowAddForm(false)
-      fetchReviews(brand?.brand_name || '')
+      
+      // Add small delay to ensure database write is complete before fetching
+      setTimeout(() => {
+        console.log('Fetching reviews for brand:', brand?.brand_name)
+        fetchReviews(brand?.brand_name || '', true)
+      }, 500)
+      
       setNotification({ isOpen: true, type: 'success', message: 'Review submitted successfully!' })
     } catch (error: any) {
       console.error('Error adding review:', error)
@@ -554,65 +584,16 @@ export default function BrandPage() {
                 )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Company or Brand Name <span className="text-red-500">*</span>
+                    Brand Name <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      value={brandSearchQuery}
-                      onChange={(e) => {
-                        setBrandSearchQuery(e.target.value)
-                        setFormData({ ...formData, company_name: e.target.value })
-                        setBrandSearchError('')
-                        setShowBrandDropdown(true)
-                      }}
-                      onFocus={() => {
-                        if (brandSearchQuery.trim() && getFilteredBrands().length > 0) {
-                          setShowBrandDropdown(true)
-                        }
-                      }}
-                      onBlur={() => {
-                        setTimeout(() => {
-                          setShowBrandDropdown(false)
-                          validateBrandName()
-                        }, 200)
-                      }}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                        brandSearchError
-                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                          : 'border-gray-200 focus:ring-primary-500 focus:border-primary-500'
-                      }`}
-                      placeholder="Type to search existing brands..."
-                    />
-                    {/* Brand Suggestions Dropdown */}
-                    {showBrandDropdown && getFilteredBrands().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-xl z-50 max-h-[15rem] overflow-y-auto">
-                        {getFilteredBrands().map((name) => (
-                          <button
-                            key={name}
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault()
-                              setFormData({ ...formData, company_name: name })
-                              setBrandSearchQuery(name)
-                              setShowBrandDropdown(false)
-                              setBrandSearchError('')
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
-                          >
-                            <p className="font-semibold text-gray-900 truncate">{name}</p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {brandSearchError && (
-                    <p className="text-sm text-red-600 mt-1">{brandSearchError}</p>
-                  )}
-                  {availableBrandNames.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-1">No brands available. Please add brands via markdown files.</p>
-                  )}
+                  <input
+                    type="text"
+                    required
+                    readOnly
+                    value={brand?.brand_name || ''}
+                    className="w-full px-4 py-3 border-2 rounded-xl bg-gray-50 border-gray-300 text-gray-700 cursor-not-allowed"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Brand name is fixed for this brand page</p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">

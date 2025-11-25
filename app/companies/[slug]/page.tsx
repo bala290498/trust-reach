@@ -85,8 +85,9 @@ export default function CompanyPage() {
       setLoading(true)
       // Use cached API route instead of direct Supabase call
       // The API route handles caching with headers
-      const response = await fetch('/api/reviews', {
-        cache: 'force-cache', // Use browser cache
+      // Always fetch fresh data for brand pages to show latest reviews
+      const response = await fetch(`/api/reviews?t=${Date.now()}`, {
+        cache: 'no-store', // Always fetch fresh data
       })
       
       if (!response.ok) {
@@ -95,27 +96,27 @@ export default function CompanyPage() {
 
       const reviews = await response.json()
 
-      // Find company by matching slug
-      const companyMap = new Map<string, CompanyReview[]>()
+      // Find brand by matching slug
+      const brandMap = new Map<string, CompanyReview[]>()
       reviews?.forEach((review: CompanyReview) => {
-        const companyName = review.company_name
-        if (!companyMap.has(companyName)) {
-          companyMap.set(companyName, [])
+        const brandName = review.company_name
+        if (!brandMap.has(brandName)) {
+          brandMap.set(brandName, [])
         }
-        companyMap.get(companyName)!.push(review)
+        brandMap.get(brandName)!.push(review)
       })
 
-      // Find the company that matches the slug
-      let foundCompany: CompanyData | null = null
-      companyMap.forEach((reviews, companyName) => {
-        const companySlug = generateSlug(companyName)
-        if (companySlug === slug) {
+      // Find the brand that matches the slug
+      let foundBrand: CompanyData | null = null
+      brandMap.forEach((reviews, brandName) => {
+        const brandSlug = generateSlug(brandName)
+        if (brandSlug === slug) {
           const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0)
           const averageRating = totalRating / reviews.length
           const firstReview = reviews[0]
           
-          foundCompany = {
-            name: companyName,
+          foundBrand = {
+            name: brandName,
             averageRating: Math.round(averageRating * 10) / 10,
             reviewCount: reviews.length,
             reviews: reviews,
@@ -123,14 +124,14 @@ export default function CompanyPage() {
         }
       })
 
-      if (foundCompany) {
-        setCompany(foundCompany)
+      if (foundBrand) {
+        setCompany(foundBrand)
       } else {
-        // Company not found, redirect to home
+        // Brand not found, redirect to home
         router.push('/')
       }
     } catch (error) {
-      console.error('Error fetching company data:', error)
+      console.error('Error fetching brand data:', error)
       router.push('/')
     } finally {
       setLoading(false)
@@ -238,7 +239,7 @@ export default function CompanyPage() {
     if (!isLoaded) return
     
     if (user) {
-      // User is signed in, open form directly with pre-filled company info
+      // User is signed in, open form directly with pre-filled brand info
       setFormData({
         rating: 0,
         review: '',
@@ -284,17 +285,26 @@ export default function CompanyPage() {
     setSubmitting(true)
 
     try {
+      // Normalize company_name to match brand name exactly (trim whitespace)
+      const companyName = company.name.trim()
+      
       const normalizedFormData = {
         email: user.email || '',
-        company_name: company.name,
+        company_name: companyName,
         rating: formData.rating,
         review: formData.review,
         user_id: user.id,
       }
       
-      const { error } = await supabase.from('company_reviews').insert([normalizedFormData])
+      console.log('Submitting review:', normalizedFormData)
+      console.log('Brand name:', company.name)
+      
+      const { data, error } = await supabase.from('company_reviews').insert([normalizedFormData]).select()
 
       if (error) throw error
+
+      console.log('Review submitted successfully:', data)
+      console.log('Stored company_name:', data?.[0]?.company_name)
 
       // Reset form and close modal
       setFormData({
@@ -303,8 +313,12 @@ export default function CompanyPage() {
       })
       setShowAddForm(false)
       
-      // Refresh company data to show new review
-      fetchCompanyData()
+      // Refresh company data to show new review (bypass cache)
+      // Add small delay to ensure database write is complete
+      setTimeout(() => {
+        console.log('Refreshing company data after review submission')
+        fetchCompanyData()
+      }, 500)
       setNotification({ show: true, message: 'Review submitted successfully!', type: 'success' })
     } catch (error) {
       console.error('Error adding review:', error)
@@ -378,7 +392,7 @@ export default function CompanyPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Company not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Brand not found</h1>
           <Link href="/" className="text-primary-600 hover:text-primary-700">
             ← Back to Home
           </Link>
@@ -410,11 +424,11 @@ export default function CompanyPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Clean Company Header Bar - Fixed below main nav */}
+      {/* Clean Brand Header Bar - Fixed below main nav */}
       <div className="fixed top-[5rem] left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-6 h-20 sm:h-24">
-            {/* Left - Company name */}
+            {/* Left - Brand name */}
             <div className="flex flex-col justify-center flex-1 min-w-0">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {company.name}
@@ -595,7 +609,7 @@ export default function CompanyPage() {
               
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Company Name <span className="text-red-500">*</span>
+                  Brand Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -685,7 +699,7 @@ export default function CompanyPage() {
               
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Company Name <span className="text-red-500">*</span>
+                  Brand Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"

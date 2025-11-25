@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ArrowRight } from 'lucide-react'
 
 export default function AllReviewsPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -31,13 +31,18 @@ export default function AllReviewsPage() {
   const [reviews, setReviews] = useState<CompanyReview[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedReview, setSelectedReview] = useState<CompanyReview | null>(null)
+  const [brandCards, setBrandCards] = useState<Array<{ id: string; brand_name: string }>>([])
 
-  const fetchReviews = useCallback(async () => {
+  const fetchReviews = useCallback(async (bypassCache = false) => {
     try {
       // Use cached API route instead of direct Supabase call
       // The API route handles caching with headers
-      const response = await fetch('/api/reviews', {
-        cache: 'force-cache', // Use browser cache
+      // After creating a review, bypass cache to get fresh data
+      const cacheOption = bypassCache ? 'no-store' : 'force-cache'
+      const url = bypassCache ? `/api/reviews?t=${Date.now()}` : '/api/reviews'
+      
+      const response = await fetch(url, {
+        cache: cacheOption,
       })
       
       if (response.ok) {
@@ -55,8 +60,39 @@ export default function AllReviewsPage() {
     }
   }, [])
 
+  // Fetch brands to get brand IDs for consistent slugs
   useEffect(() => {
-    fetchReviews()
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch('/api/brands')
+        if (response.ok) {
+          const data = await response.json()
+          setBrandCards(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching brands:', error)
+      }
+    }
+    fetchBrands()
+  }, [])
+
+  useEffect(() => {
+    // Fetch reviews on mount with cache bypass to ensure fresh data
+    // This ensures new reviews appear immediately
+    fetchReviews(true)
+  }, [fetchReviews])
+
+  // Helper function to get brand ID from brand name
+  const getBrandId = useCallback((brandName: string): string => {
+    const brand = brandCards.find(
+      (b) => b.brand_name.trim().toLowerCase() === brandName.trim().toLowerCase()
+    )
+    return brand ? brand.id : generateSlug(brandName)
+  }, [brandCards])
+
+  // Add a refresh function that can be called manually
+  const refreshReviews = useCallback(() => {
+    fetchReviews(true)
   }, [fetchReviews])
 
   const formatDate = (dateString?: string) => {
@@ -144,8 +180,7 @@ export default function AllReviewsPage() {
               <div
                 key={review.id}
                 onClick={() => {
-                  const companySlug = generateSlug(review.company_name)
-                  window.location.href = `/companies/${companySlug}`
+                  setSelectedReview(review)
                 }}
                 className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all duration-200 cursor-pointer shadow-sm"
               >
@@ -155,9 +190,18 @@ export default function AllReviewsPage() {
                       {review.company_name}
                     </h3>
                   </div>
-                  {review.created_at && (
-                    <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {review.created_at && (
+                      <p className="text-sm text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
+                    )}
+                    <Link
+                      href={`/brands/${getBrandId(review.company_name)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
+                    >
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
                 </div>
                 
                 <div className="mb-3">
@@ -182,13 +226,76 @@ export default function AllReviewsPage() {
                   {review.review}
                 </p>
                 
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm font-medium text-primary-600 text-center hover:text-primary-700 transition-colors">
+                <div 
+                  className="mt-4 pt-4 border-t border-gray-200"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedReview(review)
+                  }}
+                >
+                  <p className="text-sm font-medium text-primary-600 text-center hover:text-primary-700 transition-colors cursor-pointer">
                     Read More →
                   </p>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Review Details Modal */}
+        {selectedReview && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedReview(null)}>
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 break-words">{selectedReview.company_name}</h2>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedReview.created_at && (
+                      <React.Fragment>
+                        <span className="text-gray-300">•</span>
+                        <p className="text-base text-gray-500">{formatDate(selectedReview.created_at)}</p>
+                      </React.Fragment>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedReview(null)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <StarRating rating={selectedReview.rating} onRatingChange={() => {}} readonly />
+              </div>
+
+              <div className="mb-6 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full text-white flex items-center justify-center font-semibold text-lg flex-shrink-0" style={{ backgroundColor: getEmailColor(selectedReview.email) }}>
+                  {getEmailName(selectedReview.email)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-base font-semibold text-gray-900 truncate">{getEmailDisplayName(selectedReview.email)}</p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Review</h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">{selectedReview.review}</p>
+              </div>
+
+              <div className="pt-6 border-t border-gray-200 flex justify-end items-center gap-4">
+                <button
+                  onClick={() => setSelectedReview(null)}
+                  className="bg-gray-200 text-gray-700 py-2 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

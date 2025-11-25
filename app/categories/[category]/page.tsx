@@ -7,6 +7,7 @@ import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
 import { ArrowLeft, ExternalLink, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Laptop, Car, Building, GraduationCap } from 'lucide-react'
+import { useCallback } from 'react'
 
 const categories = [
   'Hotels & Restaurants',
@@ -64,6 +65,7 @@ export default function CategoryPage() {
   const [companies, setCompanies] = useState<CompanyData[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryName, setCategoryName] = useState<string>('')
+  const [brandCards, setBrandCards] = useState<Array<{ id: string; brand_name: string }>>([])
 
   // Decode category name from URL
   useEffect(() => {
@@ -94,13 +96,37 @@ export default function CategoryPage() {
     }
   }, [categoryName])
 
+  // Fetch brands to get brand IDs for consistent slugs
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch('/api/brands')
+        if (response.ok) {
+          const data = await response.json()
+          setBrandCards(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching brands:', error)
+      }
+    }
+    fetchBrands()
+  }, [])
+
   useEffect(() => {
     if (categoryName) {
       fetchReviews()
     }
   }, [categoryName, fetchReviews])
 
-  // Group reviews by company name
+  // Helper function to get brand ID from brand name (for consistent slugs)
+  const getBrandId = useCallback((brandName: string): string => {
+    const brand = brandCards.find(
+      (b) => b.brand_name.trim().toLowerCase() === brandName.trim().toLowerCase()
+    )
+    return brand ? brand.id : generateSlug(brandName)
+  }, [brandCards])
+
+  // Group reviews by brand name
   useEffect(() => {
     const companyMap = new Map<string, CompanyReview[]>()
 
@@ -157,7 +183,7 @@ export default function CategoryPage() {
   }
 
   const renderTop5Card = (company: CompanyData, rank: number) => {
-    const companySlug = generateSlug(company.name)
+    const brandId = getBrandId(company.name)
     
     return (
       <div className="relative flex-shrink-0 pt-4 w-[8.75rem] mr-[3.375rem] max-w-full">
@@ -184,14 +210,14 @@ export default function CategoryPage() {
         
         {/* Compact Card - Fixed width, only name, score, and review count */}
         <Link
-          href={`/companies/${companySlug}`}
+          href={`/brands/${brandId}`}
           className="relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer block overflow-hidden justify-center w-[8.75rem] h-[7.5rem] min-h-[7.5rem] max-h-[7.5rem] max-w-full"
           style={{ 
             boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)',
             zIndex: 10
           }}
         >
-          {/* Line 1: Company Name (bold) */}
+          {/* Line 1: Brand Name (bold) */}
           <div className="text-center mb-3 flex-shrink-0">
             <h3 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-2 leading-tight" title={company.name}>
               {company.name}
@@ -213,10 +239,10 @@ export default function CategoryPage() {
   }
 
   const renderCompanyCard = (company: CompanyData) => {
-    const companySlug = generateSlug(company.name)
+    const brandId = getBrandId(company.name)
     return (
       <Link
-        href={`/companies/${companySlug}`}
+        href={`/brands/${brandId}`}
         className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer block"
       >
           <div className="flex items-start justify-between mb-2 flex-shrink-0">
@@ -263,7 +289,7 @@ export default function CategoryPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading companies...</p>
+          <p className="text-gray-600">Loading brands...</p>
         </div>
       </div>
     )
@@ -290,7 +316,7 @@ export default function CategoryPage() {
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{categoryName}</h1>
           </div>
           <p className="text-gray-600 text-lg">
-            {companies.length} {companies.length === 1 ? 'company' : 'companies'} in this category
+            {companies.length} {companies.length === 1 ? 'brand' : 'brands'} in this category
           </p>
         </div>
 
@@ -322,11 +348,11 @@ export default function CategoryPage() {
         {/* All Companies Section */}
         {companies.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">All Companies</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">All Brands</h2>
           </div>
         )}
 
-        {/* Companies Grid */}
+        {/* Brands Grid */}
         {companies.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {companies.map((company, index) => (
@@ -339,9 +365,9 @@ export default function CategoryPage() {
           <div className="text-center py-16">
             <div className="max-w-md mx-auto">
               <div className="text-6xl mb-4">🏢</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Companies Found</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">No Brands Found</h3>
               <p className="text-gray-600 mb-6">
-                No companies have been reviewed in this category yet. Be the first to share your experience!
+                No brands have been reviewed in this category yet. Be the first to share your experience!
               </p>
               <Link
                 href="/"

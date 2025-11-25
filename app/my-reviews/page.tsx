@@ -193,12 +193,17 @@ export default function MyReviewsPage() {
 
     setSubmitting(true)
     try {
+      // Find exact brand name from available brands list (case-insensitive match)
+      const exactBrandName = availableBrandNames.find(
+        (name) => name.trim().toLowerCase() === formData.company_name.trim().toLowerCase()
+      ) || formData.company_name.trim()
+      
       const response = await fetch('/api/reviews/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingReview.id,
-          company_name: formData.company_name,
+          company_name: exactBrandName,
           rating: formData.rating,
           review: formData.review,
         }),
@@ -313,7 +318,7 @@ export default function MyReviewsPage() {
             <span>Back to All Reviews</span>
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Reviews</h1>
-          <p className="text-gray-600">Manage and edit your company reviews</p>
+          <p className="text-gray-600">Manage and edit your brand reviews</p>
         </div>
 
         {/* Loading State */}
@@ -399,7 +404,7 @@ export default function MyReviewsPage() {
         {showEditForm && editingReview && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Company Review</h2>
+              <h2 className="text-3xl font-bold mb-6 text-gray-900">Edit Brand Review</h2>
               
               <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-4">
                 <div>
@@ -417,7 +422,7 @@ export default function MyReviewsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Company Name <span className="text-red-500">*</span>
+                    Brand Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input

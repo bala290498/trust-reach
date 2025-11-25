@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
-import { cache } from 'react'
 
-// Cache the reviews fetch function
-const getReviews = cache(async () => {
-  if (!supabaseServer) {
-    return []
-  }
-
+export async function GET(request: NextRequest) {
   try {
+    if (!supabaseServer) {
+      return NextResponse.json([], { status: 500 })
+    }
+
+    // Check if cache should be bypassed (via query parameter)
+    const searchParams = request.nextUrl.searchParams
+    const bypassCache = searchParams.get('t') !== null
+
     const { data, error } = await supabaseServer
       .from('company_reviews')
       .select('*')
@@ -16,27 +18,15 @@ const getReviews = cache(async () => {
 
     if (error) {
       console.error('Error fetching reviews:', error)
-      return []
+      return NextResponse.json([], { status: 500 })
     }
 
-    return data || []
-  } catch (error) {
-    console.error('Error fetching reviews:', error)
-    return []
-  }
-})
+    // If bypassing cache, use no-store, otherwise use cache headers
+    const headers: HeadersInit = bypassCache
+      ? { 'Cache-Control': 'no-store' }
+      : { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' }
 
-export async function GET() {
-  try {
-    const reviews = await getReviews()
-
-    // Add caching headers - cache for 1 minute, revalidate in background
-    // Reviews change more frequently, so shorter cache time
-    return NextResponse.json(reviews, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-      },
-    })
+    return NextResponse.json(data || [], { headers })
   } catch (error) {
     console.error('Error in reviews API:', error)
     return NextResponse.json([], { status: 500 })

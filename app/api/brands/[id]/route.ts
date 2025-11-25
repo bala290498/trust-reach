@@ -30,14 +30,63 @@ export async function GET(
       )
     }
 
-    // Try to find the file by ID (slug)
-    const filePath = path.join(brandsDirectory, `${id}.md`)
+    // Try to find the file by ID (slug) - first try exact match
+    let filePath = path.join(brandsDirectory, `${id}.md`)
     
+    // If exact match not found, try to find by matching slug to brand_name
     if (!fs.existsSync(filePath)) {
-      return NextResponse.json(
-        { error: 'Brand not found' },
-        { status: 404 }
-      )
+      const files = fs.readdirSync(brandsDirectory)
+      let foundFile: string | null = null
+      
+      for (const file of files) {
+        if (file.endsWith('.md')) {
+          const filePathToCheck = path.join(brandsDirectory, file)
+          const fileContents = fs.readFileSync(filePathToCheck, 'utf8')
+          
+          // Parse frontmatter to get brand_name
+          const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/
+          const match = fileContents.match(frontmatterRegex)
+          
+          if (match) {
+            const frontmatter = match[1]
+            let brandName = ''
+            frontmatter.split('\n').forEach((line) => {
+              const [key, ...valueParts] = line.split(':')
+              if (key && valueParts.length > 0) {
+                const value = valueParts.join(':').trim().replace(/^["']|["']$/g, '')
+                if (key.trim() === 'brand_name' || key.trim() === 'business_name') {
+                  brandName = value
+                }
+              }
+            })
+            
+            // Generate slug from brand_name and compare
+            if (brandName) {
+              const brandSlug = brandName
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '')
+              
+              if (brandSlug === id) {
+                foundFile = file
+                break
+              }
+            }
+          }
+        }
+      }
+      
+      if (foundFile) {
+        filePath = path.join(brandsDirectory, foundFile)
+      } else {
+        return NextResponse.json(
+          { error: 'Brand not found' },
+          { status: 404 }
+        )
+      }
     }
 
     const fileContents = fs.readFileSync(filePath, 'utf8')
@@ -79,8 +128,11 @@ export async function GET(
       }
     }
 
+    // Get the actual filename (without .md) as the ID for consistency
+    const actualId = path.basename(filePath, '.md')
+    
     const brand: BrandCard = {
-      id: id,
+      id: actualId,
       brand_name: data.brand_name || data.business_name || '',
       url: data.url || data.website_url || '',
       category: data.category || '',

@@ -9,7 +9,7 @@ import SignInModal from '@/components/SignInModal'
 import { supabase, CompanyReview } from '@/lib/supabase'
 import { generateSlug } from '@/lib/utils'
 import StarRating from '@/components/StarRating'
-import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Laptop, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Car, Building, GraduationCap } from 'lucide-react'
+import { Search, Plus, ExternalLink, ChevronLeft, ChevronRight, Edit, Trash2, Laptop, UtensilsCrossed, Heart, Plane, Building2, Home as HomeIcon, Music, Sparkles, Car, Building, GraduationCap, ArrowRight } from 'lucide-react'
 import YourReviewsSlider from '@/components/YourReviewsSlider'
 import NotificationModal from '@/components/NotificationModal'
 
@@ -130,12 +130,16 @@ function HomeContent() {
   }, [])
 
 
-  const fetchReviews = useCallback(async () => {
+  const fetchReviews = useCallback(async (bypassCache = false) => {
     try {
       // Use cached API route instead of direct Supabase call
       // The API route handles caching with headers
-      const response = await fetch('/api/reviews', {
-        cache: 'force-cache', // Use browser cache
+      // After creating a review, bypass cache to get fresh data
+      const cacheOption = bypassCache ? 'no-store' : 'force-cache'
+      const url = bypassCache ? `/api/reviews?t=${Date.now()}` : '/api/reviews'
+      
+      const response = await fetch(url, {
+        cache: cacheOption,
       })
       
       if (response.ok) {
@@ -153,11 +157,11 @@ function HomeContent() {
   const filterReviews = useCallback(() => {
     let filtered = [...reviews]
 
-    // Real-time word-by-word search for company name - supports single word matching
+    // Real-time word-by-word search for brand name - supports single word matching
     if (searchQuery) {
       const searchTerm = searchQuery.toLowerCase().trim()
       // If search term has multiple words, check if ANY word matches
-      // If it's a single word or partial word, match if company name contains it
+      // If it's a single word or partial word, match if brand name contains it
       if (searchTerm.length > 0) {
         filtered = filtered.filter((review) => {
           const companyName = review.company_name.toLowerCase()
@@ -179,12 +183,34 @@ function HomeContent() {
   }, [fetchBrandCards])
 
   useEffect(() => {
-    fetchReviews()
+    // Always fetch fresh data on initial load to show latest reviews
+    fetchReviews(true)
+  }, [fetchReviews])
+
+  // Refresh reviews when page becomes visible (user might have added review in another tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refresh reviews when page becomes visible
+        fetchReviews(true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [fetchReviews])
 
   useEffect(() => {
     filterReviews()
   }, [filterReviews, searchQuery, selectedRating])
+
+  // Helper function to get brand ID from brand name (for consistent slugs)
+  const getBrandId = useCallback((brandName: string): string => {
+    const brand = brandCards.find(
+      (b) => b.brand_name.trim().toLowerCase() === brandName.trim().toLowerCase()
+    )
+    return brand ? brand.id : generateSlug(brandName)
+  }, [brandCards])
 
   // Close View All dropdown when clicking outside
   useEffect(() => {
@@ -229,7 +255,7 @@ function HomeContent() {
       (name) => name.toLowerCase() === formData.company_name.toLowerCase()
     )
     if (!exists) {
-      setBrandSearchError('Company or Brand name not registered. Please select from the list.')
+      setBrandSearchError('Brand name not registered. Please select from the list.')
       return false
     }
     setBrandSearchError('')
@@ -259,7 +285,7 @@ function HomeContent() {
     if (companyParam && isLoaded) {
       const decodedCompany = decodeURIComponent(companyParam)
       if (user) {
-        // User is signed in, open form with pre-filled company name
+        // User is signed in, open form with pre-filled brand name
         setFormData(prev => ({ ...prev, company_name: decodedCompany }))
         setShowAddForm(true)
       } else {
@@ -431,7 +457,7 @@ function HomeContent() {
 
     // Validate brand name exists
     if (!validateBrandName()) {
-      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered company or brand name from the list.' })
+      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered brand name from the list.' })
       return
     }
 
@@ -453,10 +479,18 @@ function HomeContent() {
     setLoading(true)
 
     try {
+      // Find exact brand name from available brands list (case-insensitive match)
+      const exactBrandName = availableBrandNames.find(
+        (name) => name.trim().toLowerCase() === formData.company_name.trim().toLowerCase()
+      ) || formData.company_name.trim()
+      
+      // Use exact brand name from markdown file
+      const companyName = exactBrandName
+      
       const normalizedFormData = {
         user_id: user.id,
         email: user.email || formData.email,
-        company_name: formData.company_name,
+        company_name: companyName,
         rating: formData.rating,
         review: formData.review,
       }
@@ -471,6 +505,7 @@ function HomeContent() {
       }
 
       console.log('Review submitted successfully:', data)
+      console.log('Stored company_name:', data?.[0]?.company_name)
 
       setFormData({
         email: '',
@@ -479,7 +514,13 @@ function HomeContent() {
         review: '',
       })
       setShowAddForm(false)
-      fetchReviews()
+      
+      // Add small delay to ensure database write is complete before fetching
+      setTimeout(() => {
+        console.log('Fetching fresh reviews after submission')
+        fetchReviews(true)
+      }, 500)
+      
       setNotification({ isOpen: true, type: 'success', message: 'Review submitted successfully!' })
     } catch (error: any) {
       console.error('Error adding review:', error)
@@ -520,7 +561,7 @@ function HomeContent() {
 
     // Validate brand name exists
     if (!validateBrandName()) {
-      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered company or brand name from the list.' })
+      setNotification({ isOpen: true, type: 'error', message: 'Please select a registered brand name from the list.' })
       return
     }
 
@@ -624,7 +665,7 @@ function HomeContent() {
   }
 
 
-  // Group reviews by company name and calculate stats
+  // Group reviews by brand name and calculate stats
   interface CompanyData {
     name: string
     averageRating: number
@@ -813,7 +854,7 @@ function HomeContent() {
     const companySlug = generateSlug(company.name)
     return (
       <Link 
-        href={`/companies/${companySlug}`}
+        href={`/brands/${companySlug}`}
         className="bg-white rounded-xl border-2 border-gray-300 p-3 sm:p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer block"
       >
             <div className="flex items-start justify-between mb-2 flex-shrink-0">
@@ -863,7 +904,7 @@ function HomeContent() {
       <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-[clamp(2.5rem,5vw,3rem)] w-full">
         <div className="max-w-[min(1200px,95vw)] mx-auto px-[clamp(1rem,4vw,2rem)] text-center">
           <h1 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-gray-900 mb-[clamp(0.75rem,2vw,1rem)] leading-tight">
-            Find Trusted Company Reviews
+            Find Trusted Brand Reviews
           </h1>
           <p className="text-[clamp(0.875rem,2vw,1.125rem)] text-gray-600 mb-[clamp(1rem,3vw,1.5rem)] max-w-[min(42rem,90vw)] mx-auto">
             Discover authentic reviews from real customers. Make informed decisions with trusted insights. {isLoaded && !user && 'Sign in to add your own reviews.'}
@@ -875,7 +916,7 @@ function HomeContent() {
               <Search className="absolute left-[clamp(0.75rem,2vw,1rem)] top-1/2 transform -translate-y-1/2 text-gray-400" size={18} style={{ width: 'clamp(1rem, 2.5vw, 1.125rem)', height: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
               <input
                 type="text"
-                placeholder="Search for companies or brands... (e.g., type any word from company name)"
+                placeholder="Search for brands... (e.g., type any word from brand name)"
                 value={searchQuery}
                 onChange={(e) => {
                   const value = e.target.value
@@ -1242,11 +1283,11 @@ function HomeContent() {
           message="Please sign in or create an account to add a review."
         />
 
-        {/* Add Company Form Modal */}
+        {/* Add Brand Form Modal */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]">
             <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(42rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl">
-              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Add New Company Review</h2>
+              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Add New Brand Review</h2>
               
               <form onSubmit={handleFormSubmit} className="space-y-[clamp(0.75rem,2vw,1rem)]">
                 {user && (
@@ -1258,7 +1299,7 @@ function HomeContent() {
                 )}
                 <div>
                   <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
-                    Company or Brand Name <span className="text-red-500">*</span>
+                    Brand Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1367,7 +1408,7 @@ function HomeContent() {
         {showEditForm && editingReview && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-[clamp(0.5rem,2vw,1rem)]">
             <div className="bg-white rounded-[clamp(0.75rem,2vw,1.25rem)] max-w-[min(42rem,95vw)] w-full max-h-[90vh] overflow-y-auto p-[clamp(1rem,4vw,2rem)] shadow-2xl">
-              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Edit Company Review</h2>
+              <h2 className="text-[clamp(1.5rem,4vw,2rem)] font-bold mb-[clamp(1rem,3vw,1.5rem)] text-gray-900">Edit Brand Review</h2>
               
               <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="space-y-[clamp(0.75rem,2vw,1rem)]">
                   {user && (
@@ -1379,7 +1420,7 @@ function HomeContent() {
                   )}
                   <div>
                     <label className="block text-[clamp(0.875rem,2vw,1rem)] font-semibold text-gray-900 mb-2">
-                      Company or Brand Name <span className="text-red-500">*</span>
+                      Brand Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1706,17 +1747,13 @@ function HomeContent() {
                                   </p>
                                 )}
                               </div>
-                              {brand.url && (
-                                <a
-                                  href={brand.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <ExternalLink size={14} style={{ width: 'clamp(0.75rem, 2vw, 0.875rem)', height: 'clamp(0.75rem, 2vw, 0.875rem)' }} />
-                                </a>
-                              )}
+                              <Link
+                                href={`/brands/${brand.id}`}
+                                className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0 ml-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ArrowRight size={14} style={{ width: 'clamp(0.75rem, 2vw, 0.875rem)', height: 'clamp(0.75rem, 2vw, 0.875rem)' }} />
+                              </Link>
                             </div>
                             
                             {/* Star Rating and Review Count */}
@@ -1819,9 +1856,18 @@ function HomeContent() {
                             {review.company_name}
                           </h3>
                         </div>
-                        {review.created_at && (
-                          <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {review.created_at && (
+                            <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] text-gray-500 whitespace-nowrap">{formatDate(review.created_at)}</p>
+                          )}
+                          <Link
+                            href={`/brands/${getBrandId(review.company_name)}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-primary-600 hover:text-primary-700 transition-colors flex-shrink-0"
+                          >
+                            <ArrowRight size={16} style={{ width: 'clamp(0.875rem, 2vw, 1rem)', height: 'clamp(0.875rem, 2vw, 1rem)' }} />
+                          </Link>
+                        </div>
                       </div>
                       
                       <div className="mb-[clamp(0.5rem,1.5vw,0.75rem)]">
@@ -1843,8 +1889,15 @@ function HomeContent() {
                         {review.review}
                       </p>
                       
-                      <div className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-[clamp(0.5rem,1.5vw,0.75rem)] border-t border-gray-200">
-                        <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center hover:text-primary-700 transition-colors">
+                      <div 
+                        className="mt-[clamp(0.5rem,1.5vw,0.75rem)] pt-[clamp(0.5rem,1.5vw,0.75rem)] border-t border-gray-200"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedReview(review)
+                          setIsReviewFromYourReviews(false)
+                        }}
+                      >
+                        <p className="text-[clamp(0.625rem,1.5vw,0.75rem)] font-medium text-primary-600 text-center hover:text-primary-700 transition-colors cursor-pointer">
                           Read More →
                         </p>
                       </div>
