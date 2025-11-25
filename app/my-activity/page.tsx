@@ -294,7 +294,7 @@ export default function MyActivityPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Reviews</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Activity</h1>
             <p className="text-gray-600 mb-6">Please sign in to view your reviews.</p>
             <Link
               href="/"
@@ -329,7 +329,7 @@ export default function MyActivityPage() {
             <ArrowLeft size={20} />
             <span>Back to Home</span>
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Reviews</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Activity</h1>
           <p className="text-gray-600">Manage and edit your reviews</p>
         </div>
 

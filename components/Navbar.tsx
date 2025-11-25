@@ -88,14 +88,14 @@ export default function Navbar() {
               <div className="hidden sm:flex items-center gap-2 sm:gap-4">
                 {!loading && user && (
                   <Link
-                    href="/my-reviews"
+                    href="/my-activity"
                     className={`text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      pathname === '/my-reviews'
+                      pathname === '/my-activity'
                         ? 'text-primary-600 font-semibold'
                         : 'text-gray-600 hover:text-primary-600'
                     }`}
                   >
-                    Your Reviews
+                    Your Activity
                   </Link>
                 )}
                 <AuthButton />
