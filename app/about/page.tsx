@@ -32,7 +32,7 @@ export default function AboutPage() {
               At TrustReach.in, we believe that every consumer deserves access to honest, authentic reviews from real customers. Our mission is to create a transparent platform where people can share their genuine experiences and make informed decisions about the companies and brands they interact with.
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-              We're committed to building a community-driven review ecosystem that values authenticity, transparency, and trust above all else.
+              We&apos;re committed to building a community-driven review ecosystem that values authenticity, transparency, and trust above all else.
             </p>
           </section>
 
@@ -70,7 +70,7 @@ export default function AboutPage() {
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Transparency</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  We believe in complete transparency. Our platform operates with clear policies, and we're open about how we collect, use, and protect your data.
+                  We believe in complete transparency. Our platform operates with clear policies, and we&apos;re open about how we collect, use, and protect your data.
                 </p>
               </div>
               <div className="bg-gray-50 p-6 rounded-lg">
@@ -82,7 +82,7 @@ export default function AboutPage() {
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Community</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  We're building a community where every voice matters. Your reviews help others make better decisions, creating a cycle of informed choices.
+                  We&apos;re building a community where every voice matters. Your reviews help others make better decisions, creating a cycle of informed choices.
                 </p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function AboutPage() {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Share Your Experience</h3>
                   <p className="text-gray-700 leading-relaxed">
-                    Write honest reviews about companies you've interacted with. Rate them and share your genuine experience to help others.
+                    Write honest reviews about companies you&apos;ve interacted with. Rate them and share your genuine experience to help others.
                   </p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function AboutPage() {
           <section className="mb-12 bg-gradient-to-br from-primary-50 to-secondary-50 p-8 rounded-xl">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Join Our Community</h2>
             <p className="text-gray-700 leading-relaxed mb-6">
-              Whether you're looking to make informed decisions or share your experiences, TrustReach.in is the platform for you. Join thousands of users who are building a more transparent marketplace through authentic reviews.
+              Whether you&apos;re looking to make informed decisions or share your experiences, TrustReach.in is the platform for you. Join thousands of users who are building a more transparent marketplace through authentic reviews.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
@@ -194,13 +194,13 @@ export default function AboutPage() {
           <section className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Have questions, suggestions, or feedback? We'd love to hear from you!
+              Have questions, suggestions, or feedback? We&apos;d love to hear from you!
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
               <strong>Email:</strong> <a href="mailto:support@trustreach.in" className="text-primary-600 hover:text-primary-700 underline">support@trustreach.in</a>
             </p>
             <p className="text-gray-700 leading-relaxed">
-              We're here to help and always appreciate your input in making TrustReach.in better.
+              We&apos;re here to help and always appreciate your input in making TrustReach.in better.
             </p>
           </section>
         </div>
