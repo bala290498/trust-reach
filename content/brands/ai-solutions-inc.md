@@ -5,6 +5,7 @@ category: Electronics & Technology
 email: info@aisolutions.com
 phone: +1 (555) 100-0005
 address: 789 AI Innovation Plaza, Seattle, WA 98101
+logo: /images/brands/ai-solutions-inc.png
 created_at: 2024-02-02T00:00:00Z
 ---
 

@@ -5,6 +5,7 @@ category: Travel & Vacation
 email: bookings@adventuretravel.com
 phone: +1 (555) 400-0001
 address: 369 Explorer Lane, Denver, CO 80202
+logo: /images/brands/adventure-travel.png
 created_at: 2024-01-23T00:00:00Z
 ---
 

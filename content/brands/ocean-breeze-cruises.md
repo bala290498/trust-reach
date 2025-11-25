@@ -5,6 +5,7 @@ category: Travel & Vacation
 email: reservations@oceanbreezecruises.com
 phone: +1 (555) 500-0001
 address: 123 Harbor Marina, Fort Lauderdale, FL 33316
+logo: /images/brands/ocean-breeze-cruises.png
 created_at: 2024-02-06T00:00:00Z
 ---
 

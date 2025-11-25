@@ -16,6 +16,7 @@ interface BrandCard {
   email?: string
   phone?: string
   address?: string
+  logo?: string
   about: string
   created_at: string
 }
@@ -274,7 +275,17 @@ export default function CategoryPage() {
               href={`/brands/${brand.id}`}
               className="bg-white rounded-lg border-2 border-gray-300 p-4 hover:shadow-lg hover:border-primary-400 transition-all duration-200 flex flex-col cursor-pointer group w-full max-w-full sm:max-w-[13.75rem] lg:max-w-[15rem] flex-shrink-0"
             >
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between mb-2 gap-2">
+                {brand.logo && (
+                  <img
+                    src={brand.logo}
+                    alt={`${brand.brand_name} logo`}
+                    className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors" title={brand.brand_name}>
                     {brand.brand_name}

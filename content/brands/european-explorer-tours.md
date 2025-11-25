@@ -5,6 +5,7 @@ category: Travel & Vacation
 email: info@europeanexplorer.com
 phone: +1 (555) 500-0003
 address: 789 Cultural Boulevard, New York, NY 10001
+logo: /images/brands/european-explorer-tours.png
 created_at: 2024-02-08T00:00:00Z
 ---
 

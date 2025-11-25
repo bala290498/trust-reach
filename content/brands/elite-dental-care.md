@@ -5,6 +5,7 @@ category: Health & Medical
 email: info@elitedentalcare.com
 phone: +1 (555) 400-0005
 address: 987 Smile Street, Miami, FL 33139
+logo: /images/brands/elite-dental-care.png
 created_at: 2024-02-05T00:00:00Z
 ---
 

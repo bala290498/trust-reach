@@ -5,6 +5,7 @@ category: Electronics & Technology
 email: info@digitalsolutions.com
 phone: +1 (555) 100-0002
 address: 456 Digital Avenue, Seattle, WA 98101
+logo: /images/brands/digital-solutions.png
 created_at: 2024-01-16T00:00:00Z
 ---
 

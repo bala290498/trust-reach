@@ -5,6 +5,7 @@ category: Hotels & Restaurants
 email: reservations@gourmetkitchen.com
 phone: +1 (555) 200-0001
 address: 321 Culinary Boulevard, New York, NY 10001
+logo: /images/brands/gourmet-kitchen.png
 created_at: 2024-01-18T00:00:00Z
 ---
 

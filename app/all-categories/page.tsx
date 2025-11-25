@@ -14,6 +14,7 @@ interface BrandCard {
   email?: string
   phone?: string
   address?: string
+  logo?: string
   about: string
   created_at: string
 }

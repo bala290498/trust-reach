@@ -5,6 +5,7 @@ category: Health & Medical
 email: info@medcareclinic.com
 phone: +1 (555) 300-0002
 address: 258 Medical Park Drive, Boston, MA 02115
+logo: /images/brands/medcare-clinic.png
 created_at: 2024-01-22T00:00:00Z
 ---
 

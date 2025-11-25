@@ -10,6 +10,7 @@ interface BrandCard {
   email?: string
   phone?: string
   address?: string
+  logo?: string
   about: string
   created_at: string
 }
@@ -76,6 +77,7 @@ export async function GET() {
           email: data.email || undefined,
           phone: data.phone || undefined,
           address: data.address || undefined,
+          logo: data.logo || undefined,
           about: about,
           created_at: data.created_at || new Date().toISOString(),
         })

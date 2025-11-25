@@ -5,6 +5,7 @@ category: Hotels & Restaurants
 email: reservations@citycenterhotel.com
 phone: +1 (555) 300-0005
 address: 852 Main Street, Los Angeles, CA 90012
+logo: /images/brands/city-center-hotel.png
 created_at: 2024-01-30T00:00:00Z
 ---
 

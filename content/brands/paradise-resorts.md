@@ -5,6 +5,7 @@ category: Travel & Vacation
 email: reservations@paradiseresorts.com
 phone: +1 (555) 400-0002
 address: 741 Vacation Way, Honolulu, HI 96815
+logo: /images/brands/paradise-resorts.png
 created_at: 2024-01-24T00:00:00Z
 ---
 

@@ -5,6 +5,7 @@ category: Health & Medical
 email: appointments@citymedicalcenter.com
 phone: +1 (555) 400-0003
 address: 321 Health Avenue, New York, NY 10016
+logo: /images/brands/city-medical-center.png
 created_at: 2024-02-03T00:00:00Z
 ---
 

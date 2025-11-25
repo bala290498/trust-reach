@@ -21,6 +21,7 @@ interface BrandCard {
   email?: string
   phone?: string
   address?: string
+  logo?: string
   about: string
   created_at: string
 }
@@ -409,11 +410,24 @@ export default function BrandPage() {
         {/* Brand Banner */}
         <div className="bg-gradient-to-r from-primary-50 via-white to-secondary-50 rounded-2xl p-6 md:p-8 mb-8 border-2 border-gray-200">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{brand.brand_name}</h1>
-              {brand.category && (
-                <p className="text-lg text-gray-600 font-medium">{brand.category}</p>
+            <div className="flex items-start gap-4 flex-1">
+              {brand.logo && (
+                <img
+                  src={brand.logo}
+                  alt={`${brand.brand_name} logo`}
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover border-2 border-gray-200 flex-shrink-0"
+                  onError={(e) => {
+                    // Hide image if it fails to load
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
               )}
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{brand.brand_name}</h1>
+                {brand.category && (
+                  <p className="text-lg text-gray-600 font-medium">{brand.category}</p>
+                )}
+              </div>
             </div>
             {brand.url && (
               <a

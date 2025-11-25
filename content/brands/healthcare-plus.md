@@ -5,6 +5,7 @@ category: Health & Medical
 email: contact@healthcareplus.com
 phone: +1 (555) 400-0004
 address: 654 Wellness Circle, Chicago, IL 60611
+logo: /images/brands/healthcare-plus.png
 created_at: 2024-02-04T00:00:00Z
 ---
 

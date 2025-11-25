@@ -21,6 +21,7 @@ interface BrandCard {
   email?: string
   phone?: string
   address?: string
+  logo?: string
   about: string
   created_at: string
 }
@@ -1744,6 +1745,16 @@ function HomeContent() {
                             className="bg-white rounded-[clamp(0.75rem,2vw,1rem)] border border-gray-200 p-[clamp(0.75rem,2vw,1rem)] hover:shadow-md hover:border-primary-300 transition-all duration-200 flex flex-col cursor-pointer group w-[min(280px,85vw)] sm:w-[min(300px,40vw)] md:w-[min(320px,30vw)] flex-shrink-0 shadow-sm"
                           >
                             <div className="flex items-start justify-between mb-2 gap-2">
+                              {brand.logo && (
+                                <img
+                                  src={brand.logo}
+                                  alt={`${brand.brand_name} logo`}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                              )}
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-[clamp(0.75rem,2vw,0.875rem)] font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors break-words" title={brand.brand_name}>
                                   {brand.brand_name}

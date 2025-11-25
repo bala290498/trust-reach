@@ -5,6 +5,7 @@ category: Hotels & Restaurants
 email: info@coastalbistro.com
 phone: +1 (555) 200-0002
 address: 654 Ocean View Road, Miami, FL 33139
+logo: /images/brands/coastal-bistro.png
 created_at: 2024-01-19T00:00:00Z
 ---
 

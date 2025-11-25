@@ -5,6 +5,7 @@ category: Electronics & Technology
 email: sales@nextgenelectronics.com
 phone: +1 (555) 100-0004
 address: 456 Silicon Valley Boulevard, San Jose, CA 95110
+logo: /images/brands/next-gen-electronics.png
 created_at: 2024-02-01T00:00:00Z
 ---
 

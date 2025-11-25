@@ -5,6 +5,7 @@ category: Hotels & Restaurants
 email: reservations@grandhotel.com
 phone: +1 (555) 300-0001
 address: 123 Luxury Avenue, New York, NY 10001
+logo: /images/brands/grand-hotel.png
 created_at: 2024-01-25T00:00:00Z
 ---
 
